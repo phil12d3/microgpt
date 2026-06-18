@@ -1,0 +1,30 @@
+<BOS><USER>
+What is the capital of France?
+<ASSISTANT>
+Paris.
+<EOS>
+
+<BOS><USER>
+Return JSON with key answer and value 42.
+<ASSISTANT>
+{"answer":42}
+<EOS>
+
+<BOS><USER>
+What is 2+2?
+<ASSISTANT>
+4
+<EOS>
+
+<BOS><USER>
+Write a one-line status message for a completed task.
+<ASSISTANT>
+Task completed successfully.
+<EOS>
+
+<BOS><USER>
+List three colors.
+<ASSISTANT>
+Red, green, blue.
+<EOS>
+

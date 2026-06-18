@@ -1,0 +1,1084 @@
+# MicroGPT C++ Training and Inference Specification
+
+## Purpose
+
+Build a small, understandable GPT-style language model in C++ for learning and experimentation.
+
+The goal is not to compete with commercial models. The goal is to produce a minimal but correct decoder-only transformer that can:
+
+- Train on plain text.
+- Learn token prediction.
+- Save and load checkpoints.
+- Generate text from a prompt.
+- Produce legible short continuations after enough training data.
+- Be simple enough to inspect, debug, and modify.
+
+Correctness is more important than cleverness. Avoid advanced optimisations until the basic model is proven to work.
+
+---
+
+## Non-goals
+
+Do not implement:
+
+- Distributed training.
+- Quantisation initially.
+- Mixed precision initially.
+- CUDA/GPU initially unless the CPU version is working.
+- Complex tokenisers like BPE at first.
+- RLHF, instruction tuning, chat templates, tools, agents, or alignment systems.
+- Multi-modal input.
+- Mixture-of-experts.
+- KV cache initially, unless basic inference already works.
+
+---
+
+## Overall Architecture
+
+Implement a decoder-only transformer language model.
+
+Pipeline:
+
+1. Load text files.
+2. Tokenise text.
+3. Build training batches of fixed-length token windows.
+4. Train the model to predict the next token.
+5. Save checkpoints.
+6. Load checkpoint for inference.
+7. Generate text token by token.
+
+The core learning task is:
+
+Given tokens:
+
+    t0, t1, t2, ..., tN
+
+Train the model so that input:
+
+    t0, t1, t2, ..., tN-1
+
+Predicts target:
+
+    t1, t2, t3, ..., tN
+
+This is next-token prediction.
+
+---
+
+## Recommended First Version
+
+Use character-level tokenisation first.
+
+This is less powerful than wordpiece/BPE, but much easier to debug.
+
+Example vocabulary:
+
+- Every distinct byte or character in the training corpus.
+- Include newline.
+- Include space.
+- Include punctuation.
+- Optional special tokens:
+  - `<PAD>`
+  - `<UNK>`
+  - `<BOS>`
+  - `<EOS>`
+
+For the first version, byte-level tokenisation is recommended:
+
+- Vocabulary size: 256
+- Each byte maps directly to token ID 0-255
+- No unknown tokens
+- No vocabulary-building bugs
+- Works with any plain text file
+
+This avoids many early tokenisation failures.
+
+---
+
+## Minimum Model
+
+Recommended starting configuration:
+
+```text
+vocab_size      = 256
+context_length  = 64
+d_model         = 128
+num_layers      = 2
+num_heads       = 4
+d_ff            = 512
+dropout         = 0.0 initially
+batch_size      = 16
+learning_rate   = 0.0003
+```
+
+This should be small enough to train on CPU for experiments.
+
+After correctness is proven, try:
+
+```text
+context_length  = 128
+d_model         = 256
+num_layers      = 4
+num_heads       = 4 or 8
+d_ff            = 1024
+batch_size      = 16 or 32
+```
+
+---
+
+## Model Components
+
+The model should contain:
+
+1. Token embedding table
+2. Positional embedding table
+3. Transformer blocks
+4. Final layer normalisation
+5. Output projection to vocabulary logits
+
+Structure:
+
+```text
+input token ids
+  -> token embeddings
+  -> add positional embeddings
+  -> transformer block 1
+  -> transformer block 2
+  -> ...
+  -> final layer norm
+  -> linear projection to vocab logits
+  -> softmax only for loss/sampling
+```
+
+Important:
+
+- Do not apply softmax before cross-entropy loss.
+- Cross-entropy should consume raw logits.
+- For numerical stability, softmax must subtract the maximum logit first.
+
+---
+
+## Transformer Block
+
+Each transformer block should use pre-layer-normalisation:
+
+```text
+x = x + masked_self_attention(layer_norm(x))
+x = x + feed_forward(layer_norm(x))
+```
+
+This is usually easier to train than post-layer-normalisation.
+
+Each block contains:
+
+- LayerNorm before attention
+- Causal multi-head self-attention
+- Residual connection
+- LayerNorm before feed-forward
+- Feed-forward network
+- Residual connection
+
+---
+
+## LayerNorm
+
+For each token vector independently:
+
+```text
+mean = average(x)
+variance = average((x - mean)^2)
+y = (x - mean) / sqrt(variance + epsilon)
+output = gamma * y + beta
+```
+
+Use:
+
+```text
+epsilon = 1e-5
+```
+
+Trainable parameters:
+
+- gamma, initially 1
+- beta, initially 0
+
+LayerNorm is applied across the feature dimension, not across batch or time.
+
+---
+
+## Token and Positional Embeddings
+
+Token embedding:
+
+```text
+token_embedding[vocab_size][d_model]
+```
+
+Position embedding:
+
+```text
+position_embedding[context_length][d_model]
+```
+
+For each batch item and time position:
+
+```text
+x[b][t][i] = token_embedding[token_id][i] + position_embedding[t][i]
+```
+
+Initialise embeddings with small random values:
+
+```text
+normal distribution mean 0, std 0.02
+```
+
+---
+
+## Causal Self-Attention
+
+For each token position, the model may only attend to previous positions and itself.
+
+It must not see the future.
+
+For each input vector x:
+
+```text
+q = x * Wq + bq
+k = x * Wk + bk
+v = x * Wv + bv
+```
+
+Shapes:
+
+```text
+x:  [batch, time, d_model]
+q:  [batch, time, d_model]
+k:  [batch, time, d_model]
+v:  [batch, time, d_model]
+```
+
+Split into heads:
+
+```text
+head_dim = d_model / num_heads
+```
+
+For each head:
+
+```text
+score[t][s] = dot(q[t], k[s]) / sqrt(head_dim)
+```
+
+Apply causal mask:
+
+```text
+if s > t:
+    score[t][s] = -infinity
+```
+
+Then:
+
+```text
+weights[t] = softmax(score[t])
+out[t] = sum_s weights[t][s] * v[s]
+```
+
+Concatenate all heads, then apply output projection:
+
+```text
+attention_output = concat(head_outputs) * Wo + bo
+```
+
+---
+
+## Attention Explanation
+
+This is materially different from simple co-occurrence.
+
+Co-occurrence says:
+
+```text
+"These tokens often appear near each other."
+```
+
+Attention says:
+
+```text
+"For this exact input sequence, at this exact position, compute which previous tokens matter most for predicting the next representation."
+```
+
+The attention weights are not fixed counts. They are produced from learned projections of the current activations.
+
+The model learns Wq, Wk, Wv, and Wo so that useful relationships receive higher attention during training.
+
+At the start of training, attention is mostly random.
+
+During training, gradients change the matrices so that useful token relationships become easier for the model to use.
+
+---
+
+## Feed-Forward Network
+
+Each transformer block has a per-token feed-forward network:
+
+```text
+ff(x) = Linear2(GELU(Linear1(x)))
+```
+
+Shapes:
+
+```text
+Linear1: d_model -> d_ff
+Linear2: d_ff -> d_model
+```
+
+Use GELU activation:
+
+Approximate GELU:
+
+```text
+GELU(x) = 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715*x^3)))
+```
+
+The feed-forward network is applied independently to each token position.
+
+---
+
+## Output Projection
+
+After the final layer norm:
+
+```text
+logits = x * W_vocab + b_vocab
+```
+
+Shape:
+
+```text
+logits: [batch, time, vocab_size]
+```
+
+For each position, the logits represent the unnormalised scores for the next token.
+
+---
+
+## Loss Function
+
+Use cross-entropy loss over all batch and time positions.
+
+For each predicted logits vector and target token:
+
+```text
+loss = -log(softmax(logits)[target])
+```
+
+Numerically stable version:
+
+```text
+max_logit = max(logits)
+sum_exp = sum(exp(logit - max_logit))
+log_prob_target = logits[target] - max_logit - log(sum_exp)
+loss = -log_prob_target
+```
+
+Average over:
+
+```text
+batch_size * context_length
+```
+
+---
+
+## Backpropagation Requirement
+
+The implementation must include correct backward passes for:
+
+- Linear layers
+- Embedding lookup
+- LayerNorm
+- GELU
+- Softmax cross-entropy
+- Attention
+- Residual connections
+- Matrix multiplication
+
+Recommendation:
+
+Do not ask Codex to write the full model in one step.
+
+Build and test backward passes one component at a time.
+
+Suggested order:
+
+1. Tensor class
+2. Linear layer forward/backward
+3. Cross-entropy loss
+4. Embedding layer
+5. LayerNorm
+6. GELU
+7. Feed-forward block
+8. Attention forward only
+9. Attention backward
+10. Transformer block
+11. Full model
+12. Training loop
+13. Inference loop
+
+---
+
+## Tensor Requirements
+
+Implement a simple Tensor class.
+
+Minimum features:
+
+```cpp
+struct Tensor {
+    std::vector<float> data;
+    std::vector<float> grad;
+    std::vector<int> shape;
+};
+```
+
+For the first version, manual indexing is acceptable.
+
+You do not need a full automatic differentiation engine.
+
+Manual forward/backward is acceptable and probably clearer.
+
+However, every trainable parameter must have:
+
+- data
+- grad
+- shape
+
+Every training step must:
+
+1. Zero gradients.
+2. Run forward pass.
+3. Compute loss.
+4. Run backward pass.
+5. Update parameters.
+
+---
+
+## Optimiser
+
+Use AdamW.
+
+Parameters:
+
+```text
+learning_rate = 0.0003
+beta1         = 0.9
+beta2         = 0.999
+epsilon       = 1e-8
+weight_decay  = 0.01
+```
+
+For each parameter:
+
+```text
+m = beta1 * m + (1 - beta1) * grad
+v = beta2 * v + (1 - beta2) * grad^2
+
+m_hat = m / (1 - beta1^step)
+v_hat = v / (1 - beta2^step)
+
+param -= learning_rate * (m_hat / (sqrt(v_hat) + epsilon) + weight_decay * param)
+```
+
+Do not apply weight decay to:
+
+- LayerNorm gamma
+- LayerNorm beta
+- Bias parameters
+
+---
+
+## Gradient Clipping
+
+Use global gradient norm clipping.
+
+```text
+max_grad_norm = 1.0
+```
+
+Compute:
+
+```text
+global_norm = sqrt(sum(all_gradients^2))
+```
+
+If:
+
+```text
+global_norm > max_grad_norm
+```
+
+Scale every gradient by:
+
+```text
+max_grad_norm / global_norm
+```
+
+This helps prevent unstable training.
+
+---
+
+## Weight Initialisation
+
+Use:
+
+```text
+normal mean 0, std 0.02
+```
+
+For linear layers:
+
+```text
+W ~ normal(0, 0.02)
+b = 0
+```
+
+For LayerNorm:
+
+```text
+gamma = 1
+beta = 0
+```
+
+For embeddings:
+
+```text
+embedding ~ normal(0, 0.02)
+```
+
+Use a fixed random seed for reproducibility.
+
+---
+
+## Data Loading
+
+Input:
+
+- One or more UTF-8 text files.
+- For byte-level tokenisation, load as bytes.
+- Convert each byte to token ID 0-255.
+
+Training samples:
+
+For a token array:
+
+```text
+tokens[0...N-1]
+```
+
+Randomly choose start index:
+
+```text
+start between 0 and N - context_length - 1
+```
+
+Input:
+
+```text
+x = tokens[start : start + context_length]
+```
+
+Target:
+
+```text
+y = tokens[start + 1 : start + context_length + 1]
+```
+
+Batch:
+
+```text
+x_batch[batch_size][context_length]
+y_batch[batch_size][context_length]
+```
+
+---
+
+## Train / Validation Split
+
+Split token stream into:
+
+```text
+90% train
+10% validation
+```
+
+Every fixed number of steps, compute validation loss.
+
+Example:
+
+```text
+eval_interval = 500 steps
+eval_batches  = 20
+```
+
+Track:
+
+- Training loss
+- Validation loss
+- Perplexity
+
+Perplexity:
+
+```text
+perplexity = exp(loss)
+```
+
+---
+
+## Sanity Tests
+
+These tests are essential.
+
+### Test 1: Tiny overfit
+
+Training text:
+
+```text
+hello hello hello hello
+```
+
+The model should overfit this very quickly.
+
+Expected result:
+
+- Loss drops significantly.
+- Generated text resembles repeated `hello`.
+
+If this fails, the model is broken.
+
+### Test 2: Alternating pattern
+
+Training text:
+
+```text
+abababababababababababab
+```
+
+Expected generation from prompt `a`:
+
+```text
+babababa...
+```
+
+If this fails, the training loop, target alignment, or sampling may be broken.
+
+### Test 3: Memorisation
+
+Training text:
+
+```text
+the cat sat on the mat.
+the cat sat on the mat.
+the cat sat on the mat.
+```
+
+Expected:
+
+- Loss should drop.
+- Generation should include recognisable fragments.
+
+### Test 4: Causal mask
+
+Create a test proving position `t` cannot attend to future position `t+1`.
+
+For all attention scores where `s > t`, ensure the softmax probability is exactly zero or effectively zero.
+
+### Test 5: Gradient check
+
+For one small linear layer, compare analytical gradients to finite-difference gradients.
+
+Finite difference:
+
+```text
+grad ≈ (loss(param + eps) - loss(param - eps)) / (2 * eps)
+```
+
+Use:
+
+```text
+eps = 1e-3
+```
+
+The gradients should be close.
+
+---
+
+## Inference
+
+Inference steps:
+
+1. Convert prompt text to token IDs.
+2. Keep only the last `context_length` tokens.
+3. Run model forward.
+4. Take logits from the final position.
+5. Apply temperature.
+6. Optionally apply top-k filtering.
+7. Sample next token.
+8. Append token.
+9. Repeat.
+
+Temperature:
+
+```text
+logits = logits / temperature
+```
+
+Suggested default:
+
+```text
+temperature = 0.8
+```
+
+Top-k sampling:
+
+```text
+top_k = 40
+```
+
+For byte-level vocab, top-k can be lower:
+
+```text
+top_k = 20
+```
+
+Avoid greedy argmax for creative generation. It often loops.
+
+---
+
+## Sampling
+
+Stable softmax sampling:
+
+1. Subtract max logit.
+2. Exponentiate.
+3. Normalise.
+4. Draw random number between 0 and 1.
+5. Select token by cumulative probability.
+
+Add options:
+
+```text
+--temperature 0.8
+--top-k 20
+--max-new-tokens 200
+```
+
+---
+
+## Checkpoints
+
+Save:
+
+- Model configuration
+- All trainable parameters
+- AdamW optimiser state
+- Training step
+- Random seed
+- Tokeniser type
+- Vocabulary info if not byte-level
+
+Use a simple binary format or JSON header plus binary weights.
+
+Recommended:
+
+```text
+checkpoint.bin
+```
+
+Include magic header:
+
+```text
+MICROGPT1
+```
+
+Then save:
+
+```text
+config
+parameter count
+for each parameter:
+    name length
+    name
+    shape length
+    shape
+    data length
+    data
+    adam m
+    adam v
+```
+
+Also save a human-readable config file:
+
+```text
+config.json
+```
+
+---
+
+## Command-Line Interface
+
+Implement these commands:
+
+```text
+microgpt train --input data.txt --checkpoint model.bin
+microgpt resume --input data.txt --checkpoint model.bin
+microgpt generate --checkpoint model.bin --prompt "Once upon a time"
+microgpt test
+```
+
+Training options:
+
+```text
+--steps 10000
+--batch-size 16
+--context 64
+--d-model 128
+--layers 2
+--heads 4
+--lr 0.0003
+--eval-interval 500
+--save-interval 1000
+```
+
+Generation options:
+
+```text
+--max-new-tokens 200
+--temperature 0.8
+--top-k 20
+```
+
+---
+
+## Important Failure Modes
+
+### Random characters forever
+
+Likely causes:
+
+- Target tokens are not shifted correctly.
+- Cross-entropy is wrong.
+- Softmax is unstable.
+- Gradients are not flowing.
+- Parameters are not being updated.
+- Learning rate is too high or too low.
+- Attention mask is wrong.
+- Model is too small for the data.
+- Data is too little or too noisy.
+
+### Loss does not decrease on tiny data
+
+The implementation is almost certainly broken.
+
+Do not train on large data until tiny overfit works.
+
+### Loss becomes NaN
+
+Likely causes:
+
+- Softmax overflow.
+- Division by zero.
+- LayerNorm variance bug.
+- Learning rate too high.
+- No gradient clipping.
+- Bad Adam implementation.
+
+### Generated output loops
+
+Likely causes:
+
+- Too little training data.
+- Greedy sampling.
+- Temperature too low.
+- Model collapsed to common tokens.
+- Context length too short.
+- Training loss still too high.
+
+---
+
+## What Counts as Success
+
+Stage 1 success:
+
+- Tiny overfit works.
+- Loss drops on simple repeated text.
+- Generation matches simple patterns.
+
+Stage 2 success:
+
+- Training on a small custom corpus gives recognisable words.
+- Generated text contains plausible fragments.
+- Validation loss decreases.
+
+Stage 3 success:
+
+- Training on several MB of text gives legible but imperfect prose.
+- Output has spelling, punctuation, and short-range structure.
+- It may still be repetitive or shallow.
+
+Do not expect real reasoning from this model.
+
+---
+
+## Suggested Training Data Sizes
+
+For byte-level modelling:
+
+```text
+10 KB     sanity tests only
+100 KB    simple memorisation and fragments
+1 MB      basic word-like generation
+10 MB     more legible text
+100 MB    better but expensive
+```
+
+A tiny model trained on tiny data will not behave like ChatGPT.
+
+The first practical goal is not intelligence. It is:
+
+```text
+Can the model learn the statistical structure of text well enough to generate legible continuations?
+```
+
+---
+
+## Development Strategy for Codex
+
+Do not ask Codex to implement the whole system at once.
+
+Use incremental prompts.
+
+### Prompt 1
+
+Implement a Tensor class and basic matrix multiplication tests.
+
+### Prompt 2
+
+Implement Linear layer with forward and backward pass. Include finite difference gradient test.
+
+### Prompt 3
+
+Implement stable softmax cross-entropy. Include tests.
+
+### Prompt 4
+
+Implement byte-level tokenizer and batch sampler.
+
+### Prompt 5
+
+Implement Embedding layer with backward pass.
+
+### Prompt 6
+
+Implement LayerNorm with backward pass and tests.
+
+### Prompt 7
+
+Implement GELU and feed-forward block.
+
+### Prompt 8
+
+Implement causal multi-head self-attention forward pass.
+
+### Prompt 9
+
+Implement attention backward pass and tests.
+
+### Prompt 10
+
+Implement transformer block and full model.
+
+### Prompt 11
+
+Implement AdamW, gradient clipping, and training loop.
+
+### Prompt 12
+
+Implement checkpoint save/load.
+
+### Prompt 13
+
+Implement generation with temperature and top-k sampling.
+
+### Prompt 14
+
+Run tiny overfit tests and fix bugs before moving on.
+
+---
+
+## Suggested File Structure
+
+```text
+src/
+  main.cpp
+  tensor.h
+  tensor.cpp
+  random.h
+  random.cpp
+  tokenizer.h
+  tokenizer.cpp
+  layers.h
+  layers.cpp
+  attention.h
+  attention.cpp
+  transformer.h
+  transformer.cpp
+  optimizer.h
+  optimizer.cpp
+  dataset.h
+  dataset.cpp
+  checkpoint.h
+  checkpoint.cpp
+  generate.h
+  generate.cpp
+  tests.h
+  tests.cpp
+```
+
+---
+
+## Implementation Notes
+
+Use `float` for parameters and activations.
+
+Use `double` for loss accumulation where convenient.
+
+Use plain C++17 or C++20.
+
+Avoid external dependencies for the first version.
+
+Optional later dependency:
+
+- Eigen
+- xtensor
+- oneDNN
+- CUDA
+- Metal
+- OpenCL
+
+But first prove the maths using simple CPU code.
+
+---
+
+## Practical Advice
+
+The model should be treated as a maths project first and a chatbot second.
+
+Do not judge it by generation quality until:
+
+- Tiny overfit works.
+- Validation loss decreases.
+- Checkpoint reload produces identical output.
+- Inference from the same seed is reproducible.
+
+If the model cannot overfit a tiny corpus, training on books for days will not help.
+
+The first milestone is correctness, not scale.
