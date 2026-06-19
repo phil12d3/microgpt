@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  cpu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build and run lab
+        run: make clean && make all && make test
+
+      - name: Run CLI smoke tests
+        run: make cli-test
+
+      - name: Strict warning build
+        run: make strict-test
+
+      - name: Sanitizer build
+        run: make sanitize-build

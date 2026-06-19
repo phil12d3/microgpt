@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>microgpt Acceleration</title>
+    <style>
+      :root {
+        --bg: #f7f8fa;
+        --panel: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6b7a;
+        --border: #d9dee7;
+        --accent: #0f766e;
+        --code-bg: #111827;
+        --code-text: #e5e7eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      main,
+      header {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.18;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        margin-top: 34px;
+        font-size: 1.35rem;
+      }
+
+      h3 {
+        margin-top: 22px;
+        font-size: 1.05rem;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+      }
+
+      code {
+        border-radius: 5px;
+        background: #eef1f5;
+        padding: 0.12rem 0.32rem;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 12px 0 0;
+        border-radius: 8px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 16px;
+      }
+
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p><a href="index.html">Back to docs index</a></p>
+      <h1>Acceleration Architecture</h1>
+      <p>
+        Hardware acceleration should keep the current CPU implementation as the
+        correctness reference while adding CUDA and Metal backends behind a
+        shared operation layer.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Why Add It</h2>
+        <p>
+          The assistant baseline showed that useful experiments need more
+          training throughput. Re-running the same CPU loop is too slow for
+          model-size and step-count sweeps.
+        </p>
+      </section>
+
+      <section>
+        <h2>Current Bottlenecks</h2>
+        <ul>
+          <li><code>SeqTensor</code> and <code>Parameter</code> own host-only <code>std::vector&lt;float&gt;</code> storage.</li>
+          <li>Attention softmax/value accumulation, loss, gradient clipping, and AdamW are still scalar host loops.</li>
+          <li>Forward and backward passes allocate many temporary vectors every step.</li>
+          <li>Evaluation repeats full forward passes on CPU batches.</li>
+          <li>Generation repeatedly recomputes the full context without a key/value cache.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Backend Shape</h2>
+        <p>
+          Add a backend abstraction first, then migrate operations behind it.
+          The public training and generation commands should select a backend
+          without changing checkpoint semantics.
+        </p>
+        <pre><code>./bin/mgpt train --backend cpu
+./bin/mgpt train --backend metal
+./bin/mgpt train --backend cuda</code></pre>
+        <p>
+          Build-time library selection should be automatic. On macOS,
+          <code>make BACKEND=metal</code> links
+          <code>Metal</code>, <code>Foundation</code>, and
+          <code>QuartzCore</code> frameworks. Use <code>make deps</code> to
+          check local backend availability. Requesting
+          <code>BACKEND=metal</code> on non-macOS platforms fails at build time
+          instead of silently compiling the CPU stub.
+        </p>
+        <pre><code>make BACKEND=metal all
+./bin/mgpt backends</code></pre>
+        <p>
+          Metal can now be selected and probed at runtime. Linear forward and
+          backward have first Metal kernels. CPU remains the reference backend,
+          and unsupported operations still fall back to CPU behavior.
+        </p>
+      </section>
+
+      <section>
+        <h2>Local Backend Support</h2>
+        <p>
+          The current development machine is an Apple Mac, so Metal is the only
+          hardware backend that can be tested locally. CUDA should remain in the
+          architecture, but it needs CI or a separate NVIDIA machine before it
+          can be treated as supported.
+        </p>
+        <p>
+          If <code>metallib</code> is unavailable, the first Metal backend
+          should use runtime source compilation through the Metal framework
+          rather than requiring an offline metallib build step.
+        </p>
+      </section>
+
+      <section>
+        <h2>Implementation Order</h2>
+        <ol>
+          <li>Add backend selection, capability reporting, and CPU parity tests.</li>
+          <li>Introduce backend-owned tensor buffers with explicit host/device synchronization.</li>
+          <li>Move linear forward and backward to backend operations first.</li>
+          <li>Move general matrix multiply operations behind the same interface.</li>
+          <li>Add backend layernorm, GELU, softmax attention, loss, gradient clipping, and AdamW.</li>
+          <li>Add CUDA and Metal implementations once the operation interface is stable.</li>
+          <li>Add benchmarks that report tokens/sec, steps/sec, memory use, and eval runtime per backend.</li>
+        </ol>
+        <p>
+          Linear forward/backward and GELU forward/backward now route through
+          the backend operation interface and have lab parity coverage. First
+          Metal kernels exist for those operations and fall back to CPU when
+          Metal is unavailable.
+        </p>
+        <p>
+          Persistent Metal buffer primitives are available through
+          <code>BackendBuffer</code>, with lab coverage for upload/download
+          round trips. Linear layers now reuse cached Metal buffers across
+          calls and avoid re-uploading forward input and weights for the
+          matching backward pass. The full model does not yet keep every
+          activation and parameter resident across whole training steps.
+        </p>
+      </section>
+
+      <section>
+        <h2>Benchmarking</h2>
+        <p>
+          Use <code>bench</code> to compare backend selection, model config,
+          training throughput, and generation throughput.
+        </p>
+        <pre><code>./bin/mgpt bench
+
+make BACKEND=metal all
+./bin/mgpt bench --backend metal --train-steps 20 --gen-tokens 20
+
+./bin/mgpt bench --backend metal --resident-linear --iterations 1000 --rows 128 --in 128 --out 128
+./bin/mgpt bench --backend cpu --resident-linear --iterations 1000 --rows 128 --in 128 --out 128</code></pre>
+        <p>
+          The resident linear benchmark uploads inputs and parameters once,
+          batches repeated linear forward/backward work into a single Metal
+          command buffer, then downloads final outputs and gradients once. It is
+          intended to measure Metal kernel and buffer behavior without the full
+          training loop moving data between every operation.
+        </p>
+        <p>
+          Benchmark output includes <code>backend_uploads</code>,
+          <code>backend_upload_bytes</code>, <code>backend_downloads</code>,
+          and <code>backend_download_bytes</code>. Use those fields to separate
+          raw kernel performance from host/device synchronization overhead.
+        </p>
+        <p>
+          Feed-forward execution also has fused Metal paths for
+          <code>linear -&gt; GELU -&gt; linear</code> forward work and the matching
+          backward gradient work. These paths batch adjacent kernels into one
+          command buffer, and the intermediate activations stay in shared
+          backend buffers across the forward/backward boundary. Full training is
+          not resident end to end yet.
+        </p>
+      </section>
+
+      <section>
+        <h2>Correctness Rules</h2>
+        <ul>
+          <li>The CPU backend remains the reference implementation.</li>
+          <li>Each accelerated operation needs CPU parity tests with tolerances.</li>
+          <li>Metal-trained checkpoints must load on CPU and produce matching logits and greedy generation within documented tolerances.</li>
+          <li>Training should produce comparable loss curves for the same seed, config, and data.</li>
+          <li>Checkpoints should remain portable across backends.</li>
+          <li>Data parsing, tokenization, checkpoint metadata, and eval reports stay backend-independent.</li>
+        </ul>
+        <p>
+          The lab includes <code>cpu_metal_training_parity_test</code> and
+          <code>metal_checkpoint_cpu_generation_interop_test</code>. These are
+          no-ops on CPU-only machines and active regression tests when a Metal
+          runtime device is visible.
+        </p>
+        <p>
+          The lab also includes <code>backend_gelu_op_test</code>,
+          <code>backend_layernorm_op_test</code>,
+          <code>backend_feedforward_forward_test</code>,
+          <code>backend_feedforward_backward_test</code>, and
+          <code>gradient_check_feedforward</code> to verify activation,
+          normalization, and fused feed-forward backend parity and catch
+          feed-forward activation derivative regressions.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

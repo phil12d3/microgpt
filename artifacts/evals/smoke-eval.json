@@ -1,0 +1,39 @@
+{
+  "type": "microgpt_eval_report",
+  "started_at": "2026-06-18T18:54:40Z",
+  "ended_at": "2026-06-18T18:54:40Z",
+  "duration_seconds": 0.0251725,
+  "command": "eval --checkpoint artifacts/checkpoints/model-200.bin --input artifacts/datasets/data.txt --max-examples 3 --max-new-tokens 20 --match contains --greedy --hide-failures --output artifacts/evals/smoke-eval.json",
+  "checkpoint": "artifacts/checkpoints/model-200.bin",
+  "input": "artifacts/datasets/data.txt",
+  "match": "contains",
+  "max_new_tokens": 20,
+  "temperature": 0.2,
+  "top_k": 1,
+  "examples": 3,
+  "correct": 0,
+  "accuracy": 0,
+  "cases": [
+    {
+      "index": 1,
+      "correct": false,
+      "prompt": "What is the capital of France?",
+      "expected": "Paris.",
+      "actual": ""
+    },
+    {
+      "index": 2,
+      "correct": false,
+      "prompt": "Return JSON with key answer and value 42.",
+      "expected": "{\"answer\":42}",
+      "actual": ""
+    },
+    {
+      "index": 3,
+      "correct": false,
+      "prompt": "What is 2+2?",
+      "expected": "4",
+      "actual": ""
+    }
+  ]
+}

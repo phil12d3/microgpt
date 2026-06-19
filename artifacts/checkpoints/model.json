@@ -1,0 +1,17 @@
+{
+  "magic": "MICROGPT1",
+  "step": 1500,
+  "vocab_size": 260,
+  "context_length": 32,
+  "d_model": 32,
+  "num_layers": 1,
+  "num_heads": 4,
+  "d_ff": 64,
+  "batch_size": 2,
+  "learning_rate": 0.001,
+  "beta1": 0.9,
+  "beta2": 0.999,
+  "adam_eps": 1e-08,
+  "weight_decay": 0.01,
+  "max_grad_norm": 1
+}

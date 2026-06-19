@@ -1,0 +1,26 @@
+{
+  "type": "microgpt_eval_report",
+  "started_at": "2026-06-18T23:20:58Z",
+  "ended_at": "2026-06-18T23:20:58Z",
+  "duration_seconds": 0.0691852,
+  "command": "eval --backend metal --checkpoint artifacts/checkpoints/assistant-seed.bin --input artifacts/datasets/assistant/val.txt --max-examples 1 --max-new-tokens 8 --match contains --greedy --hide-failures --output artifacts/evals/metal-linear-kernel-smoke.json",
+  "backend": "metal",
+  "checkpoint": "artifacts/checkpoints/assistant-seed.bin",
+  "input": "artifacts/datasets/assistant/val.txt",
+  "match": "contains",
+  "max_new_tokens": 8,
+  "temperature": 0.2,
+  "top_k": 1,
+  "examples": 1,
+  "correct": 0,
+  "accuracy": 0,
+  "cases": [
+    {
+      "index": 1,
+      "correct": false,
+      "prompt": "Summarize in four words: Training improves when data is clean and consistent.",
+      "expected": "Clean consistent data helps.",
+      "actual": "tististi"
+    }
+  ]
+}

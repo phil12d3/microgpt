@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>microgpt Public API</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f7f8fa;
+        color: #1f2933;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+      h1, h2 {
+        margin: 0;
+        line-height: 1.18;
+      }
+      h2 {
+        margin-top: 32px;
+      }
+      p, li {
+        color: #5f6b7a;
+      }
+      code {
+        border-radius: 5px;
+        background: #eef1f5;
+        padding: 0.12rem 0.32rem;
+      }
+      pre {
+        overflow-x: auto;
+        border-radius: 8px;
+        background: #111827;
+        color: #e5e7eb;
+        padding: 16px;
+      }
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Public API</h1>
+      <p>
+        The supported embedding boundaries are <code>include/microgpt/api.hpp</code>
+        for C++ and <code>include/microgpt/api_c.h</code> for C. Application
+        code should prefer these facades over CLI-specific headers.
+      </p>
+
+      <h2>Current Surface</h2>
+      <ul>
+        <li><code>microgpt::api::TrainingOptions</code> configures a small training run.</li>
+        <li><code>microgpt::api::GenerationOptions</code> configures generation.</li>
+        <li><code>microgpt::api::ModelHandle</code> owns a loaded model, optimizer state, and checkpoint step.</li>
+        <li><code>microgpt::api::load_model</code> loads a checkpoint with a selected backend.</li>
+        <li><code>microgpt::api::generate</code> runs text generation from a loaded handle.</li>
+        <li><code>microgpt::api::train_text_file</code> trains from a byte/text file and writes a checkpoint.</li>
+      </ul>
+
+      <h2>Example</h2>
+      <pre><code>#include "microgpt/api.hpp"
+
+int main() {
+  auto model = microgpt::api::load_model("model.bin");
+  microgpt::api::GenerationOptions options;
+  options.max_new_tokens = 16;
+  options.top_k = 1;
+  std::string text = microgpt::api::generate(model, "Hello", options);
+}</code></pre>
+
+      <p>
+        The build includes <code>examples/embed_api.cpp</code> as
+        <code>bin/embed_api_example</code> so this public header is compiled by
+        the normal build.
+      </p>
+
+      <h2>C API</h2>
+      <p>
+        The C API exposes an opaque <code>microgpt_model</code>, checkpoint
+        loading, generation, owned string cleanup, and
+        <code>microgpt_last_error</code> for exception-free error reporting.
+      </p>
+      <pre><code>#include "microgpt/api_c.h"
+
+microgpt_model* model = microgpt_load_model("model.bin", "cpu");
+microgpt_generation_options options = microgpt_default_generation_options();
+char* text = microgpt_generate_text(model, "Hello", options);
+microgpt_free_string(text);
+microgpt_free_model(model);</code></pre>
+      <p>
+        The normal build creates <code>bin/libmicrogpt.a</code> and compiles
+        <code>examples/embed_c.c</code> as <code>bin/embed_c_example</code>.
+      </p>
+
+      <h2>Not Stable Yet</h2>
+      <p>
+        This is the first public API boundary, not a long-term ABI promise.
+        The C API is the preferred direction for future stable embedding, while
+        the C++ API remains the preferred source-level integration point.
+      </p>
+    </main>
+  </body>
+</html>

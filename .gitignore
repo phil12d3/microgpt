@@ -1,0 +1,11 @@
+.DS_Store
+bin/*
+artifacts/*
+!artifacts/.gitkeep
+!artifacts/datasets/
+!artifacts/datasets/.gitkeep
+!artifacts/checkpoints/
+!artifacts/checkpoints/.gitkeep
+!artifacts/evals/
+!artifacts/evals/.gitkeep
+*.bin

@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>microgpt CLI Options</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f8fa;
+        --panel: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6b7a;
+        --border: #d9dee7;
+        --accent: #0f766e;
+        --accent-soft: #e5f4f2;
+        --code-bg: #111827;
+        --code-text: #e5e7eb;
+        --warn-bg: #fff7ed;
+        --warn-border: #fed7aa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      header {
+        border-bottom: 1px solid var(--border);
+        background: var(--panel);
+      }
+
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.18;
+      }
+
+      h1 {
+        font-size: 2rem;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin-top: 34px;
+        padding-top: 4px;
+        font-size: 1.35rem;
+      }
+
+      h3 {
+        margin-top: 22px;
+        font-size: 1.05rem;
+      }
+
+      p {
+        margin: 10px 0 0;
+        color: var(--muted);
+      }
+
+      code {
+        border-radius: 5px;
+        background: #eef1f5;
+        color: #111827;
+        padding: 0.12rem 0.32rem;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 12px 0 0;
+        border-radius: 8px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 16px;
+      }
+
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      nav a {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--panel);
+        color: var(--text);
+        padding: 7px 10px;
+        text-decoration: none;
+        font-size: 0.94rem;
+      }
+
+      nav a:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .card,
+      .note {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 18px;
+      }
+
+      .note {
+        border-color: var(--warn-border);
+        background: var(--warn-bg);
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 5px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        padding: 2px 7px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      table {
+        width: 100%;
+        margin-top: 14px;
+        border-collapse: collapse;
+        border: 1px solid var(--border);
+        background: var(--panel);
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--border);
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #eef1f5;
+        color: #334155;
+        font-size: 0.86rem;
+      }
+
+      td:nth-child(1),
+      td:nth-child(2),
+      td:nth-child(3) {
+        white-space: nowrap;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .footer {
+        padding-bottom: 44px;
+      }
+
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        table,
+        thead,
+        tbody,
+        th,
+        td,
+        tr {
+          display: block;
+        }
+
+        thead {
+          display: none;
+        }
+
+        tr {
+          border-bottom: 1px solid var(--border);
+          padding: 8px 0;
+        }
+
+        td {
+          border-bottom: 0;
+          padding: 6px 12px;
+          white-space: normal !important;
+        }
+
+        td::before {
+          display: block;
+          color: var(--muted);
+          font-size: 0.78rem;
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+
+        td:nth-child(1)::before {
+          content: "Option";
+        }
+
+        td:nth-child(2)::before {
+          content: "Commands";
+        }
+
+        td:nth-child(3)::before {
+          content: "Default";
+        }
+
+        td:nth-child(4)::before {
+          content: "Purpose";
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <span class="tag">Reference</span>
+        <h1>microgpt CLI Options</h1>
+        <p>
+          A local reference for the project executables. Use <code>./bin/mgpt</code>
+          for model operations, <code>./bin/lab</code> for lab checks, and
+          <code>./bin/chat</code> for interactive assistant-style use.
+        </p>
+        <nav aria-label="Page sections">
+          <a href="#commands">Commands</a>
+          <a href="#training">Training Options</a>
+          <a href="#generation">Generation Options</a>
+          <a href="#evaluation">Evaluation</a>
+          <a href="#validation">Validation</a>
+          <a href="#splitting">Splitting</a>
+          <a href="#import">Import</a>
+          <a href="#data">Data Generation</a>
+          <a href="#metadata">Metadata</a>
+          <a href="#backends">Backends</a>
+          <a href="#examples">Examples</a>
+          <a href="#tips">Practical Tips</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap footer">
+      <section id="commands">
+        <h2>Commands</h2>
+        <div class="grid">
+          <article class="card">
+            <h3><code>train</code></h3>
+            <p>
+              Starts a new model from random weights and trains it from an input
+              text file. Existing checkpoint files with the same name are
+              replaced.
+            </p>
+            <pre><code>./bin/mgpt train --input data.txt --checkpoint model.bin [options]</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>resume</code></h3>
+            <p>
+              Loads an existing checkpoint, keeps its architecture and optimizer
+              state, then continues training for more steps.
+            </p>
+            <pre><code>./bin/mgpt resume --input data.txt --checkpoint model.bin [options]</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>generate</code></h3>
+            <p>
+              Loads a checkpoint and samples new text from a prompt. Token
+              progress is printed to stderr, and generated text is printed to
+              stdout.
+            </p>
+            <pre><code>./bin/mgpt generate --checkpoint model.bin --prompt "text" [options]</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>lab</code></h3>
+            <p>
+              Runs built-in sanity checks for gradients, causal masking, and
+              simple training behavior. The lab also covers backend parity and
+              IO/tokenizer safety contracts.
+            </p>
+            <pre><code>./bin/lab</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>cli-test</code></h3>
+            <p>
+              Runs command-level smoke tests for data generation, validation,
+              splitting, JSONL import, training, generation, eval reports,
+              artifact listing, and expected failure paths.
+            </p>
+            <pre><code>make cli-test</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>eval</code></h3>
+            <p>
+              Generates answers for instruction-format examples and reports
+              exact-match accuracy. Pass <code>--output</code> to write a JSON
+              report under <code>artifacts/evals/</code>.
+            </p>
+            <pre><code>./bin/mgpt eval --checkpoint model.bin --input eval.txt [options]</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>make-arithmetic-data</code></h3>
+            <p>
+              Writes reproducible arithmetic instruction examples for controlled
+              training and evaluation experiments.
+            </p>
+            <pre><code>./bin/mgpt make-arithmetic-data --output data.txt [options]</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>validate-data</code></h3>
+            <p>
+              Checks instruction-format examples, reports counts and length
+              stats, and returns a nonzero status for malformed data.
+            </p>
+            <pre><code>./bin/mgpt validate-data --input data.txt</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>split-data</code></h3>
+            <p>
+              Shuffles instruction examples with a seed and writes explicit
+              train and validation files.
+            </p>
+            <pre><code>./bin/mgpt split-data --input data.txt --train train.txt --val val.txt [options]</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>import-jsonl</code></h3>
+            <p>
+              Converts JSONL records with <code>user</code> and
+              <code>assistant</code> fields into instruction-format examples.
+            </p>
+            <pre><code>./bin/mgpt import-jsonl --input pairs.jsonl --output data.txt</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>list-artifacts</code></h3>
+            <p>Lists generated artifact files and sizes.</p>
+            <pre><code>./bin/mgpt list-artifacts --root artifacts</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>clean-artifacts</code></h3>
+            <p>Dry-runs artifact cleanup by default. Add <code>--yes</code> to delete files.</p>
+            <pre><code>./bin/mgpt clean-artifacts --root artifacts --yes</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>backends</code></h3>
+            <p>Reports compiled and runtime backend availability.</p>
+            <pre><code>./bin/mgpt backends</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>bench</code></h3>
+            <p>Runs a small synthetic training/generation benchmark or an operation-level resident linear benchmark.</p>
+            <pre><code>./bin/mgpt bench --backend cpu
+./bin/mgpt bench --backend metal --resident-linear --iterations 1000 --rows 128 --in 128 --out 128</code></pre>
+          </article>
+        </div>
+      </section>
+
+      <section id="training">
+        <h2>Training Options</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Commands</th>
+              <th>Default</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--input PATH</code></td>
+              <td><code>train</code>, <code>resume</code></td>
+              <td>Required</td>
+              <td>Text file used as the training corpus.</td>
+            </tr>
+            <tr>
+              <td><code>--val-input PATH</code></td>
+              <td><code>train</code>, <code>resume</code></td>
+              <td>Automatic 90/10 split</td>
+              <td>Explicit validation file. When provided, all of <code>--input</code> is used for training.</td>
+            </tr>
+            <tr>
+              <td><code>--checkpoint PATH</code></td>
+              <td>All except <code>test</code></td>
+              <td><code>checkpoint.bin</code> for training, required for generation</td>
+              <td>Binary model checkpoint to write, resume, or load.</td>
+            </tr>
+            <tr>
+              <td><code>--steps N</code></td>
+              <td><code>train</code>, <code>resume</code></td>
+              <td><code>1000</code></td>
+              <td>Number of optimizer steps to run in this invocation.</td>
+            </tr>
+            <tr>
+              <td><code>--context N</code></td>
+              <td><code>train</code></td>
+              <td><code>64</code></td>
+              <td>Sequence length in tokens. Smaller corpora need smaller context sizes.</td>
+            </tr>
+            <tr>
+              <td><code>--d-model N</code></td>
+              <td><code>train</code></td>
+              <td><code>128</code></td>
+              <td>Transformer hidden width. Larger values increase capacity and runtime.</td>
+            </tr>
+            <tr>
+              <td><code>--layers N</code></td>
+              <td><code>train</code></td>
+              <td><code>2</code></td>
+              <td>Number of transformer blocks.</td>
+            </tr>
+            <tr>
+              <td><code>--heads N</code></td>
+              <td><code>train</code></td>
+              <td><code>4</code></td>
+              <td>Attention heads per block. <code>--d-model</code> must be divisible by this value.</td>
+            </tr>
+            <tr>
+              <td><code>--ff N</code></td>
+              <td><code>train</code></td>
+              <td><code>512</code></td>
+              <td>Feed-forward hidden width inside each transformer block.</td>
+            </tr>
+            <tr>
+              <td><code>--batch-size N</code></td>
+              <td><code>train</code></td>
+              <td><code>16</code></td>
+              <td>Number of context windows sampled per training step.</td>
+            </tr>
+            <tr>
+              <td><code>--lr VALUE</code></td>
+              <td><code>train</code></td>
+              <td><code>0.0003</code></td>
+              <td>AdamW learning rate.</td>
+            </tr>
+            <tr>
+              <td><code>--eval-interval N</code></td>
+              <td><code>train</code></td>
+              <td><code>500</code></td>
+              <td>How often to compute validation loss and perplexity.</td>
+            </tr>
+            <tr>
+              <td><code>--save-interval N</code></td>
+              <td><code>train</code></td>
+              <td><code>1000</code></td>
+              <td>How often to write the checkpoint during training.</td>
+            </tr>
+            <tr>
+              <td><code>--progress-interval N</code></td>
+              <td><code>train</code>, <code>resume</code></td>
+              <td><code>10</code></td>
+              <td>How often to print progress lines.</td>
+            </tr>
+            <tr>
+              <td><code>--seed N</code></td>
+              <td><code>train</code></td>
+              <td><code>42</code></td>
+              <td>Random seed for initialization and batch sampling.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <h3>Resume behavior</h3>
+          <p>
+            <code>resume</code> loads model shape and optimizer state from the
+            checkpoint. Architecture flags such as <code>--context</code>,
+            <code>--d-model</code>, <code>--layers</code>, <code>--heads</code>,
+            and <code>--ff</code> are ignored after the checkpoint is loaded.
+          </p>
+        </div>
+      </section>
+
+      <section id="generation">
+        <h2>Generation Options</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Commands</th>
+              <th>Default</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--checkpoint PATH</code></td>
+              <td><code>generate</code></td>
+              <td>Required</td>
+              <td>Checkpoint to load before generating text.</td>
+            </tr>
+            <tr>
+              <td><code>--prompt TEXT</code></td>
+              <td><code>generate</code></td>
+              <td>Required unless <code>--prompt-token</code> is used</td>
+              <td>Text prompt to condition generation.</td>
+            </tr>
+            <tr>
+              <td><code>--prompt-token N</code></td>
+              <td><code>generate</code></td>
+              <td>None</td>
+              <td>Starts generation from a single byte token in the range <code>0..255</code>.</td>
+            </tr>
+            <tr>
+              <td><code>--mode instruction</code></td>
+              <td><code>generate</code></td>
+              <td><code>instruction</code></td>
+              <td>Wraps the prompt as <code>&lt;BOS&gt;&lt;USER&gt;\n... \n&lt;ASSISTANT&gt;\n</code>.</td>
+            </tr>
+            <tr>
+              <td><code>--mode raw</code></td>
+              <td><code>generate</code></td>
+              <td>None</td>
+              <td>Sends exactly the prompt text to the model without instruction tags.</td>
+            </tr>
+            <tr>
+              <td><code>--max-new-tokens N</code></td>
+              <td><code>generate</code></td>
+              <td><code>200</code></td>
+              <td>Maximum number of tokens to sample after the prompt.</td>
+            </tr>
+            <tr>
+              <td><code>--temperature VALUE</code></td>
+              <td><code>generate</code></td>
+              <td><code>0.8</code></td>
+              <td>Sampling randomness. Lower values are more deterministic; higher values are more varied.</td>
+            </tr>
+            <tr>
+              <td><code>--top-k N</code></td>
+              <td><code>generate</code></td>
+              <td><code>20</code></td>
+              <td>Samples only from the N highest-probability next tokens. Use <code>1</code> for greedy output.</td>
+            </tr>
+            <tr>
+              <td><code>--greedy</code></td>
+              <td><code>generate</code>, <code>eval</code></td>
+              <td>Off</td>
+              <td>Shortcut for greedy decoding. Equivalent to <code>--top-k 1</code>.</td>
+            </tr>
+            <tr>
+              <td><code>--quiet</code></td>
+              <td><code>generate</code></td>
+              <td>Off</td>
+              <td>Suppresses token progress logs so stdout contains only generated text.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="evaluation">
+        <h2>Evaluation Options</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Commands</th>
+              <th>Default</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--checkpoint PATH</code></td>
+              <td><code>eval</code></td>
+              <td>Required</td>
+              <td>Checkpoint to evaluate.</td>
+            </tr>
+            <tr>
+              <td><code>--input PATH</code></td>
+              <td><code>eval</code></td>
+              <td>Required</td>
+              <td>Instruction-format examples containing expected answers.</td>
+            </tr>
+            <tr>
+              <td><code>--max-examples N</code></td>
+              <td><code>eval</code></td>
+              <td>All examples</td>
+              <td>Limits evaluation to the first N parsed examples.</td>
+            </tr>
+            <tr>
+              <td><code>--hide-failures</code></td>
+              <td><code>eval</code></td>
+              <td>Off</td>
+              <td>Prints only the final accuracy summary.</td>
+            </tr>
+            <tr>
+              <td><code>--output PATH</code></td>
+              <td><code>eval</code></td>
+              <td>None</td>
+              <td>Writes a JSON report with settings, accuracy, and per-example results.</td>
+            </tr>
+            <tr>
+              <td><code>--match MODE</code></td>
+              <td><code>eval</code></td>
+              <td><code>exact</code></td>
+              <td>Scoring mode: <code>exact</code>, <code>prefix</code>, or <code>contains</code>.</td>
+            </tr>
+            <tr>
+              <td><code>--max-new-tokens</code>, <code>--temperature</code>, <code>--top-k</code>, <code>--greedy</code></td>
+              <td><code>eval</code></td>
+              <td><code>200</code>, <code>0.2</code>, <code>1</code></td>
+              <td>Controls generation during exact-match evaluation.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="validation">
+        <h2>Validation Options</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Commands</th>
+              <th>Default</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--input PATH</code></td>
+              <td><code>validate-data</code></td>
+              <td>Required</td>
+              <td>Instruction-format dataset to validate and count.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="splitting">
+        <h2>Splitting Options</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Commands</th>
+              <th>Default</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--input PATH</code></td>
+              <td><code>split-data</code></td>
+              <td>Required</td>
+              <td>Instruction-format dataset to split.</td>
+            </tr>
+            <tr>
+              <td><code>--train PATH</code></td>
+              <td><code>split-data</code></td>
+              <td>Required</td>
+              <td>Output path for shuffled training examples.</td>
+            </tr>
+            <tr>
+              <td><code>--val PATH</code></td>
+              <td><code>split-data</code></td>
+              <td>Required</td>
+              <td>Output path for held-out validation examples.</td>
+            </tr>
+            <tr>
+              <td><code>--ratio VALUE</code></td>
+              <td><code>split-data</code></td>
+              <td><code>0.9</code></td>
+              <td>Fraction of examples written to the training file.</td>
+            </tr>
+            <tr>
+              <td><code>--seed N</code></td>
+              <td><code>split-data</code></td>
+              <td><code>42</code></td>
+              <td>Deterministic shuffle seed.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="import">
+        <h2>Import Options</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Commands</th>
+              <th>Default</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--input PATH</code></td>
+              <td><code>import-jsonl</code></td>
+              <td>Required</td>
+              <td>JSONL file containing one object per line.</td>
+            </tr>
+            <tr>
+              <td><code>--output PATH</code></td>
+              <td><code>import-jsonl</code></td>
+              <td>Required</td>
+              <td>Instruction-format dataset to write.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="backends">
+        <h2>Backend Options</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Commands</th>
+              <th>Default</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--backend MODE</code></td>
+              <td><code>train</code>, <code>resume</code>, <code>generate</code>, <code>eval</code>, <code>chat</code></td>
+              <td><code>cpu</code></td>
+              <td>Selects <code>cpu</code>, <code>metal</code>, or <code>cuda</code>. Metal requires a binary built with <code>make BACKEND=metal</code>; incomplete operations use CPU fallback.</td>
+            </tr>
+          </tbody>
+        </table>
+        <pre><code>make deps
+make BACKEND=metal all
+./bin/mgpt backends
+./bin/mgpt train --backend metal --input data.txt --checkpoint model.bin</code></pre>
+      </section>
+
+      <section id="bench">
+        <h2>Benchmark Options</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Commands</th>
+              <th>Default</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--resident-linear</code></td>
+              <td><code>bench</code></td>
+              <td>off</td>
+              <td>Runs repeated linear forward/backward work with persistent backend buffers. Metal uploads once, batches the repeated work into one command buffer, and downloads once when runtime Metal is available.</td>
+            </tr>
+            <tr>
+              <td><code>--iterations N</code></td>
+              <td><code>bench --resident-linear</code></td>
+              <td><code>100</code></td>
+              <td>Number of resident linear forward/backward iterations to run.</td>
+            </tr>
+            <tr>
+              <td><code>--rows N</code>, <code>--in N</code>, <code>--out N</code></td>
+              <td><code>bench --resident-linear</code></td>
+              <td><code>128</code></td>
+              <td>Controls the synthetic linear operation shape.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Benchmark output includes backend upload/download counts and bytes.
+          Resident Metal should show a small fixed number of transfers; normal
+          model benchmarks currently expose the remaining synchronization cost.
+        </p>
+        <pre><code>make BACKEND=metal all
+./bin/mgpt bench --backend metal --resident-linear --iterations 1000 --rows 128 --in 128 --out 128
+./bin/mgpt bench --backend cpu --resident-linear --iterations 1000 --rows 128 --in 128 --out 128</code></pre>
+      </section>
+
+      <section id="metadata">
+        <h2>Checkpoint Metadata</h2>
+        <p>
+          Training writes a binary checkpoint and a JSON sidecar at
+          the same path with a <code>.json</code> extension. For example,
+          <code>model.bin</code> writes <code>model.json</code>. The binary file
+          is used for loading model weights. The JSON file is for inspection and
+          experiment tracking.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>step</code>, <code>optimizer_step</code></td>
+              <td>Final checkpoint step and AdamW optimizer step.</td>
+            </tr>
+            <tr>
+              <td><code>start_step</code>, <code>requested_steps</code></td>
+              <td>Resume start point and number of steps requested for that run.</td>
+            </tr>
+            <tr>
+              <td><code>command</code></td>
+              <td>The CLI command used for the final training run.</td>
+            </tr>
+            <tr>
+              <td><code>parameter_count</code>, <code>parameter_bytes_f32</code></td>
+              <td>Model size as parameter count and approximate float32 weight bytes.</td>
+            </tr>
+            <tr>
+              <td><code>train_input</code>, <code>val_input</code></td>
+              <td>Dataset paths used for training and validation.</td>
+            </tr>
+            <tr>
+              <td><code>validation_source</code></td>
+              <td><code>explicit</code> when <code>--val-input</code> was used, otherwise <code>auto_split</code>.</td>
+            </tr>
+            <tr>
+              <td><code>config</code></td>
+              <td>Model and optimizer hyperparameters stored for the checkpoint.</td>
+            </tr>
+            <tr>
+              <td><code>training_history</code></td>
+              <td>One entry per train or resume run, including timing, data paths, steps, command, model size, and final observed losses.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="data">
+        <h2>Data Generation Options</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Commands</th>
+              <th>Default</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--output PATH</code></td>
+              <td><code>make-arithmetic-data</code></td>
+              <td>Required</td>
+              <td>File to write generated instruction examples into.</td>
+            </tr>
+            <tr>
+              <td><code>--max-a N</code></td>
+              <td><code>make-arithmetic-data</code></td>
+              <td><code>19</code></td>
+              <td>Highest left operand included in generated addition prompts.</td>
+            </tr>
+            <tr>
+              <td><code>--max-b N</code></td>
+              <td><code>make-arithmetic-data</code></td>
+              <td><code>9</code></td>
+              <td>Highest right operand included in generated addition prompts.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="examples">
+        <h2>Examples</h2>
+
+        <h3>Train a small model for the current tiny dataset</h3>
+        <pre><code>./bin/mgpt train \
+  --input data.txt \
+  --checkpoint model.bin \
+  --steps 1000 \
+  --context 32 \
+  --d-model 32 \
+  --layers 1 \
+  --heads 4 \
+  --ff 64 \
+  --batch-size 2 \
+  --lr 0.001 \
+  --eval-interval 50 \
+  --save-interval 100 \
+  --progress-interval 10</code></pre>
+
+        <h3>Continue training an existing checkpoint</h3>
+        <pre><code>./bin/mgpt resume \
+  --input data.txt \
+  --checkpoint model.bin \
+  --steps 500 \
+  --progress-interval 10</code></pre>
+
+        <h3>Generate from instruction-formatted data</h3>
+        <pre><code>./bin/mgpt generate \
+  --checkpoint model.bin \
+  --prompt "What is 2+2?" \
+  --mode instruction \
+  --max-new-tokens 80 \
+  --temperature 0.2 \
+  --top-k 1</code></pre>
+
+        <h3>Hide token progress logs</h3>
+        <pre><code>./bin/mgpt generate \
+  --checkpoint model.bin \
+  --prompt "What is 2+2?" \
+  --mode instruction \
+  --max-new-tokens 80 \
+  --temperature 0.2 \
+  --top-k 1 \
+  --quiet</code></pre>
+
+        <h3>Train with an explicit validation file</h3>
+        <pre><code>./bin/mgpt train \
+  --input train.txt \
+  --val-input val.txt \
+  --checkpoint model.bin \
+  --steps 3000 \
+  --context 64 \
+  --d-model 64 \
+  --layers 2 \
+  --heads 4 \
+  --ff 128 \
+  --batch-size 8</code></pre>
+
+        <h3>Generate arithmetic experiment data</h3>
+        <pre><code>./bin/mgpt make-arithmetic-data \
+  --output arithmetic.txt \
+  --max-a 19 \
+  --max-b 9</code></pre>
+
+        <h3>Validate instruction data</h3>
+        <pre><code>./bin/mgpt validate-data \
+  --input arithmetic.txt</code></pre>
+
+        <h3>Split instruction data</h3>
+        <pre><code>./bin/mgpt split-data \
+  --input arithmetic.txt \
+  --train arithmetic-train.txt \
+  --val arithmetic-val.txt \
+  --ratio 0.9 \
+  --seed 42</code></pre>
+
+        <h3>Import JSONL assistant examples</h3>
+        <pre><code>./bin/mgpt import-jsonl \
+  --input pairs.jsonl \
+  --output assistant-data.txt</code></pre>
+
+        <h3>Evaluate exact-match accuracy</h3>
+        <pre><code>./bin/mgpt eval \
+  --checkpoint model.bin \
+  --input arithmetic.txt \
+  --max-new-tokens 20 \
+  --match exact \
+  --greedy \
+  --hide-failures \
+  --output artifacts/evals/arithmetic-eval.json</code></pre>
+      </section>
+
+      <section id="tips">
+        <h2>Practical Tips</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Match the prompt mode to the data</h3>
+            <p>
+              Use <code>--mode instruction</code> for files that look like
+              <code>&lt;BOS&gt;&lt;USER&gt;...&lt;ASSISTANT&gt;...</code>.
+              Use <code>--mode raw</code> for plain continuation text.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Small data limits output quality</h3>
+            <p>
+              A few hundred bytes can demonstrate memorization, but it cannot
+              teach broad question answering. More examples are needed for
+              useful instruction behavior.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Watch both losses</h3>
+            <p>
+              Falling train loss means the model is fitting the corpus. Rising
+              validation loss means it is memorizing rather than generalizing.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Use greedy output for checks</h3>
+            <p>
+              When testing whether a tiny model learned a specific example, use
+              <code>--temperature 0.2 --top-k 1</code> to reduce randomness.
+            </p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

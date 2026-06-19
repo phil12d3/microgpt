@@ -1,0 +1,49 @@
+{
+  "magic": "MICROGPT1",
+  "checkpoint": "artifacts/checkpoints/assistant-script-smoke.bin",
+  "step": 1,
+  "optimizer_step": 1,
+  "parameter_count": 108804,
+  "parameter_bytes_f32": 435216,
+  "start_step": 0,
+  "requested_steps": 1,
+  "command": "train --input artifacts/datasets/assistant/train.txt --val-input artifacts/datasets/assistant/val.txt --checkpoint artifacts/checkpoints/assistant-script-smoke.bin --steps 1 --context 128 --d-model 64 --layers 2 --heads 4 --ff 128 --batch-size 8 --lr 0.0008 --eval-interval 1 --save-interval 1 --progress-interval 1",
+  "train_input": "artifacts/datasets/assistant/train.txt",
+  "val_input": "artifacts/datasets/assistant/val.txt",
+  "validation_source": "explicit",
+  "config": {
+    "vocab_size": 260,
+    "context_length": 128,
+    "d_model": 64,
+    "num_layers": 2,
+    "num_heads": 4,
+    "d_ff": 128,
+    "batch_size": 8,
+    "learning_rate": 0.0008,
+    "beta1": 0.9,
+    "beta2": 0.999,
+    "adam_eps": 1e-08,
+    "weight_decay": 0.01,
+    "max_grad_norm": 1
+  },
+  "training_history": [
+    {
+      "started_at": "2026-06-18T19:10:53Z",
+      "ended_at": "2026-06-18T19:10:54Z",
+      "duration_seconds": 0.841464,
+      "start_step": 0,
+      "end_step": 1,
+      "requested_steps": 1,
+      "command": "train --input artifacts/datasets/assistant/train.txt --val-input artifacts/datasets/assistant/val.txt --checkpoint artifacts/checkpoints/assistant-script-smoke.bin --steps 1 --context 128 --d-model 64 --layers 2 --heads 4 --ff 128 --batch-size 8 --lr 0.0008 --eval-interval 1 --save-interval 1 --progress-interval 1",
+      "train_input": "artifacts/datasets/assistant/train.txt",
+      "val_input": "artifacts/datasets/assistant/val.txt",
+      "validation_source": "explicit",
+      "parameter_count": 108804,
+      "parameter_bytes_f32": 435216,
+      "last_train_loss": 5.57641,
+      "last_average_loss": 5.57641,
+      "last_val_loss": 5.45515,
+      "has_validation": true
+    }
+  ]
+}

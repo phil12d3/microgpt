@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>microgpt Roadmap</title>
+    <style>
+      :root {
+        --bg: #f7f8fa;
+        --panel: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6b7a;
+        --border: #d9dee7;
+        --accent: #0f766e;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      main,
+      header {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.18;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        margin-top: 34px;
+        font-size: 1.35rem;
+      }
+
+      h3 {
+        font-size: 1.05rem;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 18px;
+      }
+
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p><a href="index.html">Back to docs index</a></p>
+      <h1>Roadmap</h1>
+      <p>
+        The project direction is a tiny assistant, supported by lab-style tasks
+        that keep training and generation behavior measurable.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Guiding Position</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Toy Lab</h3>
+            <p>
+              Controlled tasks such as arithmetic and formatting are used to
+              detect regressions, compare scaling runs, and confirm code changes
+              behave as expected.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Tiny Assistant</h3>
+            <p>
+              The useful end goal is assistant-like behavior: instruction
+              following, concise answers, formatting, and eventually context.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>Completed Foundations</h2>
+        <ul>
+          <li>Portable C++17 model, training, checkpointing, and generation.</li>
+          <li>Instruction-format tokenizer with special control tokens.</li>
+          <li>Generation prompt alignment fix and regression test.</li>
+          <li>Arithmetic data generation and exact-match evaluation.</li>
+          <li>Explicit validation file support.</li>
+          <li>Instruction dataset validation, splitting, and JSONL import.</li>
+          <li>Evaluation modes for exact, prefix, and contains matching.</li>
+          <li>Checkpoint metadata sidecars with dataset paths, command details, and config.</li>
+          <li>Checkpoint metadata history with model size, timing, and per-run data paths.</li>
+          <li>Reusable harness registry and CLI dispatcher.</li>
+          <li>Separate executables for <code>mgpt</code>, <code>lab</code>, and <code>chat</code>.</li>
+          <li>Core library split into concern-based headers with <code>microgpt.hpp</code> kept as an aggregate include.</li>
+          <li>Reusable chat harness in <code>include/microgpt/chat.hpp</code>.</li>
+          <li>Generated artifacts organized under <code>artifacts/</code>.</li>
+          <li>Static HTML documentation under <code>docs/</code>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Recommended Next Phase</h2>
+        <ol>
+          <li>Add a backend abstraction so CPU remains the reference while Metal and CUDA can be added cleanly.</li>
+          <li>Benchmark the current CPU path and use it as the baseline for accelerated backends.</li>
+          <li>Improve assistant single-turn memorization and validation behavior with controlled experiments.</li>
+          <li>Consider multi-turn session context after single-turn behavior is reliable.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Tradeoffs</h2>
+        <ul>
+          <li>More data improves assistant behavior only when the examples encode the desired behavior clearly.</li>
+          <li>Longer context enables richer prompts but slows training and increases data requirements.</li>
+          <li>A harness layer reduces CLI coupling, but it adds another integration surface to maintain.</li>
+          <li>Metal and CUDA can improve throughput, but they require strict CPU parity tests to avoid hiding correctness regressions.</li>
+          <li>Multi-turn context is useful, but it complicates prompt formatting and evaluation.</li>
+          <li>Exact-match tests are narrow but reliable; assistant-quality tests are broader but less crisp.</li>
+          <li>Keeping generated files organized makes experiments easier to compare, but it introduces retention and naming policy work.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+<BOS><USER>
+Summarize in four words: Training improves when data is clean and consistent.
+<ASSISTANT>
+Clean consistent data helps.
+<EOS>
+
+<BOS><USER>
+Classify sentiment as positive, neutral, or negative: The command finished.
+<ASSISTANT>
+neutral
+<EOS>
+
+<BOS><USER>
+Return JSON with key status and value ok.
+<ASSISTANT>
+{"status":"ok"}
+<EOS>
+
+<BOS><USER>
+Replace spaces with hyphens in: tiny assistant data.
+<ASSISTANT>
+tiny-assistant-data
+<EOS>
+
+<BOS><USER>
+Return only true or false: the moon is a star.
+<ASSISTANT>
+false
+<EOS>
+
+<BOS><USER>
+Return only the uppercase version of microgpt.
+<ASSISTANT>
+MICROGPT
+<EOS>
+
+<BOS><USER>
+Summarize in three words: The model learned from a small curated dataset.
+<ASSISTANT>
+Model learned dataset.
+<EOS>
+
+<BOS><USER>
+Answer with one sentence: What is validation data?
+<ASSISTANT>
+Validation data is held-out data used to measure how well a model generalizes.
+<EOS>
+
+<BOS><USER>
+Return only the missing word: Fire is ___.
+<ASSISTANT>
+hot
+<EOS>
+

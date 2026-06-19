@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>microgpt Artifacts</title>
+    <style>
+      :root {
+        --bg: #f7f8fa;
+        --panel: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6b7a;
+        --border: #d9dee7;
+        --accent: #0f766e;
+        --code-bg: #111827;
+        --code-text: #e5e7eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      main,
+      header {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        line-height: 1.18;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        margin-top: 34px;
+        font-size: 1.35rem;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+      }
+
+      code {
+        border-radius: 5px;
+        background: #eef1f5;
+        padding: 0.12rem 0.32rem;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 12px 0 0;
+        border-radius: 8px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 16px;
+      }
+
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p><a href="index.html">Back to docs index</a></p>
+      <h1>Artifacts</h1>
+      <p>
+        Generated datasets and checkpoints live under <code>artifacts/</code>
+        so experimental files do not accumulate in the repository root.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Layout</h2>
+        <ul>
+          <li><code>artifacts/datasets/</code> for generated or temporary training and validation files.</li>
+          <li><code>artifacts/checkpoints/</code> for generated model checkpoints and metadata sidecars.</li>
+          <li><code>artifacts/evals/</code> for generated evaluation reports.</li>
+          <li><code>sample_data/</code> for small curated examples that are intended to stay in git.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Checkpoint Files</h2>
+        <p>
+          The <code>.bin</code> file is the actual model checkpoint and is
+          required for loading, resuming, generating, evaluating, and chat.
+          The <code>.json</code> file is metadata only.
+        </p>
+        <p>
+          Metadata sidecars record config, model size, dataset paths, command
+          details, and a <code>training_history</code> entry for each training
+          or resume run that rewrites the same checkpoint path.
+        </p>
+      </section>
+
+      <section>
+        <h2>Evaluation Reports</h2>
+        <p>
+          Evaluation reports are optional JSON files written by
+          <code>eval --output</code>. They record the checkpoint, dataset,
+          scoring mode, generation settings, accuracy, and each evaluated case.
+        </p>
+        <pre><code>./bin/mgpt eval \
+  --checkpoint artifacts/checkpoints/model.bin \
+  --input artifacts/datasets/eval.txt \
+  --match exact \
+  --greedy \
+  --output artifacts/evals/model-eval.json</code></pre>
+      </section>
+
+      <section>
+        <h2>Example Paths</h2>
+        <pre><code>./bin/mgpt train \
+  --input sample_data/data.txt \
+  --checkpoint artifacts/checkpoints/model.bin \
+  --steps 1000
+
+./bin/chat --checkpoint artifacts/checkpoints/model.bin</code></pre>
+      </section>
+
+      <section>
+        <h2>Listing and Cleanup</h2>
+        <p>
+          Use <code>list-artifacts</code> to inspect generated files and
+          <code>clean-artifacts</code> to remove them. Cleanup is a dry run
+          unless <code>--yes</code> is passed.
+        </p>
+        <pre><code>./bin/mgpt list-artifacts --root artifacts
+
+./bin/mgpt clean-artifacts --root artifacts
+
+./bin/mgpt clean-artifacts --root artifacts --yes</code></pre>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>microgpt Harness</title>
+    <style>
+      :root {
+        --bg: #f7f8fa;
+        --panel: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6b7a;
+        --border: #d9dee7;
+        --accent: #0f766e;
+        --code-bg: #111827;
+        --code-text: #e5e7eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      main,
+      header {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        line-height: 1.18;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        margin-top: 34px;
+        font-size: 1.35rem;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+      }
+
+      code {
+        border-radius: 5px;
+        background: #eef1f5;
+        padding: 0.12rem 0.32rem;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 12px 0 0;
+        border-radius: 8px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 16px;
+      }
+
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 18px;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p><a href="index.html">Back to docs index</a></p>
+      <h1>Harness</h1>
+      <p>
+        The harness layer lets other codebases embed microgpt tools without
+        going through the CLI. The CLI is now just one consumer of the registry.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Headers</h2>
+        <div class="card">
+          <ul>
+            <li><code>include/microgpt/harness.hpp</code> for the tool registry and I/O wrapper.</li>
+            <li><code>include/microgpt/tools.hpp</code> as the composition header for built-in commands.</li>
+            <li><code>include/microgpt/cli_*.hpp</code> for command-specific reusable implementations.</li>
+            <li><code>include/microgpt.hpp</code> as the aggregate compatibility header for the core library.</li>
+            <li><code>include/microgpt/core.hpp</code>, <code>model.hpp</code>, <code>training.hpp</code>, <code>generation.hpp</code>, and related headers for concern-based embedding.</li>
+            <li><code>include/microgpt/chat.hpp</code> for the reusable interactive chat harness and single-turn prompt formatting.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section>
+        <h2>Embedding Example</h2>
+        <pre><code>#include "microgpt/harness.hpp"
+#include "microgpt/tools.hpp"
+
+int main() {
+  microgpt::HarnessRegistry registry;
+  microgpt::register_microgpt_tools(registry);
+  microgpt::HarnessIO io{std::cout, std::cerr};
+  return registry.run("validate-data", {"--input", "data.txt"}, io);
+}</code></pre>
+        <p>
+          A matching standalone example lives in <code>examples/embed_harness.cpp</code>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Embedding Choices</h2>
+        <ul>
+          <li>Use <code>include/microgpt/tools.hpp</code> when another program wants CLI-style tools such as training, evaluation, data validation, or artifact listing.</li>
+          <li>Use <code>include/microgpt/generation.hpp</code> with <code>checkpoint.hpp</code> when an application wants direct model loading and text generation.</li>
+          <li>Use <code>include/microgpt/chat.hpp</code> when an application wants the same single-turn chat prompt formatting as <code>bin/chat</code>.</li>
+          <li>Use the smaller concern headers instead of <code>include/microgpt.hpp</code> when embedding code only needs one layer of the system.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Custom Tools</h2>
+        <p>
+          Applications can register their own tools next to the built-ins. Each
+          tool receives arguments plus output and error streams, then returns a
+          process-style status code.
+        </p>
+        <pre><code>microgpt::HarnessRegistry registry;
+microgpt::register_microgpt_tools(registry);
+
+registry.register_tool("hello", [](const std::vector&lt;std::string&gt;&amp;, microgpt::HarnessIO&amp; io) {
+  io.out &lt;&lt; "hello from host app\n";
+  return 0;
+});</code></pre>
+      </section>
+
+      <section>
+        <h2>Current State</h2>
+        <ul>
+          <li>Built-in tools are available as reusable headers.</li>
+          <li>The CLI uses the same registry as embedders.</li>
+          <li>Command families are split into reusable headers under <code>include/microgpt/</code>.</li>
+          <li>A standalone embedding example is included under <code>examples/</code>.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

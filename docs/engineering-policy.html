@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>microgpt Engineering Policy</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f7f8fa;
+        color: #1f2933;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+      h1, h2 {
+        margin: 0;
+        line-height: 1.18;
+      }
+      h2 {
+        margin-top: 32px;
+      }
+      p, li {
+        color: #5f6b7a;
+      }
+      code {
+        border-radius: 5px;
+        background: #eef1f5;
+        padding: 0.12rem 0.32rem;
+      }
+      pre {
+        overflow-x: auto;
+        border-radius: 8px;
+        background: #111827;
+        color: #e5e7eb;
+        padding: 16px;
+      }
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Engineering Policy</h1>
+
+      <h2>Formatting</h2>
+      <p>
+        Source formatting is defined by <code>.clang-format</code>. The project
+        uses C++17, two-space indentation, and a 120-column limit.
+      </p>
+
+      <h2>Hardening Builds</h2>
+      <pre><code>make test
+make cli-test
+make strict-test
+make sanitize-build</code></pre>
+      <p>
+        <code>strict-test</code> treats warnings as errors.
+        <code>sanitize-build</code> compiles all targets with address and
+        undefined-behavior sanitizers.
+      </p>
+
+      <h2>Input Limits</h2>
+      <p>
+        File reads through <code>read_file_bytes</code> and
+        <code>read_file_text</code> are capped at 256 MiB. The byte tokenizer
+        requires <code>vocab_size &gt;= 256</code>.
+      </p>
+
+      <h2>Checkpoint Compatibility</h2>
+      <p>
+        Checkpoints use the <code>MICROGPT1</code> binary format and store CPU
+        float32 weights plus optimizer state. Backend-specific device buffers
+        are not serialized. A checkpoint trained with Metal must load and
+        generate on CPU; this is covered by
+        <code>metal_checkpoint_cpu_generation_interop_test</code>.
+      </p>
+
+      <h2>Header State</h2>
+      <p>
+        Most implementation currently remains header-only. Static state in
+        inline functions is allowed only for process-wide runtime caches such as
+        backend transfer counters or Metal runtime objects. New public
+        integration should use <code>microgpt/api.hpp</code> or
+        <code>microgpt/api_c.h</code> instead of internal headers.
+      </p>
+    </main>
+  </body>
+</html>

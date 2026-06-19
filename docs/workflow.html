@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>microgpt Experiment Workflow</title>
+    <style>
+      :root {
+        --bg: #f7f8fa;
+        --panel: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6b7a;
+        --border: #d9dee7;
+        --accent: #0f766e;
+        --code-bg: #111827;
+        --code-text: #e5e7eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      main,
+      header {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        line-height: 1.18;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        margin-top: 34px;
+        font-size: 1.35rem;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+      }
+
+      code {
+        border-radius: 5px;
+        background: #eef1f5;
+        padding: 0.12rem 0.32rem;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 12px 0 0;
+        border-radius: 8px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 16px;
+      }
+
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+
+      table {
+        width: 100%;
+        margin-top: 14px;
+        border-collapse: collapse;
+        background: var(--panel);
+      }
+
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 10px 12px;
+        text-align: left;
+      }
+
+      th {
+        background: #eef1f5;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p><a href="index.html">Back to docs index</a></p>
+      <h1>Experiment Workflow</h1>
+      <p>
+        Use a repeatable train/eval loop so changes in code, data, and model
+        size can be compared cleanly.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>0. Validate the Format Contract</h2>
+        <p>
+          Before training, run <code>validate-data</code> on the canonical
+          instruction file. This catches malformed markers, empty examples, and
+          structural drift before the model sees the data.
+        </p>
+      </section>
+
+      <section>
+        <h2>1. Generate and Split Data</h2>
+        <pre><code>./bin/mgpt make-arithmetic-data \
+  --output /private/tmp/microgpt-arithmetic.txt \
+  --max-a 12 \
+  --max-b 9
+
+./bin/mgpt validate-data \
+  --input /private/tmp/microgpt-arithmetic.txt
+
+./bin/mgpt split-data \
+  --input /private/tmp/microgpt-arithmetic.txt \
+  --train /private/tmp/microgpt-train-small.txt \
+  --val /private/tmp/microgpt-val-small.txt \
+  --ratio 0.9 \
+  --seed 42</code></pre>
+      </section>
+
+      <section>
+        <h2>2. Train With an Explicit Validation File</h2>
+        <pre><code>./bin/mgpt train \
+  --input /private/tmp/microgpt-train-small.txt \
+  --val-input /private/tmp/microgpt-val-small.txt \
+  --checkpoint /private/tmp/microgpt-baseline.bin \
+  --steps 3000 \
+  --context 64 \
+  --d-model 64 \
+  --layers 2 \
+  --heads 4 \
+  --ff 128 \
+  --batch-size 8 \
+  --lr 0.0008 \
+  --eval-interval 500 \
+  --save-interval 1000 \
+  --progress-interval 500</code></pre>
+      </section>
+
+      <section>
+        <h2>3. Evaluate Exact-Match Accuracy</h2>
+        <pre><code>./bin/mgpt eval \
+  --checkpoint /private/tmp/microgpt-baseline.bin \
+  --input /private/tmp/microgpt-train-small.txt \
+  --max-new-tokens 20 \
+  --match exact \
+  --greedy \
+  --hide-failures
+
+./bin/mgpt eval \
+  --checkpoint /private/tmp/microgpt-baseline.bin \
+  --input /private/tmp/microgpt-val-small.txt \
+  --max-new-tokens 20 \
+  --match exact \
+  --greedy \
+  --hide-failures</code></pre>
+        <p>
+          Use <code>--match exact</code> for arithmetic, JSON, and formatting
+          tasks. Use <code>prefix</code> or <code>contains</code> for assistant
+          examples where the generated answer may include extra useful text.
+        </p>
+        <p>
+          The round-trip tests exercise the same path end to end: canonical text
+          validation, JSONL import, and deterministic splitting.
+        </p>
+      </section>
+
+      <section>
+        <h2>Assistant Baseline Loop</h2>
+        <p>
+          Use the tracked assistant seed data when testing the tiny assistant
+          path. Keep generated files under <code>artifacts/</code>.
+        </p>
+        <pre><code>./scripts/train_assistant.sh</code></pre>
+        <p>
+          The script runs the full import, validation, split, train, and eval
+          pipeline. Use environment variables to override defaults, for example
+          <code>STEPS=500 ./scripts/train_assistant.sh</code> or
+          <code>ASSISTANT_BACKEND=metal ./scripts/train_assistant.sh</code>.
+        </p>
+        <pre><code>./bin/mgpt import-jsonl \
+  --input sample_data/assistant/seed.jsonl \
+  --output artifacts/datasets/assistant/all.txt
+
+./bin/mgpt split-data \
+  --input artifacts/datasets/assistant/all.txt \
+  --train artifacts/datasets/assistant/train.txt \
+  --val artifacts/datasets/assistant/val.txt \
+  --ratio 0.9 \
+  --seed 42
+
+./bin/mgpt train \
+  --input artifacts/datasets/assistant/train.txt \
+  --val-input artifacts/datasets/assistant/val.txt \
+  --checkpoint artifacts/checkpoints/assistant-seed.bin \
+  --steps 3000 \
+  --context 128 \
+  --d-model 64 \
+  --layers 2 \
+  --heads 4 \
+  --ff 128 \
+  --batch-size 8 \
+  --lr 0.0008 \
+  --eval-interval 500 \
+  --save-interval 1000 \
+  --progress-interval 500
+
+./bin/mgpt eval \
+  --checkpoint artifacts/checkpoints/assistant-seed.bin \
+  --input artifacts/datasets/assistant/val.txt \
+  --max-new-tokens 80 \
+  --match contains \
+  --greedy \
+  --output artifacts/evals/assistant-seed-val.json</code></pre>
+      </section>
+
+      <section>
+        <h2>Scaling Matrix</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Axis</th>
+              <th>Values</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Data range</td>
+              <td><code>9x9</code>, <code>19x9</code>, <code>49x9</code>, <code>99x9</code></td>
+            </tr>
+            <tr>
+              <td>Steps</td>
+              <td><code>1000</code>, <code>3000</code>, <code>6000</code>, <code>10000</code></td>
+            </tr>
+            <tr>
+              <td>Width</td>
+              <td><code>32</code>, <code>64</code>, <code>128</code></td>
+            </tr>
+            <tr>
+              <td>Layers</td>
+              <td><code>1</code>, <code>2</code>, <code>4</code></td>
+            </tr>
+            <tr>
+              <td>Context</td>
+              <td><code>32</code>, <code>64</code>, <code>128</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </body>
+</html>

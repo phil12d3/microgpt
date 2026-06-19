@@ -1,0 +1,81 @@
+{
+  "type": "microgpt_eval_report",
+  "started_at": "2026-06-18T19:23:59Z",
+  "ended_at": "2026-06-18T19:24:00Z",
+  "duration_seconds": 1.49243,
+  "command": "eval --checkpoint artifacts/checkpoints/assistant-seed.bin --input artifacts/datasets/assistant/val.txt --max-new-tokens 80 --match contains --greedy --output artifacts/evals/assistant-seed-val.json",
+  "checkpoint": "artifacts/checkpoints/assistant-seed.bin",
+  "input": "artifacts/datasets/assistant/val.txt",
+  "match": "contains",
+  "max_new_tokens": 80,
+  "temperature": 0.2,
+  "top_k": 1,
+  "examples": 9,
+  "correct": 0,
+  "accuracy": 0,
+  "cases": [
+    {
+      "index": 1,
+      "correct": false,
+      "prompt": "Summarize in four words: Training improves when data is clean and consistent.",
+      "expected": "Clean consistent data helps.",
+      "actual": "tistististiny po cely he spelos ngas the modelly m mes modelling t meais todat m"
+    },
+    {
+      "index": 2,
+      "correct": false,
+      "prompt": "Classify sentiment as positive, neutral, or negative: The command finished.",
+      "expected": "neutral",
+      "actual": "pecolorg sthe mode modell.bin\n<ASSISTANT>\ny con"
+    },
+    {
+      "index": 3,
+      "correct": false,
+      "prompt": "Return JSON with key status and value ok.",
+      "expected": "{\"status\":\"ok\"}",
+      "actual": "{\"count Conte and pdata: mblue t forrrrrrre iningaing tope: The sky contint?\n<ASSISTANT>"
+    },
+    {
+      "index": 4,
+      "correct": false,
+      "prompt": "Replace spaces with hyphens in: tiny assistant data.",
+      "expected": "tiny-assistant-data",
+      "actual": "sstistiven onn stativenskopoly tiven tionuen of pdely mestintiontiven s stin s p"
+    },
+    {
+      "index": 5,
+      "correct": false,
+      "prompt": "Return only true or false: the moon is a star.",
+      "expected": "false",
+      "actual": "contintinue"
+    },
+    {
+      "index": 6,
+      "correct": false,
+      "prompt": "Return only the uppercase version of microgpt.",
+      "expected": "MICROGPT",
+      "actual": "st\nsintive"
+    },
+    {
+      "index": 7,
+      "correct": false,
+      "prompt": "Summarize in three words: The model learned from a small curated dataset.",
+      "expected": "Model learned dataset.",
+      "actual": ""
+    },
+    {
+      "index": 8,
+      "correct": false,
+      "prompt": "Answer with one sentence: What is validation data?",
+      "expected": "Validation data is held-out data used to measure how well a model generalizes.",
+      "actual": "Thedat"
+    },
+    {
+      "index": 9,
+      "correct": false,
+      "prompt": "Return only the missing word: Fire is ___.",
+      "expected": "hot",
+      "actual": "gatin"
+    }
+  ]
+}

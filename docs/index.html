@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>microgpt Documentation</title>
+    <style>
+      :root {
+        --bg: #f7f8fa;
+        --panel: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6b7a;
+        --border: #d9dee7;
+        --accent: #0f766e;
+        --accent-soft: #e5f4f2;
+        --code-bg: #111827;
+        --code-text: #e5e7eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      header,
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      header {
+        padding-bottom: 18px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.18;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        margin-top: 34px;
+        font-size: 1.35rem;
+      }
+
+      h3 {
+        font-size: 1.05rem;
+      }
+
+      p {
+        margin: 10px 0 0;
+        color: var(--muted);
+      }
+
+      code {
+        border-radius: 5px;
+        background: #eef1f5;
+        padding: 0.12rem 0.32rem;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 12px 0 0;
+        border-radius: 8px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 16px;
+      }
+
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 5px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        padding: 2px 7px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 18px;
+      }
+
+      .card a {
+        color: var(--accent);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .card a:hover {
+        text-decoration: underline;
+      }
+
+      .steps {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .step {
+        border-left: 4px solid var(--accent);
+        background: var(--panel);
+        padding: 14px 16px;
+      }
+
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="tag">Overview</span>
+      <h1>microgpt Documentation</h1>
+      <p>
+        microgpt is moving toward a tiny assistant while keeping controlled lab
+        experiments for debugging training, generation, and evaluation behavior.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Documentation Map</h2>
+        <div class="grid">
+          <article class="card">
+            <h3><a href="cli-options.html">CLI Options</a></h3>
+            <p>
+              Commands and flags for training, resuming, generating, evaluating,
+              and generating arithmetic datasets.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3><a href="data-format.html">Data Format</a></h3>
+            <p>
+              The instruction example format, JSONL import direction, and how
+              single-turn data should be structured.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3><a href="workflow.html">Experiment Workflow</a></h3>
+            <p>
+              A repeatable loop for creating datasets, training checkpoints, and
+              measuring exact-match behavior.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3><a href="roadmap.html">Roadmap</a></h3>
+            <p>
+              Completed work, remaining decisions, and the path toward a tiny
+              assistant without losing the lab harness.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3><a href="harness.html">Harness</a></h3>
+            <p>
+              How to embed the reusable command registry and shared tool helpers
+              from other programs.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3><a href="public-api.html">Public API</a></h3>
+            <p>
+              The supported C++ facade for loading checkpoints, training from a
+              text file, and generating text from another application.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3><a href="engineering-policy.html">Engineering Policy</a></h3>
+            <p>
+              Formatting, hardening builds, input size limits, checkpoint
+              compatibility, and header-state rules.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3><a href="tiny-assistant.html">Tiny Assistant</a></h3>
+            <p>
+              The current assistant scope, deferred session context, and how to
+              judge early assistant quality.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3><a href="acceleration.html">Acceleration</a></h3>
+            <p>
+              Backend architecture for keeping CPU as the reference while adding
+              Metal and CUDA support.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3><a href="artifacts.html">Artifacts</a></h3>
+            <p>
+              Where generated datasets, checkpoints, metadata, and eval reports
+              should live.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>Current Direction</h2>
+        <div class="steps">
+          <div class="step">
+            <h3>1. Keep the lab harness</h3>
+            <p>
+              Arithmetic and synthetic tasks give clear pass/fail signals when
+              code changes affect training or generation.
+            </p>
+          </div>
+          <div class="step">
+            <h3>2. Build toward a tiny assistant</h3>
+            <p>
+              Assistant behavior needs curated instruction data, richer
+              evaluation, and eventually more context support.
+            </p>
+          </div>
+          <div class="step">
+            <h3>3. Document every feature as it lands</h3>
+            <p>
+              Code changes should be paired with updates under <code>docs/</code>
+              so usage, tradeoffs, and data expectations stay visible.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Quick Start</h2>
+        <pre><code>make test
+make cli-test
+make strict-test
+make sanitize-build
+./bin/mgpt make-arithmetic-data --output /private/tmp/microgpt-train.txt --max-a 9 --max-b 9
+./bin/mgpt train --input /private/tmp/microgpt-train.txt --checkpoint /private/tmp/microgpt.bin --steps 1000
+./bin/mgpt generate --checkpoint /private/tmp/microgpt.bin --prompt "What is 2+2?" --mode instruction --greedy --quiet</code></pre>
+        <p>
+          <code>strict-test</code> builds with warnings as errors.
+          <code>sanitize-build</code> compiles with address and
+          undefined-behavior sanitizers. <code>cli-test</code> exercises the
+          user-facing data, training, generation, eval, and negative-path
+          commands.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

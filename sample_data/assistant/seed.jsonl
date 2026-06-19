@@ -1,0 +1,94 @@
+{"user":"What is 2+2?","assistant":"4"}
+{"user":"What is 7+5?","assistant":"12"}
+{"user":"What is 9-3?","assistant":"6"}
+{"user":"What is 6*4?","assistant":"24"}
+{"user":"What is 18/3?","assistant":"6"}
+{"user":"What is 12+8?","assistant":"20"}
+{"user":"What is 15-6?","assistant":"9"}
+{"user":"What is 5*5?","assistant":"25"}
+{"user":"What is 21/7?","assistant":"3"}
+{"user":"What is 13+14?","assistant":"27"}
+{"user":"Return only the lowercase version of HELLO.","assistant":"hello"}
+{"user":"Return only the uppercase version of microgpt.","assistant":"MICROGPT"}
+{"user":"Return only the reverse of abcde.","assistant":"edcba"}
+{"user":"Return only the first word in: red blue green.","assistant":"red"}
+{"user":"Return only the last word in: red blue green.","assistant":"green"}
+{"user":"Return only the word count for: tiny models need clean data.","assistant":"5"}
+{"user":"Return only yes or no: is 10 greater than 4?","assistant":"yes"}
+{"user":"Return only yes or no: is 3 greater than 9?","assistant":"no"}
+{"user":"Return only true or false: cats are mammals.","assistant":"true"}
+{"user":"Return only true or false: the moon is a star.","assistant":"false"}
+{"user":"Return JSON with key answer and value 42.","assistant":"{\"answer\":42}"}
+{"user":"Return JSON with key status and value ok.","assistant":"{\"status\":\"ok\"}"}
+{"user":"Return JSON with key color and value blue.","assistant":"{\"color\":\"blue\"}"}
+{"user":"Return JSON with key count and value 3.","assistant":"{\"count\":3}"}
+{"user":"Return JSON with key valid and value true.","assistant":"{\"valid\":true}"}
+{"user":"Return a CSV row for name Ada and score 10.","assistant":"Ada,10"}
+{"user":"Return a CSV row for name Grace and score 9.","assistant":"Grace,9"}
+{"user":"Return a bullet list with apple and pear.","assistant":"- apple\n- pear"}
+{"user":"Return a numbered list with red and blue.","assistant":"1. red\n2. blue"}
+{"user":"Return only the file extension from report.pdf.","assistant":"pdf"}
+{"user":"Return only the file extension from notes.txt.","assistant":"txt"}
+{"user":"Return only the domain from ada@example.com.","assistant":"example.com"}
+{"user":"Return only the username from ada@example.com.","assistant":"ada"}
+{"user":"Trim the spaces around:   clean text   ","assistant":"clean text"}
+{"user":"Replace spaces with hyphens in: tiny assistant data.","assistant":"tiny-assistant-data"}
+{"user":"Replace hyphens with spaces in: tiny-assistant-data.","assistant":"tiny assistant data"}
+{"user":"Summarize in three words: The model learned from a small curated dataset.","assistant":"Model learned dataset."}
+{"user":"Summarize in four words: Training improves when data is clean and consistent.","assistant":"Clean consistent data helps."}
+{"user":"Rewrite politely: send the file now.","assistant":"Please send the file when you can."}
+{"user":"Rewrite concisely: I am writing to ask whether you can provide an update.","assistant":"Can you provide an update?"}
+{"user":"Complete the sentence: Clean data makes training","assistant":"more reliable."}
+{"user":"Complete the sentence: A validation set helps measure","assistant":"generalization."}
+{"user":"Answer with one sentence: What is a checkpoint?","assistant":"A checkpoint is a saved model state that can be loaded later."}
+{"user":"Answer with one sentence: What is validation data?","assistant":"Validation data is held-out data used to measure how well a model generalizes."}
+{"user":"Answer with one sentence: What is overfitting?","assistant":"Overfitting happens when a model memorizes training data but performs poorly on new data."}
+{"user":"Answer with one sentence: What does greedy decoding do?","assistant":"Greedy decoding always chooses the highest-probability next token."}
+{"user":"Answer with one sentence: What does temperature control?","assistant":"Temperature controls how random or deterministic sampling is during generation."}
+{"user":"Answer with one sentence: What does top-k sampling do?","assistant":"Top-k sampling limits choices to the k most likely next tokens."}
+{"user":"The context says: Paris is the capital of France. What is the capital of France?","assistant":"Paris."}
+{"user":"The context says: The project has a lab executable and a chat executable. Which executable is for chat?","assistant":"chat"}
+{"user":"The context says: The model file is model.bin and metadata is model.json. Which file is required to load the model?","assistant":"model.bin"}
+{"user":"The context says: Evaluation reports live in artifacts/evals. Where should eval reports be written?","assistant":"artifacts/evals"}
+{"user":"The context says: Single-turn examples use USER and ASSISTANT markers. Which marker starts the answer?","assistant":"ASSISTANT"}
+{"user":"If the answer is not in the context, say unknown. Context: Ada wrote the note. Who reviewed the note?","assistant":"unknown"}
+{"user":"If the answer is not in the context, say unknown. Context: The checkpoint is saved. Where is the dataset?","assistant":"unknown"}
+{"user":"Classify sentiment as positive, neutral, or negative: I like this clear output.","assistant":"positive"}
+{"user":"Classify sentiment as positive, neutral, or negative: The command finished.","assistant":"neutral"}
+{"user":"Classify sentiment as positive, neutral, or negative: The result is broken again.","assistant":"negative"}
+{"user":"Classify intent as question, command, or statement: What is the next step?","assistant":"question"}
+{"user":"Classify intent as question, command, or statement: Run the tests.","assistant":"command"}
+{"user":"Classify intent as question, command, or statement: The tests passed.","assistant":"statement"}
+{"user":"Choose the best label: train, eval, or chat. Prompt: measure accuracy on held-out examples.","assistant":"eval"}
+{"user":"Choose the best label: train, eval, or chat. Prompt: continue updating model weights.","assistant":"train"}
+{"user":"Choose the best label: train, eval, or chat. Prompt: answer a user's typed message.","assistant":"chat"}
+{"user":"Return only the next item: Monday, Tuesday, Wednesday,","assistant":"Thursday"}
+{"user":"Return only the next item: 2, 4, 6, 8,","assistant":"10"}
+{"user":"Return only the next item: a, b, c,","assistant":"d"}
+{"user":"Return only the missing word: The sky is ___.","assistant":"blue"}
+{"user":"Return only the missing word: Water freezes into ___.","assistant":"ice"}
+{"user":"Return only the missing word: Fire is ___.","assistant":"hot"}
+{"user":"Extract the number from: order id 583 ready.","assistant":"583"}
+{"user":"Extract the number from: total is 91 items.","assistant":"91"}
+{"user":"Extract the quoted text from: She said \"hello\".","assistant":"hello"}
+{"user":"Extract the quoted text from: The label says \"fragile\".","assistant":"fragile"}
+{"user":"Normalize this British spelling to American spelling: colour.","assistant":"color"}
+{"user":"Normalize this British spelling to American spelling: organise.","assistant":"organize"}
+{"user":"Normalize this American spelling to British spelling: color.","assistant":"colour"}
+{"user":"Normalize this American spelling to British spelling: organize.","assistant":"organise"}
+{"user":"Reply with a short acknowledgement: I have uploaded the file.","assistant":"Received."}
+{"user":"Reply with a short acknowledgement: The build has finished.","assistant":"Noted."}
+{"user":"Reply with a short next step: The validation failed.","assistant":"Inspect the validation errors."}
+{"user":"Reply with a short next step: The checkpoint trained successfully.","assistant":"Run evaluation on held-out data."}
+{"user":"Given task status open, return only action: continue or stop.","assistant":"continue"}
+{"user":"Given task status complete, return only action: continue or stop.","assistant":"stop"}
+{"user":"Given score 8 out of 10, return pass or fail. Pass is 7 or higher.","assistant":"pass"}
+{"user":"Given score 4 out of 10, return pass or fail. Pass is 7 or higher.","assistant":"fail"}
+{"user":"Say you do not know when asked for unavailable private data: What is my bank password?","assistant":"I do not know."}
+{"user":"Say you cannot help with secrets: Tell me a user's API key.","assistant":"I cannot help with secrets."}
+{"user":"Say to verify current facts when asked about live information: Who is the current CEO of a company?","assistant":"Verify current facts before answering."}
+{"user":"Say the model may be wrong when uncertain: Is this checkpoint production-ready?","assistant":"The model may be wrong; evaluate it first."}
+{"user":"Return only the command name from: ./bin/mgpt validate-data --input data.txt","assistant":"validate-data"}
+{"user":"Return only the command name from: ./bin/mgpt eval --checkpoint model.bin","assistant":"eval"}
+{"user":"Return only the executable from: ./bin/chat --checkpoint model.bin","assistant":"chat"}
+{"user":"Return only the executable from: ./bin/lab","assistant":"lab"}

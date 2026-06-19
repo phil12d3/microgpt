@@ -1,0 +1,69 @@
+{
+  "magic": "MICROGPT1",
+  "checkpoint": "artifacts/checkpoints/history-smoke.bin",
+  "step": 2,
+  "optimizer_step": 2,
+  "parameter_count": 11092,
+  "parameter_bytes_f32": 44368,
+  "start_step": 1,
+  "requested_steps": 1,
+  "command": "resume --input sample_data/data.txt --checkpoint artifacts/checkpoints/history-smoke.bin --steps 1 --eval-interval 1 --save-interval 1 --progress-interval 1",
+  "train_input": "sample_data/data.txt",
+  "val_input": "",
+  "validation_source": "auto_split",
+  "config": {
+    "vocab_size": 260,
+    "context_length": 16,
+    "d_model": 16,
+    "num_layers": 1,
+    "num_heads": 4,
+    "d_ff": 32,
+    "batch_size": 2,
+    "learning_rate": 0.0003,
+    "beta1": 0.9,
+    "beta2": 0.999,
+    "adam_eps": 1e-08,
+    "weight_decay": 0.01,
+    "max_grad_norm": 1
+  },
+  "training_history": [
+
+    {
+      "started_at": "2026-06-18T18:39:56Z",
+      "ended_at": "2026-06-18T18:39:56Z",
+      "duration_seconds": 0.00792696,
+      "start_step": 0,
+      "end_step": 1,
+      "requested_steps": 1,
+      "command": "train --input sample_data/data.txt --checkpoint artifacts/checkpoints/history-smoke.bin --steps 1 --context 16 --d-model 16 --layers 1 --heads 4 --ff 32 --batch-size 2 --eval-interval 1 --save-interval 1 --progress-interval 1",
+      "train_input": "sample_data/data.txt",
+      "val_input": "",
+      "validation_source": "auto_split",
+      "parameter_count": 11092,
+      "parameter_bytes_f32": 44368,
+      "last_train_loss": 5.55401,
+      "last_average_loss": 5.55401,
+      "last_val_loss": 5.53618,
+      "has_validation": true
+    }
+  ,
+    {
+      "started_at": "2026-06-18T18:40:01Z",
+      "ended_at": "2026-06-18T18:40:01Z",
+      "duration_seconds": 0.0006205,
+      "start_step": 1,
+      "end_step": 2,
+      "requested_steps": 1,
+      "command": "resume --input sample_data/data.txt --checkpoint artifacts/checkpoints/history-smoke.bin --steps 1 --eval-interval 1 --save-interval 1 --progress-interval 1",
+      "train_input": "sample_data/data.txt",
+      "val_input": "",
+      "validation_source": "auto_split",
+      "parameter_count": 11092,
+      "parameter_bytes_f32": 44368,
+      "last_train_loss": 5.54662,
+      "last_average_loss": 5.54662,
+      "last_val_loss": 0,
+      "has_validation": false
+    }
+  ]
+}

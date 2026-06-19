@@ -1,0 +1,89 @@
+{
+  "magic": "MICROGPT1",
+  "checkpoint": "artifacts/checkpoints/assistant-seed.bin",
+  "step": 3000,
+  "optimizer_step": 3000,
+  "parameter_count": 108804,
+  "parameter_bytes_f32": 435216,
+  "start_step": 0,
+  "requested_steps": 3000,
+  "command": "train --input artifacts/datasets/assistant/train.txt --val-input artifacts/datasets/assistant/val.txt --checkpoint artifacts/checkpoints/assistant-seed.bin --steps 3000 --context 128 --d-model 64 --layers 2 --heads 4 --ff 128 --batch-size 8 --lr 0.0008 --eval-interval 500 --save-interval 1000 --progress-interval 500",
+  "train_input": "artifacts/datasets/assistant/train.txt",
+  "val_input": "artifacts/datasets/assistant/val.txt",
+  "validation_source": "explicit",
+  "config": {
+    "vocab_size": 260,
+    "context_length": 128,
+    "d_model": 64,
+    "num_layers": 2,
+    "num_heads": 4,
+    "d_ff": 128,
+    "batch_size": 8,
+    "learning_rate": 0.0008,
+    "beta1": 0.9,
+    "beta2": 0.999,
+    "adam_eps": 1e-08,
+    "weight_decay": 0.01,
+    "max_grad_norm": 1
+  },
+  "training_history": [
+
+
+    {
+      "started_at": "2026-06-18T19:02:29Z",
+      "ended_at": "2026-06-18T19:07:03Z",
+      "duration_seconds": 274.319,
+      "start_step": 0,
+      "end_step": 3000,
+      "requested_steps": 3000,
+      "command": "train --input artifacts/datasets/assistant/train.txt --val-input artifacts/datasets/assistant/val.txt --checkpoint artifacts/checkpoints/assistant-seed.bin --steps 3000 --context 128 --d-model 64 --layers 2 --heads 4 --ff 128 --batch-size 8 --lr 0.0008 --eval-interval 500 --save-interval 1000 --progress-interval 500",
+      "train_input": "artifacts/datasets/assistant/train.txt",
+      "val_input": "artifacts/datasets/assistant/val.txt",
+      "validation_source": "explicit",
+      "parameter_count": 108804,
+      "parameter_bytes_f32": 435216,
+      "last_train_loss": 1.10147,
+      "last_average_loss": 1.1144,
+      "last_val_loss": 2.21137,
+      "has_validation": true
+    }
+  ,
+    {
+      "started_at": "2026-06-18T19:14:12Z",
+      "ended_at": "2026-06-18T19:18:47Z",
+      "duration_seconds": 275.102,
+      "start_step": 0,
+      "end_step": 3000,
+      "requested_steps": 3000,
+      "command": "train --input artifacts/datasets/assistant/train.txt --val-input artifacts/datasets/assistant/val.txt --checkpoint artifacts/checkpoints/assistant-seed.bin --steps 3000 --context 128 --d-model 64 --layers 2 --heads 4 --ff 128 --batch-size 8 --lr 0.0008 --eval-interval 500 --save-interval 1000 --progress-interval 500",
+      "train_input": "artifacts/datasets/assistant/train.txt",
+      "val_input": "artifacts/datasets/assistant/val.txt",
+      "validation_source": "explicit",
+      "parameter_count": 108804,
+      "parameter_bytes_f32": 435216,
+      "last_train_loss": 1.10147,
+      "last_average_loss": 1.1144,
+      "last_val_loss": 2.21137,
+      "has_validation": true
+    }
+  ,
+    {
+      "started_at": "2026-06-18T19:19:11Z",
+      "ended_at": "2026-06-18T19:23:50Z",
+      "duration_seconds": 279.441,
+      "start_step": 0,
+      "end_step": 3000,
+      "requested_steps": 3000,
+      "command": "train --input artifacts/datasets/assistant/train.txt --val-input artifacts/datasets/assistant/val.txt --checkpoint artifacts/checkpoints/assistant-seed.bin --steps 3000 --context 128 --d-model 64 --layers 2 --heads 4 --ff 128 --batch-size 8 --lr 0.0008 --eval-interval 500 --save-interval 1000 --progress-interval 500",
+      "train_input": "artifacts/datasets/assistant/train.txt",
+      "val_input": "artifacts/datasets/assistant/val.txt",
+      "validation_source": "explicit",
+      "parameter_count": 108804,
+      "parameter_bytes_f32": 435216,
+      "last_train_loss": 1.10147,
+      "last_average_loss": 1.1144,
+      "last_val_loss": 2.21137,
+      "has_validation": true
+    }
+  ]
+}

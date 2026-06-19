@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>microgpt Data Format</title>
+    <style>
+      :root {
+        --bg: #f7f8fa;
+        --panel: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6b7a;
+        --border: #d9dee7;
+        --accent: #0f766e;
+        --code-bg: #111827;
+        --code-text: #e5e7eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      main,
+      header {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.18;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        margin-top: 34px;
+        font-size: 1.35rem;
+      }
+
+      h3 {
+        margin-top: 22px;
+        font-size: 1.05rem;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+      }
+
+      code {
+        border-radius: 5px;
+        background: #eef1f5;
+        padding: 0.12rem 0.32rem;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 12px 0 0;
+        border-radius: 8px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 16px;
+      }
+
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+
+      .card {
+        margin-top: 16px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p><a href="index.html">Back to docs index</a></p>
+      <h1>Data Format</h1>
+      <p>
+        microgpt currently uses a compact single-turn instruction format. The
+        tokenizer treats the control markers as special tokens and every other
+        character as a byte token.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Single-Turn Instruction Examples</h2>
+        <p>Each example should use this shape:</p>
+        <pre><code>&lt;BOS&gt;&lt;USER&gt;
+What is 2+2?
+&lt;ASSISTANT&gt;
+4
+&lt;EOS&gt;</code></pre>
+
+        <div class="card">
+          <h3>Markers</h3>
+          <ul>
+            <li><code>&lt;BOS&gt;</code> marks the beginning of an example.</li>
+            <li><code>&lt;USER&gt;</code> marks the user prompt.</li>
+            <li><code>&lt;ASSISTANT&gt;</code> marks where the answer begins.</li>
+            <li><code>&lt;EOS&gt;</code> marks the end of the answer.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section>
+        <h2>Generation Mode</h2>
+        <p>
+          Use <code>--mode instruction</code> when the checkpoint was trained on
+          this format. It wraps the prompt as:
+        </p>
+        <pre><code>&lt;BOS&gt;&lt;USER&gt;
+prompt text
+&lt;ASSISTANT&gt;</code></pre>
+
+        <p>
+          Use <code>--mode raw</code> only for plain text continuation datasets.
+        </p>
+      </section>
+
+      <section>
+        <h2>Current Limits</h2>
+        <ul>
+          <li>The built-in parser expects single-turn examples.</li>
+          <li>Do not put literal control markers such as <code>&lt;BOS&gt;</code>, <code>&lt;USER&gt;</code>, <code>&lt;ASSISTANT&gt;</code>, or <code>&lt;EOS&gt;</code> inside prompt or answer content.</li>
+          <li>Exact-match evaluation works best for short factual, arithmetic, JSON, and formatting tasks.</li>
+          <li>Open-ended assistant answers need looser evaluation modes that are not implemented yet.</li>
+          <li>Multi-turn dialogue will require a deliberate session format and more training data.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Validate Before Training</h2>
+        <p>
+          Use <code>validate-data</code> before training or evaluation to catch
+          malformed examples and inspect dataset size:
+        </p>
+        <pre><code>./bin/mgpt validate-data --input data.txt</code></pre>
+        <p>
+          The command reports byte count, example count, marker counts, prompt
+          length stats, and answer length stats. It returns a nonzero exit code
+          if required markers are missing or unbalanced.
+        </p>
+        <p>
+          The unit tests also enforce a round-trip contract: canonical text,
+          JSONL import, and deterministic splitting all flow back through this
+          same validation path.
+        </p>
+      </section>
+
+      <section>
+        <h2>Split Before Training</h2>
+        <p>
+          Use <code>split-data</code> to create deterministic train and
+          validation files from one instruction dataset:
+        </p>
+        <pre><code>./bin/mgpt split-data \
+  --input data.txt \
+  --train train.txt \
+  --val val.txt \
+  --ratio 0.9 \
+  --seed 42</code></pre>
+        <p>
+          Then train with <code>--val-input val.txt</code> so validation always
+          measures held-out examples instead of an implicit token slice.
+        </p>
+      </section>
+
+      <section>
+        <h2>JSONL Import Format</h2>
+        <p>
+          JSONL is easier to generate, validate with external tools, shuffle,
+          and split. Each line should contain a <code>user</code> string and an
+          <code>assistant</code> string:
+        </p>
+        <pre><code>{"user":"What is 2+2?","assistant":"4"}
+{"user":"Return JSON with key answer and value 42.","assistant":"{\"answer\":42}"}</code></pre>
+        <p>Convert JSONL into the native instruction format with:</p>
+        <pre><code>./bin/mgpt import-jsonl \
+  --input pairs.jsonl \
+  --output data.txt</code></pre>
+        <p>
+          The tracked assistant seed dataset follows this path from
+          <code>sample_data/assistant/seed.jsonl</code> into generated files
+          under <code>artifacts/datasets/assistant/</code>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Reliability Rule</h2>
+        <ul>
+          <li>If <code>validate-data</code> fails, the dataset should not be used for training or evaluation.</li>
+          <li>All assistant-style examples should be converted into the canonical single-turn format before use.</li>
+          <li>Any new dataset tooling should preserve the same marker order and line structure.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
