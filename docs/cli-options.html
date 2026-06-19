@@ -250,7 +250,9 @@
         <p>
           A local reference for the project executables. Use <code>./bin/mgpt</code>
           for model operations, <code>./bin/lab</code> for lab checks, and
-          <code>./bin/chat</code> for interactive assistant-style use.
+          <code>./bin/chat</code> for interactive assistant-style use. In a
+          terminal it opens the scrollback UI; otherwise it falls back to
+          simple line input.
         </p>
         <nav aria-label="Page sections">
           <a href="#commands">Commands</a>
@@ -344,28 +346,33 @@
           <article class="card">
             <h3><code>validate-data</code></h3>
             <p>
-              Checks instruction-format examples, reports counts and length
-              stats, and returns a nonzero status for malformed data.
+              Checks instruction-format examples, or session-format examples
+              when <code>--format session</code> is selected, reports counts
+              and length stats, and returns a nonzero status for malformed
+              data.
             </p>
-            <pre><code>./bin/mgpt validate-data --input data.txt</code></pre>
+            <pre><code>./bin/mgpt validate-data --input data.txt [--format session]</code></pre>
           </article>
 
           <article class="card">
             <h3><code>split-data</code></h3>
             <p>
-              Shuffles instruction examples with a seed and writes explicit
-              train and validation files.
+              Shuffles instruction examples with a seed, or session examples
+              when <code>--format session</code> is selected, and writes
+              explicit train and validation files.
             </p>
-            <pre><code>./bin/mgpt split-data --input data.txt --train train.txt --val val.txt [options]</code></pre>
+            <pre><code>./bin/mgpt split-data --input data.txt --train train.txt --val val.txt [--format session] [options]</code></pre>
           </article>
 
           <article class="card">
             <h3><code>import-jsonl</code></h3>
             <p>
               Converts JSONL records with <code>user</code> and
-              <code>assistant</code> fields into instruction-format examples.
+              <code>assistant</code> fields into instruction-format examples,
+              or session JSONL with a <code>turns</code> array when
+              <code>--format session</code> is selected.
             </p>
-            <pre><code>./bin/mgpt import-jsonl --input pairs.jsonl --output data.txt</code></pre>
+            <pre><code>./bin/mgpt import-jsonl --input pairs.jsonl --output data.txt [--format session]</code></pre>
           </article>
 
           <article class="card">
@@ -397,6 +404,15 @@
             <p>Runs a small synthetic training/generation benchmark or an operation-level resident linear benchmark.</p>
             <pre><code>./bin/mgpt bench --backend cpu
 ./bin/mgpt bench --backend metal --resident-linear --iterations 1000 --rows 128 --in 128 --out 128</code></pre>
+          </article>
+
+          <article class="card">
+            <h3><code>eval</code></h3>
+            <p>
+              Evaluates instruction-format examples by default, or session
+              examples when <code>--format session</code> is selected.
+            </p>
+            <pre><code>./bin/mgpt eval --checkpoint model.bin --input eval.txt [--format session] [options]</code></pre>
           </article>
         </div>
       </section>
@@ -969,20 +985,23 @@ make BACKEND=metal all
 
         <h3>Validate instruction data</h3>
         <pre><code>./bin/mgpt validate-data \
-  --input arithmetic.txt</code></pre>
+  --input arithmetic.txt \
+  [--format session]</code></pre>
 
         <h3>Split instruction data</h3>
         <pre><code>./bin/mgpt split-data \
   --input arithmetic.txt \
   --train arithmetic-train.txt \
   --val arithmetic-val.txt \
+  [--format session] \
   --ratio 0.9 \
   --seed 42</code></pre>
 
         <h3>Import JSONL assistant examples</h3>
         <pre><code>./bin/mgpt import-jsonl \
   --input pairs.jsonl \
-  --output assistant-data.txt</code></pre>
+  --output assistant-data.txt \
+  [--format session]</code></pre>
 
         <h3>Evaluate exact-match accuracy</h3>
         <pre><code>./bin/mgpt eval \
@@ -992,6 +1011,7 @@ make BACKEND=metal all
   --match exact \
   --greedy \
   --hide-failures \
+  [--format session] \
   --output artifacts/evals/arithmetic-eval.json</code></pre>
       </section>
 

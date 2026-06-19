@@ -1,0 +1,26 @@
+{
+  "type": "microgpt_eval_report",
+  "started_at": "2026-06-19T14:03:14Z",
+  "ended_at": "2026-06-19T14:03:14Z",
+  "duration_seconds": 0.35922,
+  "command": "eval --checkpoint /private/tmp/session-assistant.bin --input artifacts/datasets/assistant/val.txt --max-new-tokens 80 --match contains --greedy --output artifacts/evals/session-assistant-val.json --format session --backend cpu",
+  "backend": "cpu",
+  "checkpoint": "/private/tmp/session-assistant.bin",
+  "input": "artifacts/datasets/assistant/val.txt",
+  "match": "contains",
+  "max_new_tokens": 80,
+  "temperature": 0.2,
+  "top_k": 1,
+  "examples": 1,
+  "correct": 0,
+  "accuracy": 0,
+  "cases": [
+    {
+      "index": 1,
+      "correct": false,
+      "prompt": "What is 3+3?",
+      "expected": "6",
+      "actual": "e eeeeeeeeeeeeeeeeeeteeteeeteteeteteeeeeeeeteeteeeteeteeteteteeteteeeeeteeseetet"
+    }
+  ]
+}

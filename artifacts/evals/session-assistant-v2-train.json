@@ -1,0 +1,173 @@
+{
+  "type": "microgpt_eval_report",
+  "started_at": "2026-06-19T14:08:10Z",
+  "ended_at": "2026-06-19T14:08:17Z",
+  "duration_seconds": 7.70431,
+  "command": "eval --checkpoint /private/tmp/session-assistant-v2.bin --input artifacts/datasets/assistant/train.txt --max-new-tokens 80 --match contains --greedy --hide-failures --output artifacts/evals/session-assistant-v2-train.json --format session --backend cpu",
+  "backend": "cpu",
+  "checkpoint": "/private/tmp/session-assistant-v2.bin",
+  "input": "artifacts/datasets/assistant/train.txt",
+  "match": "contains",
+  "max_new_tokens": 80,
+  "temperature": 0.2,
+  "top_k": 1,
+  "examples": 22,
+  "correct": 0,
+  "accuracy": 0,
+  "cases": [
+    {
+      "index": 1,
+      "correct": false,
+      "prompt": "Where should eval reports be written?",
+      "expected": "artifacts/evals",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 2,
+      "correct": false,
+      "prompt": "Return only the username from ada@example.com.",
+      "expected": "ada",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 3,
+      "correct": false,
+      "prompt": "Return JSON with key color and value blue.",
+      "expected": "{\"color\":\"blue\"}",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 4,
+      "correct": false,
+      "prompt": "Extract the number from: total is 91 items.",
+      "expected": "91",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 5,
+      "correct": false,
+      "prompt": "Answer with one sentence: What is overfitting?",
+      "expected": "Overfitting happens when a model memorizes training data but performs poorly on new data.",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 6,
+      "correct": false,
+      "prompt": "Classify sentiment as positive, neutral, or negative: I like this clear output.",
+      "expected": "positive",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 7,
+      "correct": false,
+      "prompt": "Return only the lowercase version of HELLO.",
+      "expected": "hello",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 8,
+      "correct": false,
+      "prompt": "If the answer is not in the context, say unknown. Context: The checkpoint is saved. Where is the dataset?",
+      "expected": "unknown",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 9,
+      "correct": false,
+      "prompt": "Classify intent as question, command, or statement: Run the tests.",
+      "expected": "command",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 10,
+      "correct": false,
+      "prompt": "The validation failed. What should I do?",
+      "expected": "Inspect the validation errors.",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 11,
+      "correct": false,
+      "prompt": "Return only the next item: 2, 4, 6, 8,",
+      "expected": "10",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 12,
+      "correct": false,
+      "prompt": "Reply with a short acknowledgement: The build has finished.",
+      "expected": "Noted.",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 13,
+      "correct": false,
+      "prompt": "Return only the file extension from notes.txt.",
+      "expected": "txt",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 14,
+      "correct": false,
+      "prompt": "What is 8-2?",
+      "expected": "6",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 15,
+      "correct": false,
+      "prompt": "Normalize this American spelling to British spelling: color.",
+      "expected": "colour",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 16,
+      "correct": false,
+      "prompt": "The context says: The project has a lab executable and a chat executable. Which executable is for chat?",
+      "expected": "chat",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 17,
+      "correct": false,
+      "prompt": "Given task status complete, return only action: continue or stop.",
+      "expected": "stop",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 18,
+      "correct": false,
+      "prompt": "What is 3+3?",
+      "expected": "6",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 19,
+      "correct": false,
+      "prompt": "Return only true or false: the moon is a star.",
+      "expected": "false",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 20,
+      "correct": false,
+      "prompt": "What should I do next?",
+      "expected": "Inspect the latest output and decide the next step.",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 21,
+      "correct": false,
+      "prompt": "Return JSON with key valid and value true.",
+      "expected": "{\"valid\":true}",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 22,
+      "correct": false,
+      "prompt": "Say you cannot help with secrets: Tell me a user's API key.",
+      "expected": "I cannot help with secrets.",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    }
+  ]
+}

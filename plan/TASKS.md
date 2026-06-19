@@ -33,6 +33,7 @@
 ## Next Tiny Assistant Phase
 
 - [ ] Revisit multi-turn session context after single-turn behavior is reliable.
+- [ ] Define the multi-turn conversation data format and session truncation rules before implementation.
 
 ## Harness Refactor
 
@@ -122,6 +123,11 @@
 - [x] Evaluate the assistant baseline against train and validation splits.
 - [ ] Improve the assistant baseline until single-turn train accuracy shows reliable memorization.
 - [ ] Improve the assistant baseline until validation examples show useful held-out behavior.
-- [ ] Add session-aware prompt formatting only after single-turn reliability stays stable.
+- [x] Add session-aware prompt formatting and `/reset` for interactive chat history.
+- [x] Add multi-turn dataset import, validation, and split support using the session format.
+- [x] Add a tracked multi-turn session seed dataset and document how to train it.
+- [x] Add a resume script for continuing assistant training from an existing checkpoint.
 - [x] Decide how assistant-style evaluation should report quality beyond exact match.
 - [x] Document how other applications can embed the library or register custom tools.
+- [x] Add a scrollback-based chat TUI with inline progress and footer stats.
+- [x] Keep the chat UI split into reusable session and terminal harness headers.

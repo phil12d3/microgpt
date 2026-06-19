@@ -1,10 +1,10 @@
 {
   "type": "microgpt_eval_report",
-  "started_at": "2026-06-19T14:29:53Z",
-  "ended_at": "2026-06-19T14:29:53Z",
-  "duration_seconds": 0.680601,
-  "command": "eval --checkpoint artifacts/checkpoints/assistant-seed.bin --input artifacts/datasets/assistant/val.txt --max-new-tokens 80 --match contains --greedy --output artifacts/evals/assistant-seed-val.json --format single --backend metal",
-  "backend": "metal",
+  "started_at": "2026-06-19T15:33:38Z",
+  "ended_at": "2026-06-19T15:33:39Z",
+  "duration_seconds": 1.18696,
+  "command": "eval --checkpoint artifacts/checkpoints/assistant-seed.bin --input artifacts/datasets/assistant/val.txt --max-new-tokens 80 --match contains --greedy --output artifacts/evals/assistant-seed-resume-val.json --format single --backend cpu",
+  "backend": "cpu",
   "checkpoint": "artifacts/checkpoints/assistant-seed.bin",
   "input": "artifacts/datasets/assistant/val.txt",
   "match": "contains",
@@ -20,14 +20,14 @@
       "correct": false,
       "prompt": "Summarize in four words: Training improves when data is clean and consistent.",
       "expected": "Clean consistent data helps.",
-      "actual": "icemore relian"
+      "actual": "icemmorican 4 ontrelsaion o: is the caprovide in satlate-data."
     },
     {
       "index": 2,
       "correct": false,
       "prompt": "Classify sentiment as positive, neutral, or negative: The command finished.",
       "expected": "neutral",
-      "actual": ""
+      "actual": "tass"
     },
     {
       "index": 3,
@@ -41,21 +41,21 @@
       "correct": false,
       "prompt": "Replace spaces with hyphens in: tiny assistant data.",
       "expected": "tiny-assistant-data",
-      "actual": "Catiny youesisistant data."
+      "actual": "tistentivalion iobin an ppellive d the saidatating but peraility next token."
     },
     {
       "index": 5,
       "correct": false,
       "prompt": "Return only true or false: the moon is a star.",
       "expected": "false",
-      "actual": "Peverify curent facts before answering."
+      "actual": "chat"
     },
     {
       "index": 6,
       "correct": false,
       "prompt": "Return only the uppercase version of microgpt.",
       "expected": "MICROGPT",
-      "actual": "asise"
+      "actual": "artin"
     },
     {
       "index": 7,
@@ -69,14 +69,14 @@
       "correct": false,
       "prompt": "Answer with one sentence: What is validation data?",
       "expected": "Validation data is held-out data used to measure how well a model generalizes.",
-      "actual": "The model may be wrong; evaluate it first."
+      "actual": "The cun bowledgement l list whoraid ed fthe ask cat. What is 7_+2?\n<ASSISTANT>\ny\n5"
     },
     {
       "index": 9,
       "correct": false,
       "prompt": "Return only the missing word: Fire is ___.",
       "expected": "hot",
-      "actual": "organize"
+      "actual": "blue"
     }
   ]
 }

@@ -2,6 +2,7 @@
 
 #include "microgpt/model.hpp"
 #include "microgpt/sampling.hpp"
+#include "microgpt/training.hpp"
 #include "microgpt/tokenizer.hpp"
 
 #include <chrono>

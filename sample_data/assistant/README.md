@@ -16,6 +16,12 @@ Build the canonical instruction dataset with:
 ./scripts/train_assistant.sh
 ```
 
+Continue training an existing checkpoint with:
+
+```bash
+./scripts/resume_assistant.sh
+```
+
 The script imports, validates, splits, trains, and writes eval reports. To run
 only the data preparation commands manually:
 
@@ -37,3 +43,29 @@ only the data preparation commands manually:
 
 Keep this dataset single-turn until the current assistant can reliably answer
 held-out examples. Multi-turn data should use a separate documented format.
+
+Tracked multi-turn seed data lives in `session_seed.jsonl` and uses the
+session turn-array JSONL shape:
+
+```json
+{"turns":[{"role":"user","content":"Hi"},{"role":"assistant","content":"Hello."}]}
+```
+
+Use `--format session` with the data commands to import, validate, and split
+that file into canonical session training artifacts.
+
+Example session training command:
+
+```bash
+ASSISTANT_SEED=sample_data/assistant/session_seed.jsonl \
+ASSISTANT_FORMAT=session \
+./scripts/train_assistant.sh
+```
+
+Example session resume command:
+
+```bash
+ASSISTANT_SEED=sample_data/assistant/session_seed.jsonl \
+ASSISTANT_FORMAT=session \
+./scripts/resume_assistant.sh
+```

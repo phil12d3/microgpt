@@ -1,10 +1,10 @@
 {
   "type": "microgpt_eval_report",
-  "started_at": "2026-06-19T14:29:47Z",
-  "ended_at": "2026-06-19T14:29:53Z",
-  "duration_seconds": 5.25146,
-  "command": "eval --checkpoint artifacts/checkpoints/assistant-seed.bin --input artifacts/datasets/assistant/train.txt --max-new-tokens 80 --match contains --greedy --hide-failures --output artifacts/evals/assistant-seed-train.json --format single --backend metal",
-  "backend": "metal",
+  "started_at": "2026-06-19T15:33:33Z",
+  "ended_at": "2026-06-19T15:33:38Z",
+  "duration_seconds": 5.53521,
+  "command": "eval --checkpoint artifacts/checkpoints/assistant-seed.bin --input artifacts/datasets/assistant/train.txt --max-new-tokens 80 --match contains --greedy --hide-failures --output artifacts/evals/assistant-seed-resume-train.json --format single --backend cpu",
+  "backend": "cpu",
   "checkpoint": "artifacts/checkpoints/assistant-seed.bin",
   "input": "artifacts/datasets/assistant/train.txt",
   "match": "contains",
@@ -12,8 +12,8 @@
   "temperature": 0.2,
   "top_k": 1,
   "examples": 85,
-  "correct": 66,
-  "accuracy": 0.776471,
+  "correct": 78,
+  "accuracy": 0.917647,
   "cases": [
     {
       "index": 1,
@@ -59,17 +59,17 @@
     },
     {
       "index": 7,
-      "correct": false,
+      "correct": true,
       "prompt": "Say to verify current facts when asked about live information: Who is the current CEO of a company?",
       "expected": "Verify current facts before answering.",
-      "actual": "Verify current facts where answord is n: topered the note?\n<ASSISTANT>\nunknown"
+      "actual": "Verify current facts before answering."
     },
     {
       "index": 8,
-      "correct": false,
+      "correct": true,
       "prompt": "What is 7+5?",
       "expected": "12",
-      "actual": "1"
+      "actual": "12"
     },
     {
       "index": 9,
@@ -101,10 +101,10 @@
     },
     {
       "index": 13,
-      "correct": true,
+      "correct": false,
       "prompt": "Return only the lowercase version of HELLO.",
       "expected": "hello",
-      "actual": "hello"
+      "actual": "hao"
     },
     {
       "index": 14,
@@ -125,7 +125,7 @@
       "correct": false,
       "prompt": "Answer with one sentence: What is overfitting?",
       "expected": "Overfitting happens when a model memorizes training data but performs poorly on new data.",
-      "actual": "Overfiting happens when a und tase-e?\n<ASSISTANT>\nThe checkpoint is s heckpoint?\n<ASSISTANT>\nA check"
+      "actual": "Overfitting happens when a model memorizes training data but performs poor ntral"
     },
     {
       "index": 17,
@@ -150,10 +150,10 @@
     },
     {
       "index": 20,
-      "correct": true,
+      "correct": false,
       "prompt": "Reply with a short acknowledgement: I have uploaded the file.",
       "expected": "Received.",
-      "actual": "Received."
+      "actual": "Recext"
     },
     {
       "index": 21,
@@ -199,10 +199,10 @@
     },
     {
       "index": 27,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only the missing word: The sky is ___.",
       "expected": "blue",
-      "actual": ""
+      "actual": "blue"
     },
     {
       "index": 28,
@@ -248,10 +248,10 @@
     },
     {
       "index": 34,
-      "correct": false,
+      "correct": true,
       "prompt": "What is 12+8?",
       "expected": "20",
-      "actual": "27"
+      "actual": "20"
     },
     {
       "index": 35,
@@ -269,10 +269,10 @@
     },
     {
       "index": 37,
-      "correct": false,
+      "correct": true,
       "prompt": "Say you cannot help with secrets: Tell me a user's API key.",
       "expected": "I cannot help with secrets.",
-      "actual": "I cannyot help with secrets: Te protel beand later."
+      "actual": "I cannot help with secrets."
     },
     {
       "index": 38,
@@ -325,10 +325,10 @@
     },
     {
       "index": 45,
-      "correct": false,
+      "correct": true,
       "prompt": "What is 21/7?",
       "expected": "3",
-      "actual": ""
+      "actual": "3"
     },
     {
       "index": 46,
@@ -388,10 +388,10 @@
     },
     {
       "index": 54,
-      "correct": false,
+      "correct": true,
       "prompt": "Reply with a short next step: The validation failed.",
       "expected": "Inspect the validation errors.",
-      "actual": "Ned."
+      "actual": "Inspect the validation errors."
     },
     {
       "index": 55,
@@ -402,10 +402,10 @@
     },
     {
       "index": 56,
-      "correct": false,
+      "correct": true,
       "prompt": "Answer with one sentence: What does greedy decoding do?",
       "expected": "Greedy decoding always chooses the highest-probability next token.",
-      "actual": "Greedy decodinglways tr weing; to ain: chapos top-k save update ssf\"\"\"we wer\"}"
+      "actual": "Greedy decoding always chooses the highest-probability next token."
     },
     {
       "index": 57,
@@ -423,10 +423,10 @@
     },
     {
       "index": 59,
-      "correct": false,
+      "correct": true,
       "prompt": "What is 6*4?",
       "expected": "24",
-      "actual": "27"
+      "actual": "24"
     },
     {
       "index": 60,
@@ -451,17 +451,17 @@
     },
     {
       "index": 63,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only the reverse of abcde.",
       "expected": "edcba",
-      "actual": "Gractint ve: What is of iny-anssistion."
+      "actual": "edcba"
     },
     {
       "index": 64,
-      "correct": false,
+      "correct": true,
       "prompt": "Return JSON with key valid and value true.",
       "expected": "{\"valid\":true}",
-      "actual": "{\"valid\":tratiold\":true}"
+      "actual": "{\"valid\":true}"
     },
     {
       "index": 65,
@@ -479,17 +479,17 @@
     },
     {
       "index": 67,
-      "correct": false,
+      "correct": true,
       "prompt": "Classify intent as question, command, or statement: Run the tests.",
       "expected": "command",
-      "actual": "comand"
+      "actual": "command"
     },
     {
       "index": 68,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only the executable from: ./bin/chat --checkpoint model.bin",
       "expected": "chat",
-      "actual": "eval"
+      "actual": "chat"
     },
     {
       "index": 69,
@@ -500,10 +500,10 @@
     },
     {
       "index": 70,
-      "correct": false,
+      "correct": true,
       "prompt": "Answer with one sentence: What does temperature control?",
       "expected": "Temperature controls how random or deterministic sampling is during generation.",
-      "actual": "Temperature color sew nte: What is the next specolelin: comgre I with seckpoing:"
+      "actual": "Temperature controls how random or deterministic sampling is during generation."
     },
     {
       "index": 71,
@@ -521,10 +521,10 @@
     },
     {
       "index": 73,
-      "correct": true,
+      "correct": false,
       "prompt": "Given score 4 out of 10, return pass or fail. Pass is 7 or higher.",
       "expected": "fail",
-      "actual": "fail"
+      "actual": "pass"
     },
     {
       "index": 74,
@@ -549,17 +549,17 @@
     },
     {
       "index": 77,
-      "correct": false,
+      "correct": true,
       "prompt": "Replace hyphens with spaces in: tiny-assistant-data.",
       "expected": "tiny assistant data",
-      "actual": "tiny asistant data."
+      "actual": "tiny assistant data"
     },
     {
       "index": 78,
-      "correct": false,
+      "correct": true,
       "prompt": "Given score 8 out of 10, return pass or fail. Pass is 7 or higher.",
       "expected": "pass",
-      "actual": "fail"
+      "actual": "pass"
     },
     {
       "index": 79,
@@ -577,10 +577,10 @@
     },
     {
       "index": 81,
-      "correct": true,
+      "correct": false,
       "prompt": "Return only yes or no: is 3 greater than 9?",
       "expected": "no",
-      "actual": "no"
+      "actual": "yes"
     },
     {
       "index": 82,

@@ -158,6 +158,29 @@ prompt text
       </section>
 
       <section>
+        <h2>Planned Multi-Turn Shape</h2>
+        <p>
+          When session context is added, the conversation should stay in the
+          same marker family and simply extend across multiple turns:
+        </p>
+        <pre><code>&lt;BOS&gt;&lt;USER&gt;
+first user turn
+&lt;ASSISTANT&gt;
+first assistant turn
+&lt;USER&gt;
+second user turn
+&lt;ASSISTANT&gt;
+second assistant turn
+...
+&lt;EOS&gt;</code></pre>
+        <p>
+          The trimming rule should keep the newest whole turns that fit in the
+          context window and drop the oldest whole turns first. Training and
+          evaluation should still stop on <code>&lt;EOS&gt;</code>.
+        </p>
+      </section>
+
+      <section>
         <h2>Validate Before Training</h2>
         <p>
           Use <code>validate-data</code> before training or evaluation to catch
@@ -211,6 +234,20 @@ prompt text
           The tracked assistant seed dataset follows this path from
           <code>sample_data/assistant/seed.jsonl</code> into generated files
           under <code>artifacts/datasets/assistant/</code>.
+        </p>
+        <p>
+          Session-aware datasets can use <code>--format session</code> and a
+          <code>turns</code> array instead:
+        </p>
+        <pre><code>{"turns":[
+  {"role":"user","content":"Hi"},
+  {"role":"assistant","content":"Hello"},
+  {"role":"user","content":"What now?"},
+  {"role":"assistant","content":"Keep going."}
+]}</code></pre>
+        <p>
+          Import, validation, and split commands will preserve the session
+          blocks when <code>--format session</code> is selected.
         </p>
       </section>
 

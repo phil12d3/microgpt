@@ -155,6 +155,11 @@
           Use <code>ASSISTANT_BACKEND=metal</code> to build and select the
           Metal backend.
         </p>
+        <p>
+          To continue training an existing checkpoint, use
+          <code>./scripts/resume_assistant.sh</code> with the same environment
+          variables.
+        </p>
         <pre><code>./bin/mgpt train \
   --input artifacts/datasets/assistant/train.txt \
   --val-input artifacts/datasets/assistant/val.txt \
@@ -176,9 +181,17 @@
         <h2>Start Chat</h2>
         <p>
           Start the assistant chat executable with the current assistant
-          checkpoint:
+          checkpoint. In a terminal it opens the scrollback-based TUI with an
+          editable input area, generation progress, and a footer showing
+          tokens and model details:
         </p>
         <pre><code>./scripts/chat_assistant.sh</code></pre>
+        <ul>
+          <li>Scrollback sits above the input bar so the conversation stays visible.</li>
+          <li>Progress updates appear while tokens are being generated.</li>
+          <li>The footer shows prompt tokens, completion tokens, backend, and checkpoint.</li>
+          <li>When stdin or stdout is not a terminal, chat falls back to line mode.</li>
+        </ul>
         <p>
           Override the checkpoint or generation settings with environment
           variables:
@@ -208,17 +221,49 @@ TOP_K=1 \
       </section>
 
       <section>
-        <h2>Deferred Context</h2>
+        <h2>Session Memory</h2>
         <p>
-          Session history is useful, but it changes the data contract and makes
-          evaluation harder. Add it after single-turn behavior is stable.
+          The interactive chat shell now keeps a running session history and
+          trims older whole turns when the prompt would exceed the context
+          window.
         </p>
         <ul>
-          <li>Define a prompt format for previous turns.</li>
-          <li>Add enough multi-turn examples to train against that format.</li>
-          <li>Choose a context-window trimming policy.</li>
-          <li>Add eval cases that prove history improves answers instead of only increasing prompt length.</li>
+          <li>Use the same <code>&lt;BOS&gt;</code>, <code>&lt;USER&gt;</code>, <code>&lt;ASSISTANT&gt;</code>, and <code>&lt;EOS&gt;</code> markers for the whole session.</li>
+          <li>Trim the oldest whole turns first.</li>
+          <li>Use <code>/reset</code> to clear the current conversation.</li>
         </ul>
+        <p>
+          The planned multi-turn training format stays the same shape and is
+          now supported by the data pipeline:
+        </p>
+        <pre><code>&lt;BOS&gt;&lt;USER&gt;
+first user turn
+&lt;ASSISTANT&gt;
+first assistant turn
+&lt;USER&gt;
+second user turn
+&lt;ASSISTANT&gt;
+second assistant turn
+...
+&lt;EOS&gt;</code></pre>
+        <p>
+          Training should keep the most recent whole turns that fit inside the
+          context window. The last assistant turn remains the target to learn,
+          and generation still stops on <code>&lt;EOS&gt;</code>.
+        </p>
+        <p>
+          Use <code>--format session</code> with <code>import-jsonl</code>,
+          <code>validate-data</code>, and <code>split-data</code> to keep the
+          session blocks intact.
+        </p>
+        <p>
+          A tracked sample lives at
+          <code>sample_data/assistant/session_seed.jsonl</code> and can be
+          trained with:
+        </p>
+        <pre><code>ASSISTANT_SEED=sample_data/assistant/session_seed.jsonl \
+ASSISTANT_FORMAT=session \
+./scripts/train_assistant.sh</code></pre>
       </section>
 
       <section>

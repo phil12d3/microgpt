@@ -44,6 +44,28 @@ Multi-turn context should wait until there is:
 - a context-window policy for trimming old turns,
 - evaluation data that checks whether history actually helps.
 
+Planned session format:
+
+```text
+<BOS><USER>
+first user turn
+<ASSISTANT>
+first assistant turn
+<USER>
+second user turn
+<ASSISTANT>
+second assistant turn
+...
+<EOS>
+```
+
+Planned trimming rule:
+
+- keep the most recent whole turns that fit inside the context window,
+- never split a turn in the middle,
+- keep the final `<ASSISTANT>` target visible when training the next reply,
+- stop generation on `<EOS>`.
+
 ## Embedding Direction
 
 Other applications should use `include/microgpt/chat.hpp` for chat behavior,

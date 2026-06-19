@@ -11,7 +11,7 @@ cd "$(dirname "$0")/.."
 : "${ASSISTANT_FORMAT:=single}"
 : "${ASSISTANT_SPLIT_RATIO:=0.9}"
 : "${ASSISTANT_SPLIT_SEED:=42}"
-: "${STEPS:=12000}"
+: "${STEPS:=10000}"
 : "${CONTEXT:=128}"
 : "${D_MODEL:=64}"
 : "${LAYERS:=2}"
@@ -30,8 +30,8 @@ TRAIN_DATA="$ASSISTANT_DATA_DIR/train.txt"
 VAL_DATA="$ASSISTANT_DATA_DIR/val.txt"
 CHECKPOINT_NAME="$(basename "$ASSISTANT_CHECKPOINT")"
 CHECKPOINT_NAME="${CHECKPOINT_NAME%.*}"
-TRAIN_REPORT="$ASSISTANT_EVAL_DIR/$CHECKPOINT_NAME-train.json"
-VAL_REPORT="$ASSISTANT_EVAL_DIR/$CHECKPOINT_NAME-val.json"
+TRAIN_REPORT="$ASSISTANT_EVAL_DIR/$CHECKPOINT_NAME-resume-train.json"
+VAL_REPORT="$ASSISTANT_EVAL_DIR/$CHECKPOINT_NAME-resume-val.json"
 
 run_eval() {
   set +e
@@ -42,6 +42,12 @@ run_eval() {
     exit "$status"
   fi
 }
+
+if [ ! -f "$ASSISTANT_CHECKPOINT" ]; then
+  echo "missing checkpoint: $ASSISTANT_CHECKPOINT" >&2
+  echo "run ./scripts/train_assistant.sh first, or set ASSISTANT_CHECKPOINT=/path/to/model.bin" >&2
+  exit 1
+fi
 
 echo "building tools"
 make BACKEND="$ASSISTANT_BACKEND" all
@@ -68,8 +74,8 @@ echo "splitting assistant dataset"
   --seed "$ASSISTANT_SPLIT_SEED" \
   --format "$ASSISTANT_FORMAT"
 
-echo "training assistant checkpoint"
-./bin/mgpt train \
+echo "resuming assistant checkpoint"
+./bin/mgpt resume \
   --input "$TRAIN_DATA" \
   --val-input "$VAL_DATA" \
   --checkpoint "$ASSISTANT_CHECKPOINT" \
@@ -109,7 +115,7 @@ run_eval ./bin/mgpt eval \
   --format "$ASSISTANT_FORMAT" \
   --backend "$ASSISTANT_BACKEND"
 
-echo "assistant training pipeline complete"
+echo "assistant resume pipeline complete"
 echo "checkpoint: $ASSISTANT_CHECKPOINT"
 echo "train report: $TRAIN_REPORT"
 echo "validation report: $VAL_REPORT"

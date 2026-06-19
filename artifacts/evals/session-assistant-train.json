@@ -1,0 +1,68 @@
+{
+  "type": "microgpt_eval_report",
+  "started_at": "2026-06-19T14:03:11Z",
+  "ended_at": "2026-06-19T14:03:14Z",
+  "duration_seconds": 2.54625,
+  "command": "eval --checkpoint /private/tmp/session-assistant.bin --input artifacts/datasets/assistant/train.txt --max-new-tokens 80 --match contains --greedy --hide-failures --output artifacts/evals/session-assistant-train.json --format session --backend cpu",
+  "backend": "cpu",
+  "checkpoint": "/private/tmp/session-assistant.bin",
+  "input": "artifacts/datasets/assistant/train.txt",
+  "match": "contains",
+  "max_new_tokens": 80,
+  "temperature": 0.2,
+  "top_k": 1,
+  "examples": 7,
+  "correct": 0,
+  "accuracy": 0,
+  "cases": [
+    {
+      "index": 1,
+      "correct": false,
+      "prompt": "Where should eval reports be written?",
+      "expected": "artifacts/evals",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 2,
+      "correct": false,
+      "prompt": "Classify sentiment as positive, neutral, or negative: I like this clear output.",
+      "expected": "positive",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 3,
+      "correct": false,
+      "prompt": "What should I do next?",
+      "expected": "Inspect the latest output and decide the next step.",
+      "actual": "eeeeeeeeeeeeeeeteeteeeteeeeteeeeeeeeeeeeeteeeteeteeteteteeteteeeeeteeeeeteteeete"
+    },
+    {
+      "index": 4,
+      "correct": false,
+      "prompt": "Return JSON with key valid and value true.",
+      "expected": "{\"valid\":true}",
+      "actual": "eeeeteteeeteteeeeteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 5,
+      "correct": false,
+      "prompt": "Given task status complete, return only action: continue or stop.",
+      "expected": "stop",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 6,
+      "correct": false,
+      "prompt": "The validation failed. What should I do?",
+      "expected": "Inspect the validation errors.",
+      "actual": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "index": 7,
+      "correct": false,
+      "prompt": "Return only the lowercase version of HELLO.",
+      "expected": "hello",
+      "actual": "eeeeeteteeeteteeeeteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    }
+  ]
+}

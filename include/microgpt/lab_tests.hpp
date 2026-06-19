@@ -1,6 +1,7 @@
 #pragma once
 
 #include "microgpt/data_format.hpp"
+#include "microgpt/chat.hpp"
 #include "microgpt/generation.hpp"
 #include "microgpt/io.hpp"
 #include "microgpt/optim.hpp"
@@ -636,6 +637,124 @@ inline bool split_dataset_contract_test() {
          val_validation.examples.size() == split.second.size();
 }
 
+inline bool session_roundtrip_test() {
+  std::vector<SessionExample> examples;
+  SessionExample first;
+  first.turns.push_back({"user", "Hi"});
+  first.turns.push_back({"assistant", "Hello"});
+  first.turns.push_back({"user", "How are you?"});
+  first.turns.push_back({"assistant", "Fine"});
+  examples.push_back(first);
+  SessionExample second;
+  second.turns.push_back({"user", "Tell me a fact"});
+  second.turns.push_back({"assistant", "Facts are useful."});
+  examples.push_back(second);
+  std::string path = test_temp_path("microgpt-session", ".txt");
+  write_session_examples(path, examples);
+  SessionValidation validation = validate_session_text(read_file_text(path));
+  if (!validation.errors.empty() || validation.examples.size() != examples.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < examples.size(); ++i) {
+    if (validation.examples[i].turns.size() != examples[i].turns.size()) {
+      return false;
+    }
+    for (size_t j = 0; j < examples[i].turns.size(); ++j) {
+      if (validation.examples[i].turns[j].role != examples[i].turns[j].role ||
+          validation.examples[i].turns[j].content != examples[i].turns[j].content) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+inline bool session_jsonl_import_roundtrip_test() {
+  std::string path = test_temp_path("microgpt-session-jsonl", ".txt");
+  std::vector<SessionExample> examples;
+  SessionExample first;
+  first.turns.push_back({"user", "Hi"});
+  first.turns.push_back({"assistant", "Hello"});
+  first.turns.push_back({"user", "What now?"});
+  first.turns.push_back({"assistant", "Keep going."});
+  examples.push_back(first);
+  SessionExample second;
+  second.turns.push_back({"user", "Give JSON"});
+  second.turns.push_back({"assistant", "{\"ok\":true}"});
+  examples.push_back(second);
+  std::vector<SessionExample> parsed;
+  parsed.push_back(parse_jsonl_session_line(
+      R"({"turns":[{"role":"user","content":"Hi"},{"role":"assistant","content":"Hello"},{"role":"user","content":"What now?"},{"role":"assistant","content":"Keep going."}]})",
+      1));
+  parsed.push_back(parse_jsonl_session_line(
+      R"({"turns":[{"role":"user","content":"Give JSON"},{"role":"assistant","content":"{\"ok\":true}"}]})", 2));
+  write_session_examples(path, parsed);
+  SessionValidation validation = validate_session_text(read_file_text(path));
+  if (!validation.errors.empty() || validation.examples.size() != parsed.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < parsed.size(); ++i) {
+    if (validation.examples[i].turns.size() != parsed[i].turns.size()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+inline bool session_split_contract_test() {
+  std::vector<SessionExample> examples;
+  for (int i = 0; i < 6; ++i) {
+    SessionExample ex;
+    ex.turns.push_back({"user", "Prompt " + std::to_string(i)});
+    ex.turns.push_back({"assistant", "Answer " + std::to_string(i)});
+    if (i % 2 == 0) {
+      ex.turns.push_back({"user", "Follow up " + std::to_string(i)});
+      ex.turns.push_back({"assistant", "Reply " + std::to_string(i)});
+    }
+    examples.push_back(ex);
+  }
+  auto split = split_session_examples(examples, 0.5f, 7);
+  if (split.first.size() != 3 || split.second.size() != 3) {
+    return false;
+  }
+  std::string train_path = test_temp_path("microgpt-session-train", ".txt");
+  std::string val_path = test_temp_path("microgpt-session-val", ".txt");
+  write_session_examples(train_path, split.first);
+  write_session_examples(val_path, split.second);
+  SessionValidation train_validation = validate_session_text(read_file_text(train_path));
+  SessionValidation val_validation = validate_session_text(read_file_text(val_path));
+  return train_validation.errors.empty() && val_validation.errors.empty() &&
+         train_validation.examples.size() == split.first.size() &&
+         val_validation.examples.size() == split.second.size();
+}
+
+inline bool chat_history_prompt_test() {
+  std::vector<ChatMessage> history;
+  history.push_back({ChatRole::User, "Hi"});
+  history.push_back({ChatRole::Assistant, "Hello"});
+  std::string prompt = format_multi_turn_chat_prompt(history, "What now?");
+  std::string expected = "<BOS><USER>\nHi\n<ASSISTANT>\nHello\n<USER>\nWhat now?\n<ASSISTANT>\n";
+  return prompt == expected;
+}
+
+inline bool chat_history_trimming_test() {
+  std::vector<ChatMessage> history;
+  history.push_back({ChatRole::User, "one"});
+  history.push_back({ChatRole::Assistant, "two"});
+  history.push_back({ChatRole::User, "three"});
+  history.push_back({ChatRole::Assistant, "four"});
+  std::vector<ChatMessage> trimmed = trim_chat_history_to_context(history, "five", 20);
+  if (trimmed.size() >= history.size()) {
+    return false;
+  }
+  std::string prompt = format_multi_turn_chat_prompt(trimmed, "five");
+  if (prompt.find("five") == std::string::npos) {
+    return false;
+  }
+  return prompt.find("one") == std::string::npos && prompt.find("two") == std::string::npos &&
+         prompt.find("three") == std::string::npos && prompt.find("four") == std::string::npos;
+}
+
 inline bool io_contract_test() {
   std::vector<uint8_t> bytes = {0, 127, 255};
   std::vector<int> tokens = bytes_to_tokens(bytes);
@@ -1081,11 +1200,16 @@ inline bool run_tests() {
   bool ok18 = jsonl_import_roundtrip_test();
   bool ok19 = split_dataset_contract_test();
   bool ok20 = io_contract_test();
-  bool ok21 = cpu_metal_training_parity_test();
-  bool ok22 = backend_adamw_update_test();
-  bool ok23 = backend_adamw_multi_param_parity_test();
-  bool ok24 = cpu_metal_staged_parity_trace_test();
-  bool ok25 = metal_checkpoint_cpu_generation_interop_test();
+  bool ok21 = session_roundtrip_test();
+  bool ok22 = session_jsonl_import_roundtrip_test();
+  bool ok23 = session_split_contract_test();
+  bool ok24 = chat_history_prompt_test();
+  bool ok25 = chat_history_trimming_test();
+  bool ok26 = cpu_metal_training_parity_test();
+  bool ok27 = backend_adamw_update_test();
+  bool ok28 = backend_adamw_multi_param_parity_test();
+  bool ok29 = cpu_metal_staged_parity_trace_test();
+  bool ok30 = metal_checkpoint_cpu_generation_interop_test();
   std::cout << "gradient_check_linear: " << (ok1 ? "PASS" : "FAIL") << '\n';
   std::cout << "backend_linear_op_test: " << (ok2 ? "PASS" : "FAIL") << '\n';
   std::cout << "backend_matmul_op_test: " << (ok3 ? "PASS" : "FAIL") << '\n';
@@ -1106,13 +1230,19 @@ inline bool run_tests() {
   std::cout << "jsonl_import_roundtrip_test: " << (ok18 ? "PASS" : "FAIL") << '\n';
   std::cout << "split_dataset_contract_test: " << (ok19 ? "PASS" : "FAIL") << '\n';
   std::cout << "io_contract_test: " << (ok20 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cpu_metal_training_parity_test: " << (ok21 ? "PASS" : "FAIL") << '\n';
-  std::cout << "backend_adamw_update_test: " << (ok22 ? "PASS" : "FAIL") << '\n';
-  std::cout << "backend_adamw_multi_param_parity_test: " << (ok23 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cpu_metal_staged_parity_trace_test: " << (ok24 ? "PASS" : "FAIL") << '\n';
-  std::cout << "metal_checkpoint_cpu_generation_interop_test: " << (ok25 ? "PASS" : "FAIL") << '\n';
+  std::cout << "session_roundtrip_test: " << (ok21 ? "PASS" : "FAIL") << '\n';
+  std::cout << "session_jsonl_import_roundtrip_test: " << (ok22 ? "PASS" : "FAIL") << '\n';
+  std::cout << "session_split_contract_test: " << (ok23 ? "PASS" : "FAIL") << '\n';
+  std::cout << "chat_history_prompt_test: " << (ok24 ? "PASS" : "FAIL") << '\n';
+  std::cout << "chat_history_trimming_test: " << (ok25 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cpu_metal_training_parity_test: " << (ok26 ? "PASS" : "FAIL") << '\n';
+  std::cout << "backend_adamw_update_test: " << (ok27 ? "PASS" : "FAIL") << '\n';
+  std::cout << "backend_adamw_multi_param_parity_test: " << (ok28 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cpu_metal_staged_parity_trace_test: " << (ok29 ? "PASS" : "FAIL") << '\n';
+  std::cout << "metal_checkpoint_cpu_generation_interop_test: " << (ok30 ? "PASS" : "FAIL") << '\n';
   return ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 &&
-         ok15 && ok16 && ok17 && ok18 && ok19 && ok20 && ok21 && ok22 && ok23 && ok24 && ok25;
+         ok15 && ok16 && ok17 && ok18 && ok19 && ok20 && ok21 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 &&
+         ok28 && ok29 && ok30;
 }
 
 

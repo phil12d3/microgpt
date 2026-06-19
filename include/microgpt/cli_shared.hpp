@@ -134,7 +134,7 @@ inline std::string build_usage_text() {
       << "  microgpt eval --checkpoint model.bin --input eval.txt [options]\n"
       << "  microgpt validate-data --input data.txt [options]\n"
       << "  microgpt split-data --input data.txt --train train.txt --val val.txt [options]\n"
-      << "  microgpt import-jsonl --input pairs.jsonl --output data.txt\n"
+      << "  microgpt import-jsonl --input pairs.jsonl --output data.txt [--format single|session]\n"
       << "  microgpt make-arithmetic-data --output data.txt [options]\n"
       << "  microgpt list-artifacts [--root artifacts]\n"
       << "  microgpt clean-artifacts [--root artifacts] [--yes]\n"
@@ -149,6 +149,8 @@ inline std::string build_usage_text() {
       << "  --mode raw|instruction, --prompt-token, --greedy, and --quiet.\n"
       << "  evaluation options include --match, --max-examples, --hide-failures,\n"
       << "  --greedy, and --output for a JSON report.\n"
+      << "  data options include --format single|session for validation, split,\n"
+      << "  and JSONL import.\n"
       << "  backend options include --backend cpu|metal|cuda.\n"
       << "  parity options include --backend cpu|metal|cuda and --tolerance.\n"
       << "  arithmetic data options include --max-a and --max-b.\n";
