@@ -80,6 +80,7 @@ inline ModelHandle train_text_file(const std::string& input_path, const std::str
   Model model(cfg);
   model.set_backend(options.backend);
   AdamW opt;
+  opt.set_backend(options.backend);
   opt.lr = cfg.learning_rate;
   opt.beta1 = cfg.beta1;
   opt.beta2 = cfg.beta2;

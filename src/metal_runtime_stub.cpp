@@ -67,3 +67,16 @@ extern "C" bool microgpt_metal_feedforward_backward(const float*, const float*, 
                                                      int, bool, bool) {
   return false;
 }
+
+extern "C" bool microgpt_metal_adamw_update(float*, float*, float*, float*, int, float, float, float, float, float, int,
+                                             bool) {
+  return false;
+}
+
+extern "C" void microgpt_metal_command_batch_begin() {}
+
+extern "C" bool microgpt_metal_command_batch_end() { return false; }
+
+extern "C" size_t microgpt_metal_command_buffer_submissions() { return 0; }
+
+extern "C" void microgpt_metal_reset_command_buffer_submissions() {}

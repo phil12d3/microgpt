@@ -46,7 +46,7 @@ On macOS, `BACKEND=metal` should automatically link:
 
 - Linear layer forward and backward are scalar nested loops.
 - Attention does repeated scalar score, softmax, and value accumulation loops.
-- Cross-entropy, gradient clipping, AdamW, and most attention work are host loops.
+- Cross-entropy, gradient clipping, and most attention work are host loops.
 - Temporary tensors are allocated repeatedly through `std::vector`.
 - Generation recomputes the full context every token.
 
@@ -63,7 +63,7 @@ On macOS, `BACKEND=metal` should automatically link:
 8. Add Metal kernels for the stabilized operation interface.
 9. Add CUDA kernels for the stabilized operation interface once hardware is available.
 10. Move additional ops behind the backend interface: softmax attention, loss,
-   gradient clipping, and AdamW.
+   and gradient clipping.
 11. Add command-buffer batching and resident activation flow so the accelerated
    backend does not submit one small command per tiny operation.
 12. Add generation key/value cache as a separate inference optimization.
@@ -90,10 +90,16 @@ Current operation boundary:
   fall back to CPU when Metal is unavailable.
 - Cached linear layers reuse Metal buffers and avoid re-uploading forward input
   and weights for the matching backward pass.
+- AdamW updates now batch all parameter work into one Metal command submission
+  before downloading updated weights and optimizer state.
 - `mgpt bench --resident-linear` isolates repeated linear forward/backward work
   with a single upload phase and a single final download phase.
 - The lab suite includes linear operation output/gradient coverage, matmul
-  coverage, and conditional Metal linear forward/backward parity coverage.
+  coverage, conditional Metal linear forward/backward parity coverage, and a
+  command-buffer submission regression test for Metal optimizer batching.
+- The lab suite also includes a staged parity trace that compares embeddings,
+  block outputs, logits, gradients, and AdamW updates on a fixed trace and
+  reports the first divergent stage.
 
 ## Correctness Rules
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "microgpt/backend.hpp"
 #include "microgpt/model.hpp"
 
 #include <algorithm>
@@ -68,9 +69,100 @@ struct AdamW {
   float eps = 1e-8f;
   float weight_decay = 0.01f;
   int step = 0;
+  BackendKind backend = BackendKind::Cpu;
+  bool batch_updates = false;
+
+  void set_backend(BackendKind kind) { backend = kind; }
 
   void update(std::vector<Parameter*>& params) {
     ++step;
+    if (params.empty()) {
+      return;
+    }
+    if (backend == BackendKind::Metal && microgpt_metal_runtime_available() && batch_updates) {
+      struct MetalParamUpdate {
+        Parameter* param = nullptr;
+        BackendBuffer data_buf;
+        BackendBuffer grad_buf;
+        BackendBuffer m_buf;
+        BackendBuffer v_buf;
+      };
+
+      struct CommandBatchGuard {
+        bool active = false;
+        CommandBatchGuard() {
+          microgpt_metal_command_batch_begin();
+          active = true;
+        }
+        void finish() {
+          if (active) {
+            if (!microgpt_metal_command_batch_end()) {
+              throw std::runtime_error("Metal command batch failed");
+            }
+            active = false;
+          }
+        }
+        ~CommandBatchGuard() {
+          if (active) {
+            (void)microgpt_metal_command_batch_end();
+          }
+        }
+      };
+
+      std::vector<MetalParamUpdate> updates;
+      updates.reserve(params.size());
+      CommandBatchGuard batch_guard;
+      for (Parameter* p : params) {
+        if (p->m.size() != p->data.size()) {
+          p->m.assign(p->data.size(), 0.0f);
+          p->v.assign(p->data.size(), 0.0f);
+        }
+        updates.push_back(MetalParamUpdate{});
+        MetalParamUpdate& update = updates.back();
+        update.param = p;
+        update.data_buf = BackendBuffer(BackendKind::Metal);
+        update.grad_buf = BackendBuffer(BackendKind::Metal);
+        update.m_buf = BackendBuffer(BackendKind::Metal);
+        update.v_buf = BackendBuffer(BackendKind::Metal);
+        update.data_buf.resize(p->data.size());
+        update.grad_buf.resize(p->grad.size());
+        update.m_buf.resize(p->m.size());
+        update.v_buf.resize(p->v.size());
+        update.data_buf.host = p->data;
+        update.grad_buf.host = p->grad;
+        update.m_buf.host = p->m;
+        update.v_buf.host = p->v;
+        update.data_buf.host_dirty = true;
+        update.grad_buf.host_dirty = true;
+        update.m_buf.host_dirty = true;
+        update.v_buf.host_dirty = true;
+        update.data_buf.upload();
+        update.grad_buf.upload();
+        update.m_buf.upload();
+        update.v_buf.upload();
+        bool ok = microgpt_metal_adamw_update(update.data_buf.device_contents(), update.grad_buf.device_contents(),
+                                              update.m_buf.device_contents(), update.v_buf.device_contents(),
+                                              static_cast<int>(p->data.size()), lr, beta1, beta2, eps,
+                                              weight_decay, step, p->decay);
+        if (!ok) {
+          throw std::runtime_error("Metal AdamW update failed");
+        }
+        update.data_buf.device_dirty = true;
+        update.m_buf.device_dirty = true;
+        update.v_buf.device_dirty = true;
+      }
+      batch_guard.finish();
+      for (MetalParamUpdate& update : updates) {
+        update.data_buf.download();
+        update.m_buf.download();
+        update.v_buf.download();
+        update.param->data = std::move(update.data_buf.host);
+        update.param->m = std::move(update.m_buf.host);
+        update.param->v = std::move(update.v_buf.host);
+        update.param->version += 1;
+      }
+      return;
+    }
     for (Parameter* p : params) {
       if (p->m.size() != p->data.size()) {
         p->m.assign(p->data.size(), 0.0f);
@@ -88,6 +180,7 @@ struct AdamW {
         }
         p->data[i] -= lr * update;
       }
+      p->version += 1;
     }
   }
 };

@@ -108,6 +108,7 @@ struct Parameter {
   std::vector<float> grad;
   std::vector<float> m;
   std::vector<float> v;
+  size_t version = 0;
   bool decay = true;
 
   Parameter() = default;
@@ -122,6 +123,7 @@ struct Parameter {
     grad.assign(data.size(), 0.0f);
     m.assign(data.size(), 0.0f);
     v.assign(data.size(), 0.0f);
+    version = 0;
   }
 
   size_t size() const { return data.size(); }

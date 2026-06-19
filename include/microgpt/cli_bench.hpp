@@ -165,6 +165,7 @@ inline int run_bench_command(const std::vector<std::string>& args, std::ostream&
   Model model(cfg);
   model.set_backend(backend);
   AdamW opt;
+  opt.set_backend(backend);
   opt.lr = cfg.learning_rate;
   opt.beta1 = cfg.beta1;
   opt.beta2 = cfg.beta2;

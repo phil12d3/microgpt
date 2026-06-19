@@ -33,6 +33,41 @@ static id<MTLCommandQueue> microgpt_metal_command_queue() {
   return queue;
 }
 
+struct MicrogptMetalCommandScope {
+  id<MTLCommandBuffer> buffer = nil;
+  bool owns = false;
+};
+
+static thread_local int microgpt_metal_batch_depth = 0;
+static thread_local id<MTLCommandBuffer> microgpt_metal_batch_buffer = nil;
+static size_t microgpt_metal_command_buffer_submission_count = 0;
+
+static MicrogptMetalCommandScope microgpt_metal_command_scope() {
+  if (microgpt_metal_batch_depth > 0 && microgpt_metal_batch_buffer != nil) {
+    return {microgpt_metal_batch_buffer, false};
+  }
+  id<MTLCommandQueue> queue = microgpt_metal_command_queue();
+  if (queue == nil) {
+    return {nil, false};
+  }
+  return {[queue commandBuffer], true};
+}
+
+static bool microgpt_metal_command_scope_finish(const MicrogptMetalCommandScope& scope) {
+  if (scope.buffer == nil) {
+    return false;
+  }
+  if (scope.owns) {
+    [scope.buffer commit];
+    [scope.buffer waitUntilCompleted];
+    if (scope.buffer.status != MTLCommandBufferStatusCompleted) {
+      return false;
+    }
+    ++microgpt_metal_command_buffer_submission_count;
+  }
+  return true;
+}
+
 extern "C" void* microgpt_metal_buffer_create(size_t bytes) {
   if (bytes == 0) {
     return nullptr;
@@ -878,6 +913,148 @@ extern "C" bool microgpt_metal_feedforward_backward(const float* x, const float*
     }
     return true;
   }
+}
+
+extern "C" bool microgpt_metal_adamw_update(float* data, float* grad, float* m, float* v, int n, float lr, float beta1,
+                                             float beta2, float eps, float weight_decay, int step, bool decay) {
+  if (data == nullptr || grad == nullptr || m == nullptr || v == nullptr || n <= 0 || step <= 0) {
+    return false;
+  }
+  @autoreleasepool {
+    id<MTLDevice> device = microgpt_metal_device();
+    if (device == nil) {
+      return false;
+    }
+    static id<MTLComputePipelineState> pipeline = nil;
+    static dispatch_once_t once;
+    static bool setup_ok = false;
+    dispatch_once(&once, ^{
+      NSError* error = nil;
+      NSString* source =
+          @"#include <metal_stdlib>\n"
+           "using namespace metal;\n"
+           "struct AdamWShape { int n; float lr; float beta1; float beta2; float eps; float weight_decay; int step; int decay; };\n"
+           "kernel void microgpt_adamw_update(device float* data [[buffer(0)]],\n"
+           "                                  device const float* grad [[buffer(1)]],\n"
+           "                                  device float* m [[buffer(2)]],\n"
+           "                                  device float* v [[buffer(3)]],\n"
+           "                                  constant AdamWShape& shape [[buffer(4)]],\n"
+           "                                  uint gid [[thread_position_in_grid]]) {\n"
+           "  if (gid >= (uint)shape.n) { return; }\n"
+           "  float g = grad[gid];\n"
+           "  m[gid] = shape.beta1 * m[gid] + (1.0f - shape.beta1) * g;\n"
+           "  v[gid] = shape.beta2 * v[gid] + (1.0f - shape.beta2) * g * g;\n"
+           "  float b1t = pow(shape.beta1, (float)shape.step);\n"
+           "  float b2t = pow(shape.beta2, (float)shape.step);\n"
+           "  float mhat = m[gid] / (1.0f - b1t);\n"
+           "  float vhat = v[gid] / (1.0f - b2t);\n"
+           "  float update = mhat / (sqrt(vhat) + shape.eps);\n"
+           "  if (shape.decay != 0) {\n"
+           "    update += shape.weight_decay * data[gid];\n"
+           "  }\n"
+           "  data[gid] -= shape.lr * update;\n"
+           "}\n";
+      id<MTLLibrary> library = [device newLibraryWithSource:source options:nil error:&error];
+      if (library == nil) {
+        setup_ok = false;
+        return;
+      }
+      id<MTLFunction> function = [library newFunctionWithName:@"microgpt_adamw_update"];
+      if (function == nil) {
+        [library release];
+        setup_ok = false;
+        return;
+      }
+      pipeline = [device newComputePipelineStateWithFunction:function error:&error];
+      [function release];
+      [library release];
+      setup_ok = pipeline != nil;
+    });
+    if (!setup_ok || pipeline == nil) {
+      return false;
+    }
+    struct Shape {
+      int n;
+      float lr;
+      float beta1;
+      float beta2;
+      float eps;
+      float weight_decay;
+      int step;
+      int decay;
+    } shape{n, lr, beta1, beta2, eps, weight_decay, step, decay ? 1 : 0};
+    size_t bytes = static_cast<size_t>(n) * sizeof(float);
+    id<MTLBuffer> data_buf = [[device newBufferWithBytes:data length:bytes options:MTLResourceStorageModeShared] autorelease];
+    id<MTLBuffer> grad_buf = [[device newBufferWithBytes:grad length:bytes options:MTLResourceStorageModeShared] autorelease];
+    id<MTLBuffer> m_buf = [[device newBufferWithBytes:m length:bytes options:MTLResourceStorageModeShared] autorelease];
+    id<MTLBuffer> v_buf = [[device newBufferWithBytes:v length:bytes options:MTLResourceStorageModeShared] autorelease];
+    id<MTLBuffer> shape_buf =
+        [[device newBufferWithBytes:&shape length:sizeof(shape) options:MTLResourceStorageModeShared] autorelease];
+    if (data_buf == nil || grad_buf == nil || m_buf == nil || v_buf == nil || shape_buf == nil) {
+      return false;
+    }
+    MicrogptMetalCommandScope scope = microgpt_metal_command_scope();
+    id<MTLCommandBuffer> command_buffer = scope.buffer;
+    id<MTLComputeCommandEncoder> encoder = [command_buffer computeCommandEncoder];
+    if (command_buffer == nil || encoder == nil) {
+      return false;
+    }
+    [encoder setComputePipelineState:pipeline];
+    [encoder setBuffer:data_buf offset:0 atIndex:0];
+    [encoder setBuffer:grad_buf offset:0 atIndex:1];
+    [encoder setBuffer:m_buf offset:0 atIndex:2];
+    [encoder setBuffer:v_buf offset:0 atIndex:3];
+    [encoder setBuffer:shape_buf offset:0 atIndex:4];
+    NSUInteger total = static_cast<NSUInteger>(n);
+    NSUInteger width = pipeline.maxTotalThreadsPerThreadgroup;
+    if (width > total) {
+      width = total;
+    }
+    [encoder dispatchThreads:MTLSizeMake(total, 1, 1) threadsPerThreadgroup:MTLSizeMake(width, 1, 1)];
+    [encoder endEncoding];
+    if (!microgpt_metal_command_scope_finish(scope)) {
+      return false;
+    }
+    std::memcpy(data, [data_buf contents], bytes);
+    std::memcpy(m, [m_buf contents], bytes);
+    std::memcpy(v, [v_buf contents], bytes);
+    return true;
+  }
+}
+
+extern "C" void microgpt_metal_command_batch_begin() {
+  ++microgpt_metal_batch_depth;
+  if (microgpt_metal_batch_depth == 1) {
+    id<MTLCommandQueue> queue = microgpt_metal_command_queue();
+    microgpt_metal_batch_buffer = queue == nil ? nil : [queue commandBuffer];
+  }
+}
+
+extern "C" bool microgpt_metal_command_batch_end() {
+  if (microgpt_metal_batch_depth <= 0) {
+    return false;
+  }
+  --microgpt_metal_batch_depth;
+  if (microgpt_metal_batch_depth == 0) {
+    id<MTLCommandBuffer> buffer = microgpt_metal_batch_buffer;
+    microgpt_metal_batch_buffer = nil;
+    if (buffer == nil) {
+      return false;
+    }
+    [buffer commit];
+    [buffer waitUntilCompleted];
+    if (buffer.status != MTLCommandBufferStatusCompleted) {
+      return false;
+    }
+    ++microgpt_metal_command_buffer_submission_count;
+  }
+  return true;
+}
+
+extern "C" size_t microgpt_metal_command_buffer_submissions() { return microgpt_metal_command_buffer_submission_count; }
+
+extern "C" void microgpt_metal_reset_command_buffer_submissions() {
+  microgpt_metal_command_buffer_submission_count = 0;
 }
 
 extern "C" bool microgpt_metal_layernorm_forward(const float* x, const float* gamma, const float* beta, float* y,

@@ -139,6 +139,7 @@ inline std::string build_usage_text() {
       << "  microgpt list-artifacts [--root artifacts]\n"
       << "  microgpt clean-artifacts [--root artifacts] [--yes]\n"
       << "  microgpt backends\n"
+      << "  microgpt parity [options]\n"
       << "  microgpt bench [options]\n"
       << "  microgpt test\n"
       << "  training options include --steps, --batch-size, --context, --d-model,\n"
@@ -149,6 +150,7 @@ inline std::string build_usage_text() {
       << "  evaluation options include --match, --max-examples, --hide-failures,\n"
       << "  --greedy, and --output for a JSON report.\n"
       << "  backend options include --backend cpu|metal|cuda.\n"
+      << "  parity options include --backend cpu|metal|cuda and --tolerance.\n"
       << "  arithmetic data options include --max-a and --max-b.\n";
   return out.str();
 }

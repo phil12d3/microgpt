@@ -150,6 +150,8 @@ struct LinearBackendCache {
   bool x_device_current = false;
   bool w_device_current = false;
   bool b_device_current = false;
+  size_t w_version = 0;
+  size_t b_version = 0;
 
   explicit LinearBackendCache(BackendKind kind = BackendKind::Cpu)
       : backend(kind), x(kind), w(kind), b(kind), y(kind), dy(kind), dx(kind), dw(kind), db(kind) {}
@@ -174,6 +176,8 @@ struct LinearBackendCache {
     x_device_current = false;
     w_device_current = false;
     b_device_current = false;
+    w_version = 0;
+    b_version = 0;
   }
 
   bool usable_for_metal() const {
@@ -474,8 +478,16 @@ inline SeqTensor linear_forward_op(BackendKind backend, LinearBackendCache* cach
       cache->b.ensure_size(b.data.size());
     }
     cache->x.host = x.data;
+    if (cache->w_version != w.version) {
+      cache->w_device_current = false;
+      cache->w_version = w.version;
+    }
     cache->w.host = w.data;
     if (!b.data.empty()) {
+      if (cache->b_version != b.version) {
+        cache->b_device_current = false;
+        cache->b_version = b.version;
+      }
       cache->b.host = b.data;
     }
     cache->x.host_dirty = true;
@@ -553,8 +565,16 @@ inline void linear_backward_op(BackendKind backend, LinearBackendCache* cache, S
     if (cache->w.size() != old_w_size) {
       cache->w_device_current = false;
     }
+    if (cache->w_version != w.version) {
+      cache->w_device_current = false;
+      cache->w_version = w.version;
+    }
     if (!b.data.empty()) {
       cache->db.ensure_size(b.data.size());
+      if (cache->b_version != b.version) {
+        cache->b_device_current = false;
+        cache->b_version = b.version;
+      }
     }
     cache->dy.host = y.grad;
     if (!cache->x_device_current) {

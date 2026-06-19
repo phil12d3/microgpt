@@ -44,6 +44,12 @@ extern "C" bool microgpt_metal_feedforward_backward(const float* x, const float*
                                                      const float* w1, const float* w2, const float* dy, float* dx,
                                                      float* dw1, float* db1, float* dw2, float* db2, int rows,
                                                      int d_model, int d_ff, bool has_b1, bool has_b2);
+extern "C" bool microgpt_metal_adamw_update(float* data, float* grad, float* m, float* v, int n, float lr, float beta1,
+                                             float beta2, float eps, float weight_decay, int step, bool decay);
+extern "C" void microgpt_metal_command_batch_begin();
+extern "C" bool microgpt_metal_command_batch_end();
+extern "C" size_t microgpt_metal_command_buffer_submissions();
+extern "C" void microgpt_metal_reset_command_buffer_submissions();
 
 namespace microgpt {
 

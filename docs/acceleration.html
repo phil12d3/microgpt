@@ -116,7 +116,7 @@
         <h2>Current Bottlenecks</h2>
         <ul>
           <li><code>SeqTensor</code> and <code>Parameter</code> own host-only <code>std::vector&lt;float&gt;</code> storage.</li>
-          <li>Attention softmax/value accumulation, loss, gradient clipping, and AdamW are still scalar host loops.</li>
+          <li>Attention softmax/value accumulation, loss, and gradient clipping are still scalar host loops.</li>
           <li>Forward and backward passes allocate many temporary vectors every step.</li>
           <li>Evaluation repeats full forward passes on CPU batches.</li>
           <li>Generation repeatedly recomputes the full context without a key/value cache.</li>
@@ -146,8 +146,9 @@
 ./bin/mgpt backends</code></pre>
         <p>
           Metal can now be selected and probed at runtime. Linear forward and
-          backward have first Metal kernels. CPU remains the reference backend,
-          and unsupported operations still fall back to CPU behavior.
+          backward, feed-forward, LayerNorm, and AdamW have Metal paths. CPU
+          remains the reference backend, and unsupported operations still fall
+          back to CPU behavior.
         </p>
       </section>
 
@@ -224,8 +225,9 @@ make BACKEND=metal all
           <code>linear -&gt; GELU -&gt; linear</code> forward work and the matching
           backward gradient work. These paths batch adjacent kernels into one
           command buffer, and the intermediate activations stay in shared
-          backend buffers across the forward/backward boundary. Full training is
-          not resident end to end yet.
+          backend buffers across the forward/backward boundary. AdamW updates
+          now batch all parameter work into a single Metal submission before
+          results are downloaded. Full training is not resident end to end yet.
         </p>
       </section>
 
@@ -240,7 +242,8 @@ make BACKEND=metal all
           <li>Data parsing, tokenization, checkpoint metadata, and eval reports stay backend-independent.</li>
         </ul>
         <p>
-          The lab includes <code>cpu_metal_training_parity_test</code> and
+          The lab includes <code>cpu_metal_training_parity_test</code>,
+          <code>backend_adamw_update_test</code>, and
           <code>metal_checkpoint_cpu_generation_interop_test</code>. These are
           no-ops on CPU-only machines and active regression tests when a Metal
           runtime device is visible.
@@ -249,10 +252,16 @@ make BACKEND=metal all
           The lab also includes <code>backend_gelu_op_test</code>,
           <code>backend_layernorm_op_test</code>,
           <code>backend_feedforward_forward_test</code>,
-          <code>backend_feedforward_backward_test</code>, and
-          <code>gradient_check_feedforward</code> to verify activation,
-          normalization, and fused feed-forward backend parity and catch
-          feed-forward activation derivative regressions.
+          <code>backend_feedforward_backward_test</code>,
+          <code>backend_adamw_batch_submission_test</code> to verify the
+          optimizer batching path, and <code>gradient_check_feedforward</code>
+          to verify activation, normalization, and fused feed-forward backend
+          parity while catching feed-forward activation derivative regressions.
+        </p>
+        <p>
+          A staged parity trace test now compares CPU and Metal at the
+          embedding, block, logits, gradient, and AdamW update stages and
+          prints the first divergent stage when parity breaks.
         </p>
       </section>
     </main>

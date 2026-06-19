@@ -97,9 +97,13 @@
 - [x] Add feed-forward gradient coverage to catch activation derivative regressions.
 - [x] Add a fused Metal feed-forward forward path that batches `linear -> GELU -> linear` in one command buffer.
 - [x] Add a fused Metal feed-forward backward path that batches linear/GELU gradient work in one command buffer.
+- [x] Add a staged CPU-vs-Metal parity harness that compares embeddings, block outputs, logits, gradients, and AdamW updates on fixed traces.
+- [ ] Collect and review a CPU-vs-Metal staged comparison report on real Metal hardware and use it to pinpoint the first divergent stage.
+- [ ] Add a strict no-fallback Metal mode so selected Metal runs fail when any phase silently drops back to CPU.
+- [x] Add compact trace reporting for parity debugging so the first divergent tensor or update is easy to isolate.
 - [ ] Add command-buffer batching to the full model execution path so small Metal operations do not pay one command submission per kernel.
 - [x] Keep more activation tensors resident across adjacent backend operations.
-- [ ] Move optimizer updates behind the backend interface so Metal training does not download gradients before AdamW.
+- [x] Move optimizer updates behind the backend interface so Metal training does not download gradients before AdamW.
 - [x] Test Metal locally on Apple hardware.
 - [ ] Add broader Metal backend support for Apple hardware after the backend interface is stable.
 - [ ] Add CUDA backend support for NVIDIA hardware after the backend interface is stable.

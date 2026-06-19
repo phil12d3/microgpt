@@ -44,6 +44,7 @@ struct GenerationProgress {
 inline void train_model(Model& model, const std::vector<int>& train_tokens, const std::vector<int>& val_tokens, AdamW& opt,
                         int steps, const std::string& checkpoint_path, int resume_step = 0,
                         const std::function<void(const TrainingProgress&)>& on_progress = {}) {
+  opt.set_backend(model.backend);
   int start_step = resume_step;
   using clock = std::chrono::steady_clock;
   auto train_start = clock::now();

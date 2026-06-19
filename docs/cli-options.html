@@ -387,6 +387,12 @@
           </article>
 
           <article class="card">
+            <h3><code>parity</code></h3>
+            <p>Runs a staged CPU-vs-Metal comparison trace and prints the first divergent stage when the trace drifts.</p>
+            <pre><code>./bin/mgpt parity --backend metal</code></pre>
+          </article>
+
+          <article class="card">
             <h3><code>bench</code></h3>
             <p>Runs a small synthetic training/generation benchmark or an operation-level resident linear benchmark.</p>
             <pre><code>./bin/mgpt bench --backend cpu
@@ -764,6 +770,7 @@
         <pre><code>make deps
 make BACKEND=metal all
 ./bin/mgpt backends
+./bin/mgpt parity --backend metal
 ./bin/mgpt train --backend metal --input data.txt --checkpoint model.bin</code></pre>
       </section>
 

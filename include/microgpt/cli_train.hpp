@@ -214,6 +214,7 @@ inline int run_train_command(const std::vector<std::string>& args, bool resume, 
     opt.weight_decay = cfg.weight_decay;
   }
   model.set_backend(backend);
+  opt.set_backend(backend);
   TrainingRunSummary run;
   run.started_at = timestamp_utc_now();
   auto started = std::chrono::steady_clock::now();

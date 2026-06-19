@@ -677,6 +677,7 @@ inline std::vector<int> backend_parity_tokens() {
 }
 
 inline void backend_parity_train_steps(Model& model, AdamW& opt, const std::vector<int>& tokens, int steps) {
+  opt.set_backend(model.backend);
   for (int i = 0; i < steps; ++i) {
     model.zero_grad();
     Batch batch = sample_batch(tokens, model.cfg.batch_size, model.cfg.context_length, model.rng);
@@ -687,6 +688,93 @@ inline void backend_parity_train_steps(Model& model, AdamW& opt, const std::vect
     clip_gradients(params, model.cfg.max_grad_norm);
     opt.update(params);
   }
+}
+
+inline bool backend_adamw_update_test() {
+  Parameter cpu_p("adamw.cpu", {4}, true);
+  cpu_p.data = {0.2f, -0.4f, 0.7f, -1.1f};
+  cpu_p.grad = {0.05f, -0.1f, 0.2f, -0.3f};
+  cpu_p.m = {0.01f, -0.02f, 0.03f, -0.04f};
+  cpu_p.v = {0.001f, 0.002f, 0.003f, 0.004f};
+  Parameter metal_p = cpu_p;
+  AdamW cpu_opt;
+  cpu_opt.lr = 0.001f;
+  cpu_opt.beta1 = 0.9f;
+  cpu_opt.beta2 = 0.999f;
+  cpu_opt.eps = 1e-8f;
+  cpu_opt.weight_decay = 0.01f;
+  AdamW metal_opt = cpu_opt;
+  metal_opt.set_backend(BackendKind::Metal);
+  std::vector<Parameter*> cpu_params = {&cpu_p};
+  std::vector<Parameter*> metal_params = {&metal_p};
+  cpu_opt.update(cpu_params);
+  if (!microgpt_metal_runtime_available()) {
+    return true;
+  }
+  metal_opt.update(metal_params);
+  for (size_t i = 0; i < cpu_p.data.size(); ++i) {
+    if (std::fabs(cpu_p.data[i] - metal_p.data[i]) > 1e-5f || std::fabs(cpu_p.m[i] - metal_p.m[i]) > 1e-5f ||
+        std::fabs(cpu_p.v[i] - metal_p.v[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  return cpu_p.version == 1 && metal_p.version == 1;
+}
+
+inline bool backend_adamw_multi_param_parity_test() {
+  if (!microgpt_metal_runtime_available()) {
+    return true;
+  }
+
+  std::vector<Parameter> cpu_storage;
+  std::vector<Parameter> metal_storage;
+  for (int i = 0; i < 3; ++i) {
+    Parameter cpu_p("adamw.batch." + std::to_string(i), {4 + i}, true);
+    for (size_t j = 0; j < cpu_p.data.size(); ++j) {
+      float base = static_cast<float>(i + 1) * 0.1f;
+      cpu_p.data[j] = base + static_cast<float>(j) * 0.05f;
+      cpu_p.grad[j] = static_cast<float>(j + 1) * 0.02f - static_cast<float>(i) * 0.01f;
+      cpu_p.m[j] = static_cast<float>(j) * 0.03f;
+      cpu_p.v[j] = static_cast<float>(j + 1) * 0.004f;
+    }
+    if (i == 1) {
+      cpu_p.decay = false;
+    }
+    cpu_storage.push_back(cpu_p);
+    metal_storage.push_back(cpu_p);
+  }
+
+  AdamW cpu_opt;
+  AdamW metal_opt;
+  cpu_opt.lr = 0.001f;
+  cpu_opt.beta1 = 0.9f;
+  cpu_opt.beta2 = 0.999f;
+  cpu_opt.eps = 1e-8f;
+  cpu_opt.weight_decay = 0.01f;
+  metal_opt = cpu_opt;
+  metal_opt.set_backend(BackendKind::Metal);
+  metal_opt.batch_updates = false;
+  std::vector<Parameter*> cpu_params;
+  std::vector<Parameter*> metal_params;
+  for (size_t i = 0; i < cpu_storage.size(); ++i) {
+    cpu_params.push_back(&cpu_storage[i]);
+    metal_params.push_back(&metal_storage[i]);
+  }
+  cpu_opt.update(cpu_params);
+  metal_opt.update(metal_params);
+  for (size_t p = 0; p < cpu_storage.size(); ++p) {
+    if (cpu_storage[p].version != 1 || metal_storage[p].version != 1) {
+      return false;
+    }
+    for (size_t i = 0; i < cpu_storage[p].data.size(); ++i) {
+      if (std::fabs(cpu_storage[p].data[i] - metal_storage[p].data[i]) > 1e-5f ||
+          std::fabs(cpu_storage[p].m[i] - metal_storage[p].m[i]) > 1e-5f ||
+          std::fabs(cpu_storage[p].v[i] - metal_storage[p].v[i]) > 1e-5f) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 inline float max_parameter_abs_diff(Model& a, Model& b) {
@@ -716,6 +804,198 @@ inline float max_tensor_abs_diff(const SeqTensor& a, const SeqTensor& b) {
     max_diff = std::max(max_diff, std::fabs(a.data[i] - b.data[i]));
   }
   return max_diff;
+}
+
+inline float max_vector_abs_diff(const std::vector<float>& a, const std::vector<float>& b) {
+  if (a.size() != b.size()) {
+    return std::numeric_limits<float>::infinity();
+  }
+  float max_diff = 0.0f;
+  for (size_t i = 0; i < a.size(); ++i) {
+    max_diff = std::max(max_diff, std::fabs(a[i] - b[i]));
+  }
+  return max_diff;
+}
+
+template <typename Getter>
+inline float max_parameter_component_abs_diff(Model& a, Model& b, Getter getter) {
+  auto ap = a.parameters();
+  auto bp = b.parameters();
+  if (ap.size() != bp.size()) {
+    return std::numeric_limits<float>::infinity();
+  }
+  float max_diff = 0.0f;
+  for (size_t p = 0; p < ap.size(); ++p) {
+    const std::vector<float>& lhs = getter(*ap[p]);
+    const std::vector<float>& rhs = getter(*bp[p]);
+    max_diff = std::max(max_diff, max_vector_abs_diff(lhs, rhs));
+  }
+  return max_diff;
+}
+
+struct ParityTraceEntry {
+  std::string stage;
+  float max_abs_diff = 0.0f;
+};
+
+inline void add_parity_trace(std::vector<ParityTraceEntry>& trace, const std::string& stage, float diff) {
+  trace.push_back({stage, diff});
+}
+
+inline bool parity_trace_ok(const std::vector<ParityTraceEntry>& trace, float tolerance) {
+  for (const auto& entry : trace) {
+    if (!std::isfinite(entry.max_abs_diff) || entry.max_abs_diff > tolerance) {
+      return false;
+    }
+  }
+  return true;
+}
+
+inline std::string first_parity_trace_failure(const std::vector<ParityTraceEntry>& trace, float tolerance) {
+  for (const auto& entry : trace) {
+    if (!std::isfinite(entry.max_abs_diff) || entry.max_abs_diff > tolerance) {
+      return entry.stage;
+    }
+  }
+  return "";
+}
+
+inline void print_parity_trace(const std::vector<ParityTraceEntry>& trace, std::ostream& out) {
+  out << "parity_trace\n";
+  for (const auto& entry : trace) {
+    out << entry.stage << " max_abs_diff " << std::fixed << std::setprecision(6) << entry.max_abs_diff << '\n';
+  }
+}
+
+inline void trace_block_state(std::vector<ParityTraceEntry>& trace, const Block& cpu, const Block& metal,
+                              const std::string& prefix) {
+  add_parity_trace(trace, prefix + ".ln1.mean", max_vector_abs_diff(cpu.ln1.mean, metal.ln1.mean));
+  add_parity_trace(trace, prefix + ".ln1.inv_std", max_vector_abs_diff(cpu.ln1.inv_std, metal.ln1.inv_std));
+  add_parity_trace(trace, prefix + ".ln1.xhat", max_vector_abs_diff(cpu.ln1.xhat, metal.ln1.xhat));
+  add_parity_trace(trace, prefix + ".attn.q", max_tensor_abs_diff(cpu.attn.q, metal.attn.q));
+  add_parity_trace(trace, prefix + ".attn.k", max_tensor_abs_diff(cpu.attn.k, metal.attn.k));
+  add_parity_trace(trace, prefix + ".attn.v", max_tensor_abs_diff(cpu.attn.v, metal.attn.v));
+  add_parity_trace(trace, prefix + ".attn.context", max_tensor_abs_diff(cpu.attn.context, metal.attn.context));
+  add_parity_trace(trace, prefix + ".attn.weights", max_vector_abs_diff(cpu.attn.weights, metal.attn.weights));
+  add_parity_trace(trace, prefix + ".resid1", max_tensor_abs_diff(cpu.resid1, metal.resid1));
+  add_parity_trace(trace, prefix + ".ln2.mean", max_vector_abs_diff(cpu.ln2.mean, metal.ln2.mean));
+  add_parity_trace(trace, prefix + ".ln2.inv_std", max_vector_abs_diff(cpu.ln2.inv_std, metal.ln2.inv_std));
+  add_parity_trace(trace, prefix + ".ln2.xhat", max_vector_abs_diff(cpu.ln2.xhat, metal.ln2.xhat));
+  add_parity_trace(trace, prefix + ".ff.pre_activation", max_tensor_abs_diff(cpu.ff.pre_activation, metal.ff.pre_activation));
+  add_parity_trace(trace, prefix + ".ff.hidden", max_tensor_abs_diff(cpu.ff.hidden, metal.ff.hidden));
+  add_parity_trace(trace, prefix + ".ff.fc1.w.grad", max_vector_abs_diff(cpu.ff.fc1.w.grad, metal.ff.fc1.w.grad));
+  add_parity_trace(trace, prefix + ".ff.fc1.b.grad", max_vector_abs_diff(cpu.ff.fc1.b.grad, metal.ff.fc1.b.grad));
+  add_parity_trace(trace, prefix + ".ff.fc2.w.grad", max_vector_abs_diff(cpu.ff.fc2.w.grad, metal.ff.fc2.w.grad));
+  add_parity_trace(trace, prefix + ".ff.fc2.b.grad", max_vector_abs_diff(cpu.ff.fc2.b.grad, metal.ff.fc2.b.grad));
+}
+
+inline void trace_model_state(std::vector<ParityTraceEntry>& trace, const Model& cpu, const Model& metal,
+                              const std::string& prefix) {
+  add_parity_trace(trace, prefix + ".embed_out", max_tensor_abs_diff(cpu.embed_out, metal.embed_out));
+  add_parity_trace(trace, prefix + ".pre_norm", max_tensor_abs_diff(cpu.pre_norm, metal.pre_norm));
+  add_parity_trace(trace, prefix + ".norm_out", max_tensor_abs_diff(cpu.norm_out, metal.norm_out));
+  add_parity_trace(trace, prefix + ".token_embedding.data", max_vector_abs_diff(cpu.token_embedding.data, metal.token_embedding.data));
+  add_parity_trace(trace, prefix + ".position_embedding.data",
+                   max_vector_abs_diff(cpu.position_embedding.data, metal.position_embedding.data));
+  add_parity_trace(trace, prefix + ".token_embedding.grad", max_vector_abs_diff(cpu.token_embedding.grad, metal.token_embedding.grad));
+  add_parity_trace(trace, prefix + ".position_embedding.grad",
+                   max_vector_abs_diff(cpu.position_embedding.grad, metal.position_embedding.grad));
+  add_parity_trace(trace, prefix + ".final_norm.gamma.grad",
+                   max_vector_abs_diff(cpu.final_norm.gamma.grad, metal.final_norm.gamma.grad));
+  add_parity_trace(trace, prefix + ".final_norm.beta.grad",
+                   max_vector_abs_diff(cpu.final_norm.beta.grad, metal.final_norm.beta.grad));
+  add_parity_trace(trace, prefix + ".lm_head.w.grad", max_vector_abs_diff(cpu.lm_head.w.grad, metal.lm_head.w.grad));
+  add_parity_trace(trace, prefix + ".lm_head.b.grad", max_vector_abs_diff(cpu.lm_head.b.grad, metal.lm_head.b.grad));
+  for (size_t i = 0; i < cpu.blocks.size(); ++i) {
+    trace_block_state(trace, cpu.blocks[i], metal.blocks[i], prefix + ".block" + std::to_string(i));
+  }
+}
+
+inline bool cpu_metal_staged_parity_trace_report(std::ostream& out) {
+  if (!microgpt_metal_runtime_available()) {
+    out << "parity_report unavailable\n";
+    out << "reason no_runtime_metal_device\n";
+    return true;
+  }
+  Config cfg = backend_parity_test_config();
+  std::vector<int> tokens = backend_parity_tokens();
+  RNG batch_rng(777);
+  Batch batch = sample_batch(tokens, cfg.batch_size, cfg.context_length, batch_rng);
+
+  Model cpu_model(cfg);
+  Model metal_model(cfg);
+  metal_model.set_backend(BackendKind::Metal);
+  AdamW cpu_opt;
+  AdamW metal_opt;
+  cpu_opt.lr = cfg.learning_rate;
+  metal_opt.lr = cfg.learning_rate;
+  metal_opt.set_backend(BackendKind::Metal);
+  std::vector<ParityTraceEntry> trace;
+
+  SeqTensor cpu_logits = cpu_model.forward(batch.x);
+  SeqTensor metal_logits = metal_model.forward(batch.x);
+  add_parity_trace(trace, "forward.embed_out", max_tensor_abs_diff(cpu_model.embed_out, metal_model.embed_out));
+  add_parity_trace(trace, "forward.pre_norm", max_tensor_abs_diff(cpu_model.pre_norm, metal_model.pre_norm));
+  add_parity_trace(trace, "forward.norm_out", max_tensor_abs_diff(cpu_model.norm_out, metal_model.norm_out));
+  for (size_t i = 0; i < cpu_model.blocks.size(); ++i) {
+    trace_block_state(trace, cpu_model.blocks[i], metal_model.blocks[i], "forward.block" + std::to_string(i));
+  }
+  add_parity_trace(trace, "forward.logits", max_tensor_abs_diff(cpu_logits, metal_logits));
+  out << "parity_report stage forward\n";
+  print_parity_trace(trace, out);
+  out << "first_divergent_stage " << first_parity_trace_failure(trace, 5e-3f) << '\n';
+  bool forward_ok = parity_trace_ok(trace, 5e-3f);
+
+  trace.clear();
+  cross_entropy_loss(cpu_logits, batch.y);
+  cross_entropy_loss(metal_logits, batch.y);
+  add_parity_trace(trace, "backward.logits.grad", max_vector_abs_diff(cpu_logits.grad, metal_logits.grad));
+  cpu_model.backward(cpu_logits);
+  metal_model.backward(metal_logits);
+  trace_model_state(trace, cpu_model, metal_model, "backward");
+  add_parity_trace(trace, "backward.param_data", max_parameter_component_abs_diff(cpu_model, metal_model, [](const Parameter& p) {
+                      return p.data;
+                    }));
+  add_parity_trace(trace, "backward.param_grad", max_parameter_component_abs_diff(cpu_model, metal_model, [](const Parameter& p) {
+                      return p.grad;
+                    }));
+  out << "parity_report stage backward\n";
+  print_parity_trace(trace, out);
+  out << "first_divergent_stage " << first_parity_trace_failure(trace, 5e-3f) << '\n';
+  bool backward_ok = parity_trace_ok(trace, 5e-3f);
+
+  trace.clear();
+  std::vector<Parameter*> cpu_params = cpu_model.parameters();
+  std::vector<Parameter*> metal_params = metal_model.parameters();
+  cpu_opt.update(cpu_params);
+  metal_opt.update(metal_params);
+  add_parity_trace(trace, "update.param_data", max_parameter_component_abs_diff(cpu_model, metal_model, [](const Parameter& p) {
+                      return p.data;
+                    }));
+  add_parity_trace(trace, "update.param_grad", max_parameter_component_abs_diff(cpu_model, metal_model, [](const Parameter& p) {
+                      return p.grad;
+                    }));
+  add_parity_trace(trace, "update.param_m", max_parameter_component_abs_diff(cpu_model, metal_model, [](const Parameter& p) {
+                      return p.m;
+                    }));
+  add_parity_trace(trace, "update.param_v", max_parameter_component_abs_diff(cpu_model, metal_model, [](const Parameter& p) {
+                      return p.v;
+                    }));
+  out << "parity_report stage update\n";
+  print_parity_trace(trace, out);
+  out << "first_divergent_stage " << first_parity_trace_failure(trace, 5e-3f) << '\n';
+  bool update_ok = parity_trace_ok(trace, 5e-3f);
+  out << "parity_report status " << ((forward_ok && backward_ok && update_ok) ? "pass" : "fail") << '\n';
+  return forward_ok && backward_ok && update_ok;
+}
+
+inline bool cpu_metal_staged_parity_trace_test() {
+  std::ostringstream sink;
+  bool ok = cpu_metal_staged_parity_trace_report(sink);
+  if (!ok) {
+    std::cerr << sink.str();
+  }
+  return ok;
 }
 
 inline bool cpu_metal_training_parity_test() {
@@ -802,7 +1082,10 @@ inline bool run_tests() {
   bool ok19 = split_dataset_contract_test();
   bool ok20 = io_contract_test();
   bool ok21 = cpu_metal_training_parity_test();
-  bool ok22 = metal_checkpoint_cpu_generation_interop_test();
+  bool ok22 = backend_adamw_update_test();
+  bool ok23 = backend_adamw_multi_param_parity_test();
+  bool ok24 = cpu_metal_staged_parity_trace_test();
+  bool ok25 = metal_checkpoint_cpu_generation_interop_test();
   std::cout << "gradient_check_linear: " << (ok1 ? "PASS" : "FAIL") << '\n';
   std::cout << "backend_linear_op_test: " << (ok2 ? "PASS" : "FAIL") << '\n';
   std::cout << "backend_matmul_op_test: " << (ok3 ? "PASS" : "FAIL") << '\n';
@@ -824,9 +1107,12 @@ inline bool run_tests() {
   std::cout << "split_dataset_contract_test: " << (ok19 ? "PASS" : "FAIL") << '\n';
   std::cout << "io_contract_test: " << (ok20 ? "PASS" : "FAIL") << '\n';
   std::cout << "cpu_metal_training_parity_test: " << (ok21 ? "PASS" : "FAIL") << '\n';
-  std::cout << "metal_checkpoint_cpu_generation_interop_test: " << (ok22 ? "PASS" : "FAIL") << '\n';
+  std::cout << "backend_adamw_update_test: " << (ok22 ? "PASS" : "FAIL") << '\n';
+  std::cout << "backend_adamw_multi_param_parity_test: " << (ok23 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cpu_metal_staged_parity_trace_test: " << (ok24 ? "PASS" : "FAIL") << '\n';
+  std::cout << "metal_checkpoint_cpu_generation_interop_test: " << (ok25 ? "PASS" : "FAIL") << '\n';
   return ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 &&
-         ok15 && ok16 && ok17 && ok18 && ok19 && ok20 && ok21 && ok22;
+         ok15 && ok16 && ok17 && ok18 && ok19 && ok20 && ok21 && ok22 && ok23 && ok24 && ok25;
 }
 
 

@@ -7,6 +7,7 @@
 #include "microgpt/cli_data.hpp"
 #include "microgpt/cli_eval.hpp"
 #include "microgpt/cli_generate.hpp"
+#include "microgpt/cli_parity.hpp"
 #include "microgpt/cli_shared.hpp"
 #include "microgpt/cli_train.hpp"
 #include "microgpt/harness.hpp"
@@ -52,6 +53,9 @@ inline void register_microgpt_tools(HarnessRegistry& registry) {
   });
   registry.register_tool("bench", [](const std::vector<std::string>& args, HarnessIO& io) {
     return run_bench_command(args, io.out);
+  });
+  registry.register_tool("parity", [](const std::vector<std::string>& args, HarnessIO& io) {
+    return run_parity_command(args, io.out, io.err);
   });
   registry.register_tool("test", [](const std::vector<std::string>&, HarnessIO&) { return run_tests() ? 0 : 2; });
 }
