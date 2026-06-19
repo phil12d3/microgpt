@@ -131,3 +131,4 @@
 - [x] Document how other applications can embed the library or register custom tools.
 - [x] Add a scrollback-based chat TUI with inline progress and footer stats.
 - [x] Keep the chat UI split into reusable session and terminal harness headers.
+- [x] Split the chat TUI into separate command, input, render, and loop headers.
