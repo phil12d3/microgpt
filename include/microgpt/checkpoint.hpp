@@ -2,6 +2,7 @@
 
 #include "microgpt/io.hpp"
 #include "microgpt/optim.hpp"
+#include "microgpt/tokenizer.hpp"
 
 #include <cstdint>
 #include <fstream>
@@ -120,8 +121,9 @@ inline void save_checkpoint(const std::string& path, const Model& model, const A
   if (!out) {
     throw std::runtime_error("failed to open checkpoint for write: " + path);
   }
-  out.write("MICROGPT1", 9);
+  out.write("MICROGPT2", 9);
   write_i32(out, step);
+  write_i32(out, model.cfg.tokenizer_kind);
   write_i32(out, model.cfg.vocab_size);
   write_i32(out, model.cfg.context_length);
   write_i32(out, model.cfg.d_model);
@@ -156,12 +158,23 @@ inline Model load_checkpoint(const std::string& path, AdamW& opt, int& step) {
   }
   char magic[10] = {};
   in.read(magic, 9);
-  if (std::string(magic, 9) != "MICROGPT1") {
+  std::string magic_text(magic, 9);
+  if (magic_text != "MICROGPT1" && magic_text != "MICROGPT2") {
     throw std::runtime_error("invalid checkpoint magic");
   }
   step = read_i32(in);
   Config cfg;
-  cfg.vocab_size = read_i32(in);
+  if (magic_text == "MICROGPT2") {
+    cfg.tokenizer_kind = read_i32(in);
+    Tokenizer tok(tokenizer_kind_from_int(cfg.tokenizer_kind));
+    cfg.vocab_size = read_i32(in);
+    if (cfg.vocab_size != tok.vocab_size()) {
+      throw std::runtime_error("checkpoint tokenizer/vocab size mismatch");
+    }
+  } else {
+    cfg.tokenizer_kind = static_cast<int>(TokenizerKind::Byte);
+    cfg.vocab_size = read_i32(in);
+  }
   cfg.context_length = read_i32(in);
   cfg.d_model = read_i32(in);
   cfg.num_layers = read_i32(in);

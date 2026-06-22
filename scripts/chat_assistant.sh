@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-: "${ASSISTANT_CHECKPOINT:=artifacts/checkpoints/assistant-seed.bin}"
+: "${ASSISTANT_CHECKPOINT:=artifacts/checkpoints/assistant-seed-bpe.bin}"
 : "${MAX_NEW_TOKENS:=120}"
 : "${TEMPERATURE:=0.2}"
 : "${TOP_K:=1}"

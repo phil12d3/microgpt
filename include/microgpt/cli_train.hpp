@@ -100,7 +100,8 @@ inline void write_checkpoint_metadata_json(const std::string& checkpoint, const 
   }
   size_t params = model_parameter_count(const_cast<Model&>(model));
   json << "{\n";
-  json << "  \"magic\": \"MICROGPT1\",\n";
+  Tokenizer tok(tokenizer_kind_from_int(model.cfg.tokenizer_kind));
+  json << "  \"magic\": \"MICROGPT2\",\n";
   json << "  \"checkpoint\": \"" << json_escape(checkpoint) << "\",\n";
   json << "  \"step\": " << final_step << ",\n";
   json << "  \"optimizer_step\": " << opt.step << ",\n";
@@ -115,6 +116,8 @@ inline void write_checkpoint_metadata_json(const std::string& checkpoint, const 
   json << "  \"validation_source\": \"" << (explicit_validation ? "explicit" : "auto_split") << "\",\n";
   json << "  \"config\": {\n";
   json << "    \"vocab_size\": " << model.cfg.vocab_size << ",\n";
+  json << "    \"tokenizer\": \"" << json_escape(tok.name()) << "\",\n";
+  json << "    \"tokenizer_kind\": " << model.cfg.tokenizer_kind << ",\n";
   json << "    \"context_length\": " << model.cfg.context_length << ",\n";
   json << "    \"d_model\": " << model.cfg.d_model << ",\n";
   json << "    \"num_layers\": " << model.cfg.num_layers << ",\n";
@@ -144,6 +147,8 @@ inline void write_checkpoint_metadata_json(const std::string& checkpoint, const 
   json << "      \"requested_steps\": " << requested_steps << ",\n";
   json << "      \"command\": \"" << json_escape(command) << "\",\n";
   json << "      \"backend\": \"" << json_escape(backend_name(backend)) << "\",\n";
+  json << "      \"tokenizer\": \"" << json_escape(tok.name()) << "\",\n";
+  json << "      \"tokenizer_kind\": " << model.cfg.tokenizer_kind << ",\n";
   json << "      \"train_input\": \"" << json_escape(input) << "\",\n";
   json << "      \"val_input\": \"" << json_escape(val_input) << "\",\n";
   json << "      \"validation_source\": \"" << (explicit_validation ? "explicit" : "auto_split") << "\",\n";
@@ -184,7 +189,26 @@ inline int run_train_command(const std::vector<std::string>& args, bool resume, 
   cfg.top_k = get_arg_int(args, "--top-k", cfg.top_k);
   cfg.seed = static_cast<uint32_t>(get_arg_int(args, "--seed", static_cast<int>(cfg.seed)));
 
-  Tokenizer tok;
+  std::string tokenizer_arg = get_arg(args, "--tokenizer", "byte");
+  cfg.tokenizer_kind = static_cast<int>(parse_tokenizer_kind(tokenizer_arg));
+  Tokenizer tok(tokenizer_kind_from_int(cfg.tokenizer_kind));
+  cfg.vocab_size = tok.vocab_size();
+  AdamW opt;
+  int resume_step = 0;
+  Model model(cfg);
+  if (resume) {
+    model = load_checkpoint(checkpoint, opt, resume_step);
+    if (has_arg(args, "--tokenizer") && model.cfg.tokenizer_kind != cfg.tokenizer_kind) {
+      throw std::runtime_error("--tokenizer cannot change when resuming a checkpoint");
+    }
+    tok = Tokenizer(tokenizer_kind_from_int(model.cfg.tokenizer_kind));
+  } else {
+    opt.lr = cfg.learning_rate;
+    opt.beta1 = cfg.beta1;
+    opt.beta2 = cfg.beta2;
+    opt.eps = cfg.adam_eps;
+    opt.weight_decay = cfg.weight_decay;
+  }
   std::vector<int> tokens = tok.encode_text(read_file_text(input));
   if (tokens.size() < 2) {
     throw std::runtime_error("training input is too small");
@@ -200,18 +224,6 @@ inline int run_train_command(const std::vector<std::string>& args, bool resume, 
     if (val_tokens.size() < 2) {
       throw std::runtime_error("validation input is too small");
     }
-  }
-  AdamW opt;
-  int resume_step = 0;
-  Model model(cfg);
-  if (resume) {
-    model = load_checkpoint(checkpoint, opt, resume_step);
-  } else {
-    opt.lr = cfg.learning_rate;
-    opt.beta1 = cfg.beta1;
-    opt.beta2 = cfg.beta2;
-    opt.eps = cfg.adam_eps;
-    opt.weight_decay = cfg.weight_decay;
   }
   model.set_backend(backend);
   opt.set_backend(backend);

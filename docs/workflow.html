@@ -200,6 +200,7 @@
           pipeline. Use environment variables to override defaults, for example
           <code>STEPS=500 ./scripts/train_assistant.sh</code> or
           <code>ASSISTANT_BACKEND=metal ./scripts/train_assistant.sh</code>.
+          The assistant scripts default to <code>ASSISTANT_TOKENIZER=bpe</code>.
         </p>
         <pre><code>./bin/mgpt import-jsonl \
   --input sample_data/assistant/seed.jsonl \
@@ -215,7 +216,7 @@
 ./bin/mgpt train \
   --input artifacts/datasets/assistant/train.txt \
   --val-input artifacts/datasets/assistant/val.txt \
-  --checkpoint artifacts/checkpoints/assistant-seed.bin \
+  --checkpoint artifacts/checkpoints/assistant-seed-bpe.bin \
   --steps 3000 \
   --context 128 \
   --d-model 64 \
@@ -224,17 +225,18 @@
   --ff 128 \
   --batch-size 8 \
   --lr 0.0008 \
+  --tokenizer bpe \
   --eval-interval 500 \
   --save-interval 1000 \
   --progress-interval 500
 
 ./bin/mgpt eval \
-  --checkpoint artifacts/checkpoints/assistant-seed.bin \
+  --checkpoint artifacts/checkpoints/assistant-seed-bpe.bin \
   --input artifacts/datasets/assistant/val.txt \
   --max-new-tokens 80 \
   --match contains \
   --greedy \
-  --output artifacts/evals/assistant-seed-val.json</code></pre>
+  --output artifacts/evals/assistant-seed-bpe-val.json</code></pre>
       </section>
 
       <section>

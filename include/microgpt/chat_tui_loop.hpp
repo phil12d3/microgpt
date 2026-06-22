@@ -26,7 +26,7 @@ inline void run_chat_tui_loop(Model& model, ChatConfig config, std::ostream& err
   if (!guard.active()) {
     throw std::runtime_error("failed to enable terminal raw mode");
   }
-  Tokenizer tok;
+  Tokenizer tok(tokenizer_kind_from_int(model.cfg.tokenizer_kind));
   ChatUiState ui;
   ui.checkpoint = config.checkpoint;
   ui.backend_name = backend_name(config.backend);
@@ -77,7 +77,7 @@ inline void run_chat_tui_loop(Model& model, ChatConfig config, std::ostream& err
           ui.command_suggestion_index = -1;
           continue;
         }
-        std::vector<ChatMessage> trimmed_history = trim_chat_history_to_context(history, ui.input, model.cfg.context_length);
+        std::vector<ChatMessage> trimmed_history = trim_chat_history_to_context(history, ui.input, model.cfg.context_length, tok);
         std::string model_prompt = format_multi_turn_chat_prompt(trimmed_history, ui.input);
         ui.last_prompt_tokens = tok.encode_text(model_prompt).size();
         ui.generating = true;

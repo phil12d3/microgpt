@@ -67,6 +67,9 @@
 - [x] Fail explicitly when `BACKEND=metal` is requested on non-macOS platforms.
 - [x] Add bounded file reads and byte-tokenizer vocabulary contract checks.
 - [x] Add lab coverage for IO/tokenizer safety contracts.
+- [x] Add selectable tokenizer modes with byte compatibility and deterministic BPE-style tokenization.
+- [x] Store tokenizer metadata in checkpoints so CPU and Metal runs use the same token IDs.
+- [x] Update assistant train/resume/chat scripts to default to BPE-tokenized checkpoints.
 - [x] Add CI workflow covering CPU build, tests, strict build, and sanitizer build.
 - [x] Add CLI-level tests for train/generate/eval/data commands.
 - [x] Add negative-path tests for malformed data, bad checkpoints, and invalid CLI arguments.
@@ -110,6 +113,7 @@
 - [ ] Add CUDA backend support for NVIDIA hardware after the backend interface is stable.
 - [ ] Test CUDA only on NVIDIA hardware or CI with CUDA available.
 - [ ] Keep checkpoints, data parsing, tokenizer behavior, and eval reports portable across backends.
+- [ ] Add a learned BPE trainer and persisted merge/vocabulary files if fixed BPE proves useful.
 
 ## Tiny Assistant Roadmap
 

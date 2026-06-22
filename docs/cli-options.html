@@ -460,6 +460,16 @@
               <td>Sequence length in tokens. Smaller corpora need smaller context sizes.</td>
             </tr>
             <tr>
+              <td><code>--tokenizer byte|bpe</code></td>
+              <td><code>train</code></td>
+              <td><code>byte</code></td>
+              <td>
+                Tokenizer used to create a new checkpoint. <code>byte</code> is the legacy byte-level mode.
+                <code>bpe</code> uses the built-in deterministic multi-character vocabulary. Resume and generation
+                read the tokenizer from the checkpoint.
+              </td>
+            </tr>
+            <tr>
               <td><code>--d-model N</code></td>
               <td><code>train</code></td>
               <td><code>128</code></td>
@@ -528,7 +538,9 @@
             <code>resume</code> loads model shape and optimizer state from the
             checkpoint. Architecture flags such as <code>--context</code>,
             <code>--d-model</code>, <code>--layers</code>, <code>--heads</code>,
-            and <code>--ff</code> are ignored after the checkpoint is loaded.
+            <code>--ff</code>, and <code>--tokenizer</code> are ignored after the
+            checkpoint is loaded. Passing a different explicit tokenizer while
+            resuming is rejected.
           </p>
         </div>
       </section>

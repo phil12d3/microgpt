@@ -1,11 +1,11 @@
 {
   "magic": "MICROGPT1",
   "checkpoint": "artifacts/checkpoints/assistant-seed.bin",
-  "step": 24000,
-  "optimizer_step": 24000,
+  "step": 44000,
+  "optimizer_step": 44000,
   "parameter_count": 108804,
   "parameter_bytes_f32": 435216,
-  "start_step": 14000,
+  "start_step": 34000,
   "requested_steps": 10000,
   "command": "resume --input artifacts/datasets/assistant/train.txt --val-input artifacts/datasets/assistant/val.txt --checkpoint artifacts/checkpoints/assistant-seed.bin --steps 10000 --context 128 --d-model 64 --layers 2 --heads 4 --ff 128 --batch-size 8 --lr 0.0008 --eval-interval 500 --save-interval 1000 --progress-interval 500 --backend cpu",
   "backend": "cpu",
@@ -28,6 +28,8 @@
     "max_grad_norm": 1
   },
   "training_history": [
+
+
 
 
 
@@ -210,6 +212,46 @@
       "last_train_loss": 0.067566,
       "last_average_loss": 0.0758327,
       "last_val_loss": 5.31678,
+      "has_validation": true
+    }
+  ,
+    {
+      "started_at": "2026-06-19T19:06:06Z",
+      "ended_at": "2026-06-19T19:21:37Z",
+      "duration_seconds": 931.548,
+      "start_step": 24000,
+      "end_step": 34000,
+      "requested_steps": 10000,
+      "command": "resume --input artifacts/datasets/assistant/train.txt --val-input artifacts/datasets/assistant/val.txt --checkpoint artifacts/checkpoints/assistant-seed.bin --steps 10000 --context 128 --d-model 64 --layers 2 --heads 4 --ff 128 --batch-size 8 --lr 0.0008 --eval-interval 500 --save-interval 1000 --progress-interval 500 --backend cpu",
+      "backend": "cpu",
+      "train_input": "artifacts/datasets/assistant/train.txt",
+      "val_input": "artifacts/datasets/assistant/val.txt",
+      "validation_source": "explicit",
+      "parameter_count": 108804,
+      "parameter_bytes_f32": 435216,
+      "last_train_loss": 0.0605505,
+      "last_average_loss": 0.0703642,
+      "last_val_loss": 5.56582,
+      "has_validation": true
+    }
+  ,
+    {
+      "started_at": "2026-06-19T20:01:04Z",
+      "ended_at": "2026-06-19T20:16:48Z",
+      "duration_seconds": 943.158,
+      "start_step": 34000,
+      "end_step": 44000,
+      "requested_steps": 10000,
+      "command": "resume --input artifacts/datasets/assistant/train.txt --val-input artifacts/datasets/assistant/val.txt --checkpoint artifacts/checkpoints/assistant-seed.bin --steps 10000 --context 128 --d-model 64 --layers 2 --heads 4 --ff 128 --batch-size 8 --lr 0.0008 --eval-interval 500 --save-interval 1000 --progress-interval 500 --backend cpu",
+      "backend": "cpu",
+      "train_input": "artifacts/datasets/assistant/train.txt",
+      "val_input": "artifacts/datasets/assistant/val.txt",
+      "validation_source": "explicit",
+      "parameter_count": 108804,
+      "parameter_bytes_f32": 435216,
+      "last_train_loss": 0.0587699,
+      "last_average_loss": 0.0646814,
+      "last_val_loss": 5.75248,
       "has_validation": true
     }
   ]

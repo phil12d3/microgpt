@@ -152,6 +152,9 @@
           Override settings with environment variables such as
           <code>STEPS=500</code>, <code>D_MODEL=128</code>, or
           <code>ASSISTANT_CHECKPOINT=artifacts/checkpoints/assistant-big.bin</code>.
+          The script defaults to <code>ASSISTANT_TOKENIZER=bpe</code>; set
+          <code>ASSISTANT_TOKENIZER=byte</code> only when creating a legacy
+          byte-tokenized checkpoint.
           Use <code>ASSISTANT_BACKEND=metal</code> to build and select the
           Metal backend.
         </p>
@@ -163,7 +166,7 @@
         <pre><code>./bin/mgpt train \
   --input artifacts/datasets/assistant/train.txt \
   --val-input artifacts/datasets/assistant/val.txt \
-  --checkpoint artifacts/checkpoints/assistant-seed.bin \
+  --checkpoint artifacts/checkpoints/assistant-seed-bpe.bin \
   --steps 3000 \
   --context 128 \
   --d-model 64 \
@@ -172,6 +175,7 @@
   --ff 128 \
   --batch-size 8 \
   --lr 0.0008 \
+  --tokenizer bpe \
   --eval-interval 500 \
   --save-interval 1000 \
   --progress-interval 500</code></pre>
@@ -196,7 +200,7 @@
           Override the checkpoint or generation settings with environment
           variables:
         </p>
-        <pre><code>ASSISTANT_CHECKPOINT=artifacts/checkpoints/assistant-seed.bin \
+        <pre><code>ASSISTANT_CHECKPOINT=artifacts/checkpoints/assistant-seed-bpe.bin \
 ASSISTANT_BACKEND=metal \
 MAX_NEW_TOKENS=80 \
 TEMPERATURE=0.2 \

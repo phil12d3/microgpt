@@ -40,8 +40,8 @@ inline std::string format_multi_turn_chat_prompt(const std::vector<ChatMessage>&
 }
 
 inline std::vector<ChatMessage> trim_chat_history_to_context(const std::vector<ChatMessage>& history,
-                                                             const std::string& user_prompt, int context_length) {
-  Tokenizer tok;
+                                                             const std::string& user_prompt, int context_length,
+                                                             const Tokenizer& tok) {
   std::vector<ChatMessage> trimmed = history;
   if (context_length <= 0) {
     return trimmed;
@@ -58,6 +58,12 @@ inline std::vector<ChatMessage> trim_chat_history_to_context(const std::vector<C
     }
   }
   return trimmed;
+}
+
+inline std::vector<ChatMessage> trim_chat_history_to_context(const std::vector<ChatMessage>& history,
+                                                             const std::string& user_prompt, int context_length) {
+  Tokenizer tok;
+  return trim_chat_history_to_context(history, user_prompt, context_length, tok);
 }
 
 inline ChatSessionStats summarize_chat_session(const std::vector<ChatMessage>& history, const Tokenizer& tok) {

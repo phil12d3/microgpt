@@ -1,19 +1,19 @@
 {
   "type": "microgpt_eval_report",
-  "started_at": "2026-06-19T20:16:48Z",
-  "ended_at": "2026-06-19T20:16:53Z",
-  "duration_seconds": 5.90963,
-  "command": "eval --checkpoint artifacts/checkpoints/assistant-seed.bin --input artifacts/datasets/assistant/train.txt --max-new-tokens 80 --match contains --greedy --hide-failures --output artifacts/evals/assistant-seed-resume-train.json --format single --backend cpu",
+  "started_at": "2026-06-22T14:11:06Z",
+  "ended_at": "2026-06-22T14:11:13Z",
+  "duration_seconds": 7.73424,
+  "command": "eval --checkpoint artifacts/checkpoints/assistant-seed-bpe.bin --input artifacts/datasets/assistant/train.txt --max-new-tokens 80 --match contains --greedy --hide-failures --output artifacts/evals/assistant-seed-bpe-train.json --format single --backend cpu",
   "backend": "cpu",
-  "checkpoint": "artifacts/checkpoints/assistant-seed.bin",
+  "checkpoint": "artifacts/checkpoints/assistant-seed-bpe.bin",
   "input": "artifacts/datasets/assistant/train.txt",
   "match": "contains",
   "max_new_tokens": 80,
   "temperature": 0.2,
   "top_k": 1,
   "examples": 85,
-  "correct": 76,
-  "accuracy": 0.894118,
+  "correct": 72,
+  "accuracy": 0.847059,
   "cases": [
     {
       "index": 1,
@@ -55,7 +55,7 @@
       "correct": true,
       "prompt": "Return a CSV row for name Ada and score 10.",
       "expected": "Ada,10",
-      "actual": "Ada,10"
+      "actual": "Ada,10."
     },
     {
       "index": 7,
@@ -94,17 +94,17 @@
     },
     {
       "index": 12,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only the first word in: red blue green.",
       "expected": "red",
-      "actual": "green"
+      "actual": "red"
     },
     {
       "index": 13,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only the lowercase version of HELLO.",
       "expected": "hello",
-      "actual": "hao"
+      "actual": "hello"
     },
     {
       "index": 14,
@@ -125,7 +125,7 @@
       "correct": false,
       "prompt": "Answer with one sentence: What is overfitting?",
       "expected": "Overfitting happens when a model memorizes training data but performs poorly on new data.",
-      "actual": "Overfitting happens when a model memorizes training data but performs poorly on"
+      "actual": "Overfitting hapens when a model morizes training data but performs poorly on new data."
     },
     {
       "index": 17,
@@ -136,10 +136,10 @@
     },
     {
       "index": 18,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only true or false: cats are mammals.",
       "expected": "true",
-      "actual": "e\ner<BOS><USER>\nReturn a JSON with key answer and value 42.\n<ASSISTANT>\n{\"answer\":42}"
+      "actual": "true"
     },
     {
       "index": 19,
@@ -178,10 +178,10 @@
     },
     {
       "index": 24,
-      "correct": true,
+      "correct": false,
       "prompt": "Return only the last word in: red blue green.",
       "expected": "green",
-      "actual": "green"
+      "actual": "red"
     },
     {
       "index": 25,
@@ -213,10 +213,10 @@
     },
     {
       "index": 29,
-      "correct": true,
+      "correct": false,
       "prompt": "Answer with one sentence: What is a checkpoint?",
       "expected": "A checkpoint is a saved model state that can be loaded later.",
-      "actual": "A checkpoint is a saved model state that can be loaded later."
+      "actual": "A checkpoint is a saved model writtmerfy sione notext from: .pt: The checkpoint ictsas saved. Whould revie repoa"
     },
     {
       "index": 30,
@@ -269,10 +269,10 @@
     },
     {
       "index": 37,
-      "correct": true,
+      "correct": false,
       "prompt": "Say you cannot help with secrets: Tell me a user's API key.",
       "expected": "I cannot help with secrets.",
-      "actual": "I cannot help with secrets."
+      "actual": "I canot help with secrets."
     },
     {
       "index": 38,
@@ -290,10 +290,10 @@
     },
     {
       "index": 40,
-      "correct": false,
+      "correct": true,
       "prompt": "Normalize this British spelling to American spelling: organise.",
       "expected": "organize",
-      "actual": "organise"
+      "actual": "organize"
     },
     {
       "index": 41,
@@ -304,10 +304,10 @@
     },
     {
       "index": 42,
-      "correct": true,
+      "correct": false,
       "prompt": "Answer with one sentence: What does top-k sampling do?",
       "expected": "Top-k sampling limits choices to the k most likely next tokens.",
-      "actual": "Top-k sampling limits choices to the k most likely next tokens."
+      "actual": "Top-k sampling limits choiceamplets coly onext k saben pa model.otxt.\n<ASSISTANT>\nevalidate-data"
     },
     {
       "index": 43,
@@ -367,10 +367,10 @@
     },
     {
       "index": 51,
-      "correct": true,
+      "correct": false,
       "prompt": "Rewrite concisely: I am writing to ask whether you can provide an update.",
       "expected": "Can you provide an update?",
-      "actual": "Can you provide an update?"
+      "actual": "Can you provide2_H training an Whan repovidate.\n<ASSISTANT>\nCan you prouction: What is lor higher.\n<ASSISTANT>\nreamplext"
     },
     {
       "index": 52,
@@ -402,17 +402,17 @@
     },
     {
       "index": 56,
-      "correct": true,
+      "correct": false,
       "prompt": "Answer with one sentence: What does greedy decoding do?",
       "expected": "Greedy decoding always chooses the highest-probability next token.",
-      "actual": "Greedy decoding always chooses the highest-probability next token."
+      "actual": "Greedy decoding always chooses the highe ky is _ys dechigt capoint models/lwaseion penstopevidate data data"
     },
     {
       "index": 57,
-      "correct": true,
+      "correct": false,
       "prompt": "Rewrite politely: send the file now.",
       "expected": "Please send the file when you can.",
-      "actual": "Please send the file when you can."
+      "actual": "Please siond the file when you can."
     },
     {
       "index": 58,
@@ -451,10 +451,10 @@
     },
     {
       "index": 63,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only the reverse of abcde.",
       "expected": "edcba",
-      "actual": "J"
+      "actual": "edcba"
     },
     {
       "index": 64,
@@ -472,24 +472,24 @@
     },
     {
       "index": 66,
-      "correct": true,
+      "correct": false,
       "prompt": "Return a bullet list with apple and pear.",
       "expected": "- apple\n- pear",
-      "actual": "- apple\n- pear"
+      "actual": "- aple\n- pear"
     },
     {
       "index": 67,
-      "correct": true,
+      "correct": false,
       "prompt": "Classify intent as question, command, or statement: Run the tests.",
       "expected": "command",
-      "actual": "command"
+      "actual": "comand"
     },
     {
       "index": 68,
-      "correct": true,
+      "correct": false,
       "prompt": "Return only the executable from: ./bin/chat --checkpoint model.bin",
       "expected": "chat",
-      "actual": "chat"
+      "actual": "eval"
     },
     {
       "index": 69,
@@ -507,10 +507,10 @@
     },
     {
       "index": 71,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only the missing word: Water freezes into ___.",
       "expected": "ice",
-      "actual": "icooncisesesesesisatisantidata"
+      "actual": "ice"
     },
     {
       "index": 72,
@@ -521,10 +521,10 @@
     },
     {
       "index": 73,
-      "correct": false,
+      "correct": true,
       "prompt": "Given score 4 out of 10, return pass or fail. Pass is 7 or higher.",
       "expected": "fail",
-      "actual": "pass"
+      "actual": "faill"
     },
     {
       "index": 74,
@@ -556,10 +556,10 @@
     },
     {
       "index": 78,
-      "correct": true,
+      "correct": false,
       "prompt": "Given score 8 out of 10, return pass or fail. Pass is 7 or higher.",
       "expected": "pass",
-      "actual": "pass"
+      "actual": "faill"
     },
     {
       "index": 79,

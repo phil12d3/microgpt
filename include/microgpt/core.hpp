@@ -48,6 +48,7 @@ struct RNG {
 
 struct Config {
   int vocab_size = 260;
+  int tokenizer_kind = 0;
   int context_length = 64;
   int d_model = 128;
   int num_layers = 2;

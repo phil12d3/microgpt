@@ -1,19 +1,19 @@
 {
   "type": "microgpt_eval_report",
-  "started_at": "2026-06-19T20:16:48Z",
-  "ended_at": "2026-06-19T20:16:53Z",
-  "duration_seconds": 5.90963,
-  "command": "eval --checkpoint artifacts/checkpoints/assistant-seed.bin --input artifacts/datasets/assistant/train.txt --max-new-tokens 80 --match contains --greedy --hide-failures --output artifacts/evals/assistant-seed-resume-train.json --format single --backend cpu",
+  "started_at": "2026-06-22T14:41:26Z",
+  "ended_at": "2026-06-22T14:41:33Z",
+  "duration_seconds": 6.87026,
+  "command": "eval --checkpoint artifacts/checkpoints/assistant-seed-bpe.bin --input artifacts/datasets/assistant/train.txt --max-new-tokens 80 --match contains --greedy --hide-failures --output artifacts/evals/assistant-seed-bpe-resume-train.json --format single --backend cpu",
   "backend": "cpu",
-  "checkpoint": "artifacts/checkpoints/assistant-seed.bin",
+  "checkpoint": "artifacts/checkpoints/assistant-seed-bpe.bin",
   "input": "artifacts/datasets/assistant/train.txt",
   "match": "contains",
   "max_new_tokens": 80,
   "temperature": 0.2,
   "top_k": 1,
   "examples": 85,
-  "correct": 76,
-  "accuracy": 0.894118,
+  "correct": 83,
+  "accuracy": 0.976471,
   "cases": [
     {
       "index": 1,
@@ -73,10 +73,10 @@
     },
     {
       "index": 9,
-      "correct": false,
+      "correct": true,
       "prompt": "Given task status open, return only action: continue or stop.",
       "expected": "continue",
-      "actual": "stop"
+      "actual": "continue"
     },
     {
       "index": 10,
@@ -94,17 +94,17 @@
     },
     {
       "index": 12,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only the first word in: red blue green.",
       "expected": "red",
-      "actual": "green"
+      "actual": "red"
     },
     {
       "index": 13,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only the lowercase version of HELLO.",
       "expected": "hello",
-      "actual": "hao"
+      "actual": "hello"
     },
     {
       "index": 14,
@@ -122,10 +122,10 @@
     },
     {
       "index": 16,
-      "correct": false,
+      "correct": true,
       "prompt": "Answer with one sentence: What is overfitting?",
       "expected": "Overfitting happens when a model memorizes training data but performs poorly on new data.",
-      "actual": "Overfitting happens when a model memorizes training data but performs poorly on"
+      "actual": "Overfitting happens when a model memorizes training data but performs poorly on new data."
     },
     {
       "index": 17,
@@ -136,10 +136,10 @@
     },
     {
       "index": 18,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only true or false: cats are mammals.",
       "expected": "true",
-      "actual": "e\ner<BOS><USER>\nReturn a JSON with key answer and value 42.\n<ASSISTANT>\n{\"answer\":42}"
+      "actual": "true"
     },
     {
       "index": 19,
@@ -290,10 +290,10 @@
     },
     {
       "index": 40,
-      "correct": false,
+      "correct": true,
       "prompt": "Normalize this British spelling to American spelling: organise.",
       "expected": "organize",
-      "actual": "organise"
+      "actual": "organize"
     },
     {
       "index": 41,
@@ -374,10 +374,10 @@
     },
     {
       "index": 52,
-      "correct": true,
+      "correct": false,
       "prompt": "The context says: Single-turn examples use USER and ASSISTANT markers. Which marker starts the answer?",
       "expected": "ASSISTANT",
-      "actual": "ASSISTANT"
+      "actual": "ASSSISTANT"
     },
     {
       "index": 53,
@@ -451,10 +451,10 @@
     },
     {
       "index": 63,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only the reverse of abcde.",
       "expected": "edcba",
-      "actual": "J"
+      "actual": "edcba"
     },
     {
       "index": 64,
@@ -507,10 +507,10 @@
     },
     {
       "index": 71,
-      "correct": false,
+      "correct": true,
       "prompt": "Return only the missing word: Water freezes into ___.",
       "expected": "ice",
-      "actual": "icooncisesesesesisatisantidata"
+      "actual": "ice"
     },
     {
       "index": 72,
@@ -521,10 +521,10 @@
     },
     {
       "index": 73,
-      "correct": false,
+      "correct": true,
       "prompt": "Given score 4 out of 10, return pass or fail. Pass is 7 or higher.",
       "expected": "fail",
-      "actual": "pass"
+      "actual": "fail"
     },
     {
       "index": 74,
@@ -556,10 +556,10 @@
     },
     {
       "index": 78,
-      "correct": true,
+      "correct": false,
       "prompt": "Given score 8 out of 10, return pass or fail. Pass is 7 or higher.",
       "expected": "pass",
-      "actual": "pass"
+      "actual": "fail"
     },
     {
       "index": 79,

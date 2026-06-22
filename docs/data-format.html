@@ -105,8 +105,9 @@
       <h1>Data Format</h1>
       <p>
         microgpt currently uses a compact single-turn instruction format. The
-        tokenizer treats the control markers as special tokens and every other
-        character as a byte token.
+        tokenizer treats the control markers as special tokens. New checkpoints
+        can use either the default byte tokenizer or the built-in deterministic
+        BPE-style tokenizer.
       </p>
     </header>
 
@@ -128,6 +129,22 @@ What is 2+2?
             <li><code>&lt;ASSISTANT&gt;</code> marks where the answer begins.</li>
             <li><code>&lt;EOS&gt;</code> marks the end of the answer.</li>
           </ul>
+        </div>
+
+        <div class="card">
+          <h3>Tokenizer Modes</h3>
+          <ul>
+            <li><code>byte</code>: the compatibility mode. Every non-marker byte is one token.</li>
+            <li>
+              <code>bpe</code>: a built-in greedy multi-character tokenizer for common assistant and instruction
+              substrings. It reduces token counts for matching text and stores the tokenizer choice in the checkpoint.
+            </li>
+          </ul>
+          <p>
+            Choose the tokenizer at training time with <code>--tokenizer byte</code> or
+            <code>--tokenizer bpe</code>. Resume, generation, chat, and eval load the tokenizer from the checkpoint,
+            so CPU and Metal use the same token IDs for the same model.
+          </p>
         </div>
       </section>
 

@@ -60,6 +60,7 @@ inline ChatConfig parse_chat_config(const std::vector<std::string>& args) {
 inline int run_chat_line_mode(Model& model, ChatConfig config, std::istream& in, std::ostream& out, std::ostream& err) {
   std::string prompt;
   std::vector<ChatMessage> history;
+  Tokenizer tok(tokenizer_kind_from_int(model.cfg.tokenizer_kind));
   out << "microgpt chat. type /exit to quit.\n";
   out << "type /reset to clear the current session history.\n";
   while (true) {
@@ -78,7 +79,7 @@ inline int run_chat_line_mode(Model& model, ChatConfig config, std::istream& in,
     if (prompt.empty()) {
       continue;
     }
-    std::vector<ChatMessage> trimmed_history = trim_chat_history_to_context(history, prompt, model.cfg.context_length);
+    std::vector<ChatMessage> trimmed_history = trim_chat_history_to_context(history, prompt, model.cfg.context_length, tok);
     std::string model_prompt = format_multi_turn_chat_prompt(trimmed_history, prompt);
     std::string reply = generate_text(model, model_prompt, config.max_new_tokens, config.temperature, config.top_k,
                                       Tokenizer::kEos);

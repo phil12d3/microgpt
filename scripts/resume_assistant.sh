@@ -5,10 +5,11 @@ cd "$(dirname "$0")/.."
 
 : "${ASSISTANT_SEED:=sample_data/assistant/seed.jsonl}"
 : "${ASSISTANT_DATA_DIR:=artifacts/datasets/assistant}"
-: "${ASSISTANT_CHECKPOINT:=artifacts/checkpoints/assistant-seed.bin}"
+: "${ASSISTANT_CHECKPOINT:=artifacts/checkpoints/assistant-seed-bpe.bin}"
 : "${ASSISTANT_EVAL_DIR:=artifacts/evals}"
 : "${ASSISTANT_BACKEND:=cpu}"
 : "${ASSISTANT_FORMAT:=single}"
+: "${ASSISTANT_TOKENIZER:=bpe}"
 : "${ASSISTANT_SPLIT_RATIO:=0.9}"
 : "${ASSISTANT_SPLIT_SEED:=42}"
 : "${STEPS:=10000}"
@@ -87,6 +88,7 @@ echo "resuming assistant checkpoint"
   --ff "$FF" \
   --batch-size "$BATCH_SIZE" \
   --lr "$LR" \
+  --tokenizer "$ASSISTANT_TOKENIZER" \
   --eval-interval "$EVAL_INTERVAL" \
   --save-interval "$SAVE_INTERVAL" \
   --progress-interval "$PROGRESS_INTERVAL" \
