@@ -227,6 +227,7 @@ inline int run_train_command(const std::vector<std::string>& args, bool resume, 
   }
   model.set_backend(backend);
   opt.set_backend(backend);
+  reset_backend_dispatch_stats();
   TrainingRunSummary run;
   run.started_at = timestamp_utc_now();
   auto started = std::chrono::steady_clock::now();
@@ -251,8 +252,17 @@ inline int run_train_command(const std::vector<std::string>& args, bool resume, 
   write_checkpoint_metadata_json(checkpoint, model, opt, resume_step + requested_steps, command, input, val_input,
                                  !val_input.empty(), requested_steps, resume_step, backend, run);
   if (backend != BackendKind::Cpu) {
-    out << "backend_note " << backend_name(backend)
-        << " selected but accelerated kernels are incomplete or unavailable; CPU fallback may have been used\n";
+    const BackendDispatchStats& stats = backend_dispatch_stats();
+    out << "backend_accelerated_ops " << stats.accelerated_ops << '\n';
+    out << "backend_cpu_fallback_ops " << stats.cpu_fallback_ops << '\n';
+    if (stats.accelerated_ops == 0) {
+      out << "backend_note " << backend_name(backend) << " selected but no accelerated kernels ran\n";
+    } else if (stats.cpu_fallback_ops > 0) {
+      out << "backend_note " << backend_name(backend)
+          << " accelerated kernels ran; unsupported operations used CPU fallback\n";
+    } else {
+      out << "backend_note " << backend_name(backend) << " accelerated kernels ran\n";
+    }
   }
   return 0;
 }

@@ -163,6 +163,24 @@ struct AdamW {
       }
       return;
     }
+    if (backend == BackendKind::Cuda && microgpt_cuda_runtime_available()) {
+      for (Parameter* p : params) {
+        if (p->m.size() != p->data.size()) {
+          p->m.assign(p->data.size(), 0.0f);
+          p->v.assign(p->data.size(), 0.0f);
+        }
+        bool ok = microgpt_cuda_adamw_update(p->data.data(), p->grad.data(), p->m.data(), p->v.data(),
+                                             static_cast<int>(p->data.size()), lr, beta1, beta2, eps, weight_decay,
+                                             step, p->decay);
+        if (!ok) {
+          throw std::runtime_error("CUDA AdamW update failed");
+        }
+        record_backend_accelerated_op(backend);
+        p->version += 1;
+      }
+      return;
+    }
+    record_backend_cpu_fallback_op(backend);
     for (Parameter* p : params) {
       if (p->m.size() != p->data.size()) {
         p->m.assign(p->data.size(), 0.0f);

@@ -1,8 +1,10 @@
 CXX ?= g++
 CC ?= cc
 AR ?= ar
+NVCC ?= nvcc
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -pedantic
 CFLAGS ?= -std=c11 -O2 -Wall -Wextra -pedantic
+NVCCFLAGS ?= -std=c++17 -O2
 CPPFLAGS ?= -Iinclude
 LDLIBS ?=
 BACKEND ?= cpu
@@ -14,6 +16,8 @@ PUBLIC_HDRS := $(shell find include -name '*.h')
 UNAME_S := $(shell uname -s)
 RUNTIME_SRC := src/metal_runtime_stub.cpp
 RUNTIME_LANG :=
+RUNTIME_COMPILER := $(CXX)
+RUNTIME_FLAGS := $(CXXFLAGS)
 RUNTIME_OBJ := bin/backend_runtime_$(BACKEND)_sanitize-$(SANITIZE)_strict-$(STRICT).o
 API_C_OBJ := bin/api_c_$(BACKEND)_sanitize-$(SANITIZE)_strict-$(STRICT).o
 EMBED_C_OBJ := bin/embed_c_$(BACKEND)_sanitize-$(SANITIZE)_strict-$(STRICT).o
@@ -43,6 +47,14 @@ RUNTIME_SRC := src/metal_runtime.mm
 RUNTIME_LANG := -x objective-c++
 endif
 
+ifeq ($(BACKEND),cuda)
+CPPFLAGS += -DMICROGPT_ENABLE_CUDA=1
+LDLIBS += -lcudart
+RUNTIME_SRC := src/cuda_runtime.cu
+RUNTIME_COMPILER := $(NVCC)
+RUNTIME_FLAGS := $(NVCCFLAGS)
+endif
+
 .PHONY: all clean test cli-test sanitize-build sanitize-test strict-test deps accel-deps print-metal-flags
 
 all: $(TARGETS)
@@ -51,12 +63,13 @@ bin:
 	mkdir -p bin
 
 $(RUNTIME_OBJ): bin $(RUNTIME_SRC)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(RUNTIME_LANG) -c $(RUNTIME_SRC) -o $(RUNTIME_OBJ)
+	$(RUNTIME_COMPILER) $(CPPFLAGS) $(RUNTIME_FLAGS) $(RUNTIME_LANG) -c $(RUNTIME_SRC) -o $(RUNTIME_OBJ)
 
 $(API_C_OBJ): bin src/api_c.cpp $(HDRS) $(PUBLIC_HDRS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/api_c.cpp -o $(API_C_OBJ)
 
 bin/libmicrogpt.a: bin $(RUNTIME_OBJ) $(API_C_OBJ)
+	rm -f bin/libmicrogpt.a
 	$(AR) rcs bin/libmicrogpt.a $(RUNTIME_OBJ) $(API_C_OBJ)
 
 bin/microgpt: bin src/main.cpp $(HDRS) $(RUNTIME_OBJ)

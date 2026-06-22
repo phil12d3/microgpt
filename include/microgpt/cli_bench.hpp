@@ -34,17 +34,19 @@ inline int run_resident_linear_bench(const std::vector<std::string>& args, Backe
 
   using clock = std::chrono::steady_clock;
   bool metal_resident = backend == BackendKind::Metal && microgpt_metal_runtime_available();
+  bool cuda_resident = backend == BackendKind::Cuda && microgpt_cuda_runtime_available();
   reset_backend_transfer_stats();
   auto start = clock::now();
-  if (metal_resident) {
-    BackendBuffer xb(BackendKind::Metal);
-    BackendBuffer wb(BackendKind::Metal);
-    BackendBuffer bb(BackendKind::Metal);
-    BackendBuffer yb(BackendKind::Metal);
-    BackendBuffer dyb(BackendKind::Metal);
-    BackendBuffer dxb(BackendKind::Metal);
-    BackendBuffer dwb(BackendKind::Metal);
-    BackendBuffer dbb(BackendKind::Metal);
+  if (metal_resident || cuda_resident) {
+    BackendKind resident_backend = metal_resident ? BackendKind::Metal : BackendKind::Cuda;
+    BackendBuffer xb(resident_backend);
+    BackendBuffer wb(resident_backend);
+    BackendBuffer bb(resident_backend);
+    BackendBuffer yb(resident_backend);
+    BackendBuffer dyb(resident_backend);
+    BackendBuffer dxb(resident_backend);
+    BackendBuffer dwb(resident_backend);
+    BackendBuffer dbb(resident_backend);
     xb.resize(x.size());
     wb.resize(w.size());
     bb.resize(b.size());
@@ -65,21 +67,34 @@ inline int run_resident_linear_bench(const std::vector<std::string>& args, Backe
     wb.upload();
     bb.upload();
     dyb.upload();
-    bool repeat_ok = microgpt_metal_linear_forward_backward_repeat_buffers(
-        xb.device, wb.device, bb.device, yb.device, dyb.device, dxb.device, dwb.device, dbb.device, rows, in_features,
-        out_features, true, iterations);
+    bool repeat_ok = metal_resident
+                         ? microgpt_metal_linear_forward_backward_repeat_buffers(
+                               xb.device, wb.device, bb.device, yb.device, dyb.device, dxb.device, dwb.device,
+                               dbb.device, rows, in_features, out_features, true, iterations)
+                         : microgpt_cuda_linear_forward_backward_repeat_buffers(
+                               xb.device, wb.device, bb.device, yb.device, dyb.device, dxb.device, dwb.device,
+                               dbb.device, rows, in_features, out_features, true, iterations);
     for (int i = repeat_ok ? iterations : 0; i < iterations; ++i) {
-      bool ok = microgpt_metal_linear_forward_backward_buffers(xb.device, wb.device, bb.device, yb.device, dyb.device,
-                                                               dxb.device, dwb.device, dbb.device, rows, in_features,
-                                                               out_features, true);
+      bool ok = metal_resident
+                    ? microgpt_metal_linear_forward_backward_buffers(xb.device, wb.device, bb.device, yb.device,
+                                                                     dyb.device, dxb.device, dwb.device, dbb.device,
+                                                                     rows, in_features, out_features, true)
+                    : microgpt_cuda_linear_forward_backward_buffers(xb.device, wb.device, bb.device, yb.device,
+                                                                    dyb.device, dxb.device, dwb.device, dbb.device,
+                                                                    rows, in_features, out_features, true);
       if (!ok) {
-        ok = microgpt_metal_linear_forward_buffers(xb.device, wb.device, bb.device, yb.device, rows, in_features,
-                                                   out_features, true) &&
-             microgpt_metal_linear_backward_buffers(xb.device, wb.device, dyb.device, dxb.device, dwb.device,
-                                                    dbb.device, rows, in_features, out_features, true);
+        ok = metal_resident
+                 ? microgpt_metal_linear_forward_buffers(xb.device, wb.device, bb.device, yb.device, rows, in_features,
+                                                         out_features, true) &&
+                       microgpt_metal_linear_backward_buffers(xb.device, wb.device, dyb.device, dxb.device, dwb.device,
+                                                              dbb.device, rows, in_features, out_features, true)
+                 : microgpt_cuda_linear_forward_buffers(xb.device, wb.device, bb.device, yb.device, rows, in_features,
+                                                        out_features, true) &&
+                       microgpt_cuda_linear_backward_buffers(xb.device, wb.device, dyb.device, dxb.device, dwb.device,
+                                                             dbb.device, rows, in_features, out_features, true);
       }
       if (!ok) {
-        throw std::runtime_error("Metal resident linear forward/backward failed");
+        throw std::runtime_error(backend_name(backend) + " resident linear forward/backward failed");
       }
     }
     yb.device_dirty = true;
@@ -131,6 +146,7 @@ inline int run_resident_linear_bench(const std::vector<std::string>& args, Backe
   out << "backend " << backend_name(backend) << '\n';
   out << "backend_detail " << backend_detail(backend) << '\n';
   out << "metal_resident_active " << (metal_resident ? "yes" : "no") << '\n';
+  out << "cuda_resident_active " << (cuda_resident ? "yes" : "no") << '\n';
   out << "rows " << rows << '\n';
   out << "in " << in_features << '\n';
   out << "out " << out_features << '\n';

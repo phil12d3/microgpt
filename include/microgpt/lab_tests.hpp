@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <cstdio>
 #include <iostream>
 #include <sstream>
@@ -271,6 +272,77 @@ inline bool backend_feedforward_backward_test() {
   return true;
 }
 
+inline bool cuda_feedforward_forward_test() {
+  if (!microgpt_cuda_runtime_available()) {
+    return true;
+  }
+  RNG rng(224);
+  FeedForward cpu("backend_cuda_ff", 3, 5, rng);
+  FeedForward cuda = cpu;
+  cuda.set_backend(BackendKind::Cuda);
+  SeqTensor x(2, 1, 3);
+  x.data = {0.2f, -0.4f, 0.7f, -1.0f, 0.5f, 0.25f};
+  SeqTensor y_cpu = cpu.forward(x);
+  SeqTensor y_cuda = cuda.forward(x);
+  for (size_t i = 0; i < y_cpu.data.size(); ++i) {
+    if (std::fabs(y_cpu.data[i] - y_cuda.data[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < cpu.pre_activation.data.size(); ++i) {
+    if (std::fabs(cpu.pre_activation.data[i] - cuda.pre_activation.data[i]) > 1e-5f ||
+        std::fabs(cpu.hidden.data[i] - cuda.hidden.data[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  return true;
+}
+
+inline bool cuda_feedforward_backward_test() {
+  if (!microgpt_cuda_runtime_available()) {
+    return true;
+  }
+  RNG rng(334);
+  FeedForward cpu("backend_cuda_ff_backward", 3, 5, rng);
+  FeedForward cuda = cpu;
+  cuda.set_backend(BackendKind::Cuda);
+  SeqTensor x_cpu(2, 1, 3);
+  x_cpu.data = {0.2f, -0.4f, 0.7f, -1.0f, 0.5f, 0.25f};
+  SeqTensor x_cuda = x_cpu;
+  SeqTensor y_cpu = cpu.forward(x_cpu);
+  SeqTensor y_cuda = cuda.forward(x_cuda);
+  y_cpu.grad = {0.1f, -0.2f, 0.3f, -0.15f, 0.05f, 0.25f};
+  y_cuda.grad = y_cpu.grad;
+  cpu.backward(x_cpu, y_cpu);
+  cuda.backward(x_cuda, y_cuda);
+  for (size_t i = 0; i < x_cpu.grad.size(); ++i) {
+    if (std::fabs(x_cpu.grad[i] - x_cuda.grad[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < cpu.fc1.w.grad.size(); ++i) {
+    if (std::fabs(cpu.fc1.w.grad[i] - cuda.fc1.w.grad[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < cpu.fc1.b.grad.size(); ++i) {
+    if (std::fabs(cpu.fc1.b.grad[i] - cuda.fc1.b.grad[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < cpu.fc2.w.grad.size(); ++i) {
+    if (std::fabs(cpu.fc2.w.grad[i] - cuda.fc2.w.grad[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < cpu.fc2.b.grad.size(); ++i) {
+    if (std::fabs(cpu.fc2.b.grad[i] - cuda.fc2.b.grad[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  return true;
+}
+
 inline bool backend_buffer_roundtrip_test() {
   if (!microgpt_metal_runtime_available()) {
     return true;
@@ -439,6 +511,52 @@ inline bool cached_linear_backend_test() {
          cache.dw.has_device();
 }
 
+inline bool cuda_cached_linear_backend_test() {
+  if (!microgpt_cuda_runtime_available()) {
+    return true;
+  }
+  Parameter w_cpu("cached_cuda_linear.w", {3, 2}, true);
+  Parameter b_cpu("cached_cuda_linear.b", {2}, false);
+  w_cpu.data = {0.2f, -0.1f, 0.4f, 0.3f, -0.5f, 0.7f};
+  b_cpu.data = {0.05f, -0.02f};
+  w_cpu.grad.assign(w_cpu.data.size(), 0.0f);
+  b_cpu.grad.assign(b_cpu.data.size(), 0.0f);
+  Parameter w_cuda = w_cpu;
+  Parameter b_cuda = b_cpu;
+  SeqTensor x_cpu(2, 1, 3);
+  x_cpu.data = {1.0f, -2.0f, 0.5f, 0.25f, 3.0f, -1.5f};
+  SeqTensor x_cuda = x_cpu;
+  LinearBackendCache cache(BackendKind::Cuda);
+  SeqTensor y_cpu = linear_forward_op(BackendKind::Cpu, x_cpu, w_cpu, b_cpu, 3, 2);
+  SeqTensor y_cuda = linear_forward_op(BackendKind::Cuda, &cache, x_cuda, w_cuda, b_cuda, 3, 2);
+  for (size_t i = 0; i < y_cpu.data.size(); ++i) {
+    if (std::fabs(y_cpu.data[i] - y_cuda.data[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  y_cpu.grad = {0.3f, -0.2f, 0.1f, 0.4f};
+  y_cuda.grad = y_cpu.grad;
+  linear_backward_op(BackendKind::Cpu, x_cpu, w_cpu, b_cpu, 3, 2, y_cpu);
+  linear_backward_op(BackendKind::Cuda, &cache, x_cuda, w_cuda, b_cuda, 3, 2, y_cuda);
+  for (size_t i = 0; i < x_cpu.grad.size(); ++i) {
+    if (std::fabs(x_cpu.grad[i] - x_cuda.grad[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < w_cpu.grad.size(); ++i) {
+    if (std::fabs(w_cpu.grad[i] - w_cuda.grad[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < b_cpu.grad.size(); ++i) {
+    if (std::fabs(b_cpu.grad[i] - b_cuda.grad[i]) > 1e-5f) {
+      return false;
+    }
+  }
+  return cache.x.has_device() && cache.w.has_device() && cache.y.has_device() && cache.dx.has_device() &&
+         cache.dw.has_device();
+}
+
 inline bool causal_mask_test() {
   RNG rng(321);
   Attention attn("mask", 8, 2, rng);
@@ -579,7 +697,8 @@ inline bool generation_alignment_test() {
 inline std::string test_temp_path(const std::string& stem, const std::string& suffix) {
   auto now = std::chrono::steady_clock::now().time_since_epoch().count();
   std::ostringstream out;
-  out << "/private/tmp/" << stem << '_' << now << suffix;
+  const char* tmpdir = std::getenv("TMPDIR");
+  out << (tmpdir != nullptr && tmpdir[0] != '\0' ? tmpdir : "/tmp") << '/' << stem << '_' << now << suffix;
   return out.str();
 }
 
@@ -1225,6 +1344,45 @@ inline bool metal_checkpoint_cpu_generation_interop_test() {
   return cpu_generated == metal_generated;
 }
 
+inline bool cuda_checkpoint_cpu_generation_interop_test() {
+  if (!microgpt_cuda_runtime_compiled()) {
+    return true;
+  }
+  Config cfg = backend_parity_test_config();
+  std::vector<int> tokens = backend_parity_tokens();
+  Model cuda_model(cfg);
+  cuda_model.set_backend(BackendKind::Cuda);
+  AdamW cuda_opt;
+  cuda_opt.lr = cfg.learning_rate;
+  cuda_opt.set_backend(BackendKind::Cuda);
+  backend_parity_train_steps(cuda_model, cuda_opt, tokens, 2);
+
+  std::string checkpoint = test_temp_path("microgpt-cuda-interop", ".bin");
+  save_checkpoint(checkpoint, cuda_model, cuda_opt, 2);
+  AdamW cpu_loaded_opt;
+  AdamW cuda_loaded_opt;
+  int cpu_step = 0;
+  int cuda_step = 0;
+  Model cpu_loaded = load_checkpoint(checkpoint, cpu_loaded_opt, cpu_step);
+  Model cuda_loaded = load_checkpoint(checkpoint, cuda_loaded_opt, cuda_step);
+  cuda_loaded.set_backend(BackendKind::Cuda);
+  std::remove(checkpoint.c_str());
+  std::remove(checkpoint_json_path(checkpoint).c_str());
+  if (cpu_step != 2 || cuda_step != 2 || cpu_loaded_opt.step != cuda_opt.step ||
+      cuda_loaded_opt.step != cuda_opt.step) {
+    return false;
+  }
+  std::vector<int> prompt(cfg.context_length, static_cast<int>('q'));
+  SeqTensor cpu_logits = cpu_loaded.forward(prompt);
+  SeqTensor cuda_logits = cuda_loaded.forward(prompt);
+  if (max_tensor_abs_diff(cpu_logits, cuda_logits) > 5e-3f) {
+    return false;
+  }
+  std::string cpu_generated = generate_text(cpu_loaded, "the", 4, 0.2f, 1, Tokenizer::kEos);
+  std::string cuda_generated = generate_text(cuda_loaded, "the", 4, 0.2f, 1, Tokenizer::kEos);
+  return cpu_generated == cuda_generated;
+}
+
 inline bool run_tests() {
   bool ok1 = gradient_check_linear();
   bool ok2 = backend_linear_op_test();
@@ -1259,6 +1417,10 @@ inline bool run_tests() {
   bool ok31 = backend_adamw_multi_param_parity_test();
   bool ok32 = cpu_metal_staged_parity_trace_test();
   bool ok33 = metal_checkpoint_cpu_generation_interop_test();
+  bool ok34 = cuda_checkpoint_cpu_generation_interop_test();
+  bool ok35 = cuda_feedforward_forward_test();
+  bool ok36 = cuda_feedforward_backward_test();
+  bool ok37 = cuda_cached_linear_backend_test();
   std::cout << "gradient_check_linear: " << (ok1 ? "PASS" : "FAIL") << '\n';
   std::cout << "backend_linear_op_test: " << (ok2 ? "PASS" : "FAIL") << '\n';
   std::cout << "backend_matmul_op_test: " << (ok3 ? "PASS" : "FAIL") << '\n';
@@ -1292,9 +1454,13 @@ inline bool run_tests() {
   std::cout << "backend_adamw_multi_param_parity_test: " << (ok31 ? "PASS" : "FAIL") << '\n';
   std::cout << "cpu_metal_staged_parity_trace_test: " << (ok32 ? "PASS" : "FAIL") << '\n';
   std::cout << "metal_checkpoint_cpu_generation_interop_test: " << (ok33 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_checkpoint_cpu_generation_interop_test: " << (ok34 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_feedforward_forward_test: " << (ok35 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_feedforward_backward_test: " << (ok36 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_cached_linear_backend_test: " << (ok37 ? "PASS" : "FAIL") << '\n';
   return ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 &&
          ok15 && ok16 && ok17 && ok18 && ok19 && ok20 && ok21 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 &&
-         ok28 && ok29 && ok30 && ok31 && ok32 && ok33;
+         ok28 && ok29 && ok30 && ok31 && ok32 && ok33 && ok34 && ok35 && ok36 && ok37;
 }
 
 

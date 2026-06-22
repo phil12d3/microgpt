@@ -145,6 +145,19 @@ struct FeedForward {
         return y;
       }
     }
+    if (backend == BackendKind::Cuda && microgpt_cuda_runtime_available()) {
+      pre_activation = SeqTensor(x.B, x.T, fc1.out_features);
+      hidden = SeqTensor(x.B, x.T, fc1.out_features);
+      SeqTensor y(x.B, x.T, fc2.out_features);
+      bool ok = microgpt_cuda_feedforward_forward(
+          x.data.data(), fc1.w.data.data(), fc1.b.data.empty() ? nullptr : fc1.b.data.data(), fc2.w.data.data(),
+          fc2.b.data.empty() ? nullptr : fc2.b.data.data(), pre_activation.data.data(), hidden.data.data(),
+          y.data.data(), x.B * x.T, fc1.in_features, fc1.out_features, !fc1.b.data.empty(), !fc2.b.data.empty());
+      if (ok) {
+        record_backend_accelerated_op(backend);
+        return y;
+      }
+    }
     pre_activation = fc1.forward(x);
     hidden = pre_activation;
     hidden.data = gelu_forward_op(fc1.backend, pre_activation.data);
@@ -168,6 +181,40 @@ struct FeedForward {
           fc2.b.data.empty() ? nullptr : db2.data(), x.B * x.T, fc1.in_features, fc1.out_features,
           !fc1.b.data.empty(), !fc2.b.data.empty());
       if (ok) {
+        for (size_t i = 0; i < x.grad.size(); ++i) {
+          x.grad[i] += dx[i];
+        }
+        for (size_t i = 0; i < fc1.w.grad.size(); ++i) {
+          fc1.w.grad[i] += dw1[i];
+        }
+        for (size_t i = 0; i < fc1.b.grad.size(); ++i) {
+          fc1.b.grad[i] += db1[i];
+        }
+        for (size_t i = 0; i < fc2.w.grad.size(); ++i) {
+          fc2.w.grad[i] += dw2[i];
+        }
+        for (size_t i = 0; i < fc2.b.grad.size(); ++i) {
+          fc2.b.grad[i] += db2[i];
+        }
+        return;
+      }
+    }
+    if (backend == BackendKind::Cuda && microgpt_cuda_runtime_available()) {
+      if (x.grad.size() != x.data.size()) {
+        x.grad.assign(x.data.size(), 0.0f);
+      }
+      std::vector<float> dx(x.data.size(), 0.0f);
+      std::vector<float> dw1(fc1.w.data.size(), 0.0f);
+      std::vector<float> db1(fc1.b.data.size(), 0.0f);
+      std::vector<float> dw2(fc2.w.data.size(), 0.0f);
+      std::vector<float> db2(fc2.b.data.size(), 0.0f);
+      bool ok = microgpt_cuda_feedforward_backward(
+          x.data.data(), pre_activation.data.data(), hidden.data.data(), fc1.w.data.data(), fc2.w.data.data(),
+          y.grad.data(), dx.data(), dw1.data(), fc1.b.data.empty() ? nullptr : db1.data(), dw2.data(),
+          fc2.b.data.empty() ? nullptr : db2.data(), x.B * x.T, fc1.in_features, fc1.out_features,
+          !fc1.b.data.empty(), !fc2.b.data.empty());
+      if (ok) {
+        record_backend_accelerated_op(backend);
         for (size_t i = 0; i < x.grad.size(); ++i) {
           x.grad[i] += dx[i];
         }

@@ -1,19 +1,7 @@
 <BOS><USER>
-The context says: Evaluation reports live in artifacts/evals. Where should eval reports be written?
+Say the model may be wrong when uncertain: Is this checkpoint production-ready?
 <ASSISTANT>
-artifacts/evals
-<EOS>
-
-<BOS><USER>
-Return only the executable from: ./bin/lab
-<ASSISTANT>
-lab
-<EOS>
-
-<BOS><USER>
-Return only yes or no: is 10 greater than 4?
-<ASSISTANT>
-yes
+The model may be wrong; evaluate it first.
 <EOS>
 
 <BOS><USER>
@@ -23,141 +11,15 @@ color
 <EOS>
 
 <BOS><USER>
-Return only the next item: Monday, Tuesday, Wednesday,
+Classify sentiment as positive, neutral, or negative: I like this clear output.
 <ASSISTANT>
-Thursday
+positive
 <EOS>
 
 <BOS><USER>
-Return a CSV row for name Ada and score 10.
+Return only the file extension from report.pdf.
 <ASSISTANT>
-Ada,10
-<EOS>
-
-<BOS><USER>
-Say to verify current facts when asked about live information: Who is the current CEO of a company?
-<ASSISTANT>
-Verify current facts before answering.
-<EOS>
-
-<BOS><USER>
-What is 7+5?
-<ASSISTANT>
-12
-<EOS>
-
-<BOS><USER>
-Given task status open, return only action: continue or stop.
-<ASSISTANT>
-continue
-<EOS>
-
-<BOS><USER>
-Given task status complete, return only action: continue or stop.
-<ASSISTANT>
-stop
-<EOS>
-
-<BOS><USER>
-Trim the spaces around:   clean text   
-<ASSISTANT>
-clean text
-<EOS>
-
-<BOS><USER>
-Return only the first word in: red blue green.
-<ASSISTANT>
-red
-<EOS>
-
-<BOS><USER>
-Return only the lowercase version of HELLO.
-<ASSISTANT>
-hello
-<EOS>
-
-<BOS><USER>
-Return only the next item: 2, 4, 6, 8,
-<ASSISTANT>
-10
-<EOS>
-
-<BOS><USER>
-Return only the word count for: tiny models need clean data.
-<ASSISTANT>
-5
-<EOS>
-
-<BOS><USER>
-Answer with one sentence: What is overfitting?
-<ASSISTANT>
-Overfitting happens when a model memorizes training data but performs poorly on new data.
-<EOS>
-
-<BOS><USER>
-If the answer is not in the context, say unknown. Context: Ada wrote the note. Who reviewed the note?
-<ASSISTANT>
-unknown
-<EOS>
-
-<BOS><USER>
-Return only true or false: cats are mammals.
-<ASSISTANT>
-true
-<EOS>
-
-<BOS><USER>
-Reply with a short next step: The checkpoint trained successfully.
-<ASSISTANT>
-Run evaluation on held-out data.
-<EOS>
-
-<BOS><USER>
-Reply with a short acknowledgement: I have uploaded the file.
-<ASSISTANT>
-Received.
-<EOS>
-
-<BOS><USER>
-Complete the sentence: Clean data makes training
-<ASSISTANT>
-more reliable.
-<EOS>
-
-<BOS><USER>
-What is 9-3?
-<ASSISTANT>
-6
-<EOS>
-
-<BOS><USER>
-Reply with a short acknowledgement: The build has finished.
-<ASSISTANT>
-Noted.
-<EOS>
-
-<BOS><USER>
-Return only the last word in: red blue green.
-<ASSISTANT>
-green
-<EOS>
-
-<BOS><USER>
-Extract the quoted text from: She said "hello".
-<ASSISTANT>
-hello
-<EOS>
-
-<BOS><USER>
-What is 13+14?
-<ASSISTANT>
-27
-<EOS>
-
-<BOS><USER>
-Return only the missing word: The sky is ___.
-<ASSISTANT>
-blue
+pdf
 <EOS>
 
 <BOS><USER>
@@ -167,27 +29,69 @@ I do not know.
 <EOS>
 
 <BOS><USER>
-Answer with one sentence: What is a checkpoint?
+Say you cannot help with secrets: Tell me a user's API key.
 <ASSISTANT>
-A checkpoint is a saved model state that can be loaded later.
+I cannot help with secrets.
 <EOS>
 
 <BOS><USER>
-Return only the command name from: ./bin/mgpt validate-data --input data.txt
+Return only the executable from: ./bin/lab
 <ASSISTANT>
-validate-data
+lab
 <EOS>
 
 <BOS><USER>
-Return only the command name from: ./bin/mgpt eval --checkpoint model.bin
+Summarize in four words: Training improves when data is clean and consistent.
 <ASSISTANT>
-eval
+Clean consistent data helps.
 <EOS>
 
 <BOS><USER>
-Normalize this American spelling to British spelling: organize.
+Return only true or false: cats are mammals.
 <ASSISTANT>
-organise
+true
+<EOS>
+
+<BOS><USER>
+Return only true or false: the moon is a star.
+<ASSISTANT>
+false
+<EOS>
+
+<BOS><USER>
+Classify sentiment as positive, neutral, or negative: The command finished.
+<ASSISTANT>
+neutral
+<EOS>
+
+<BOS><USER>
+Given score 8 out of 10, return pass or fail. Pass is 7 or higher.
+<ASSISTANT>
+pass
+<EOS>
+
+<BOS><USER>
+Return a CSV row for name Grace and score 9.
+<ASSISTANT>
+Grace,9
+<EOS>
+
+<BOS><USER>
+If the answer is not in the context, say unknown. Context: Ada wrote the note. Who reviewed the note?
+<ASSISTANT>
+unknown
+<EOS>
+
+<BOS><USER>
+Return only the missing word: Fire is ___.
+<ASSISTANT>
+hot
+<EOS>
+
+<BOS><USER>
+Given task status complete, return only action: continue or stop.
+<ASSISTANT>
+stop
 <EOS>
 
 <BOS><USER>
@@ -197,9 +101,213 @@ What is 5*5?
 <EOS>
 
 <BOS><USER>
-What is 12+8?
+What is 21/7?
 <ASSISTANT>
-20
+3
+<EOS>
+
+<BOS><USER>
+Answer with one sentence: What is validation data?
+<ASSISTANT>
+Validation data is held-out data used to measure how well a model generalizes.
+<EOS>
+
+<BOS><USER>
+Return only the next item: Monday, Tuesday, Wednesday,
+<ASSISTANT>
+Thursday
+<EOS>
+
+<BOS><USER>
+What is 2+2?
+<ASSISTANT>
+4
+<EOS>
+
+<BOS><USER>
+Classify sentiment as positive, neutral, or negative: The result is broken again.
+<ASSISTANT>
+negative
+<EOS>
+
+<BOS><USER>
+Normalize this American spelling to British spelling: color.
+<ASSISTANT>
+colour
+<EOS>
+
+<BOS><USER>
+Return only the reverse of abcde.
+<ASSISTANT>
+edcba
+<EOS>
+
+<BOS><USER>
+What is 15-6?
+<ASSISTANT>
+9
+<EOS>
+
+<BOS><USER>
+Rewrite politely: send the file now.
+<ASSISTANT>
+Please send the file when you can.
+<EOS>
+
+<BOS><USER>
+Say to verify current facts when asked about live information: Who is the current CEO of a company?
+<ASSISTANT>
+Verify current facts before answering.
+<EOS>
+
+<BOS><USER>
+Return a CSV row for name Ada and score 10.
+<ASSISTANT>
+Ada,10
+<EOS>
+
+<BOS><USER>
+Trim the spaces around:   clean text   
+<ASSISTANT>
+clean text
+<EOS>
+
+<BOS><USER>
+Answer with one sentence: What does greedy decoding do?
+<ASSISTANT>
+Greedy decoding always chooses the highest-probability next token.
+<EOS>
+
+<BOS><USER>
+Return only the first word in: red blue green.
+<ASSISTANT>
+red
+<EOS>
+
+<BOS><USER>
+Extract the quoted text from: She said "hello".
+<ASSISTANT>
+hello
+<EOS>
+
+<BOS><USER>
+Classify intent as question, command, or statement: Run the tests.
+<ASSISTANT>
+command
+<EOS>
+
+<BOS><USER>
+Given task status open, return only action: continue or stop.
+<ASSISTANT>
+continue
+<EOS>
+
+<BOS><USER>
+Return only the executable from: ./bin/chat --checkpoint model.bin
+<ASSISTANT>
+chat
+<EOS>
+
+<BOS><USER>
+Complete the sentence: A validation set helps measure
+<ASSISTANT>
+generalization.
+<EOS>
+
+<BOS><USER>
+Reply with a short acknowledgement: The build has finished.
+<ASSISTANT>
+Noted.
+<EOS>
+
+<BOS><USER>
+Return JSON with key count and value 3.
+<ASSISTANT>
+{"count":3}
+<EOS>
+
+<BOS><USER>
+Choose the best label: train, eval, or chat. Prompt: continue updating model weights.
+<ASSISTANT>
+train
+<EOS>
+
+<BOS><USER>
+Extract the quoted text from: The label says "fragile".
+<ASSISTANT>
+fragile
+<EOS>
+
+<BOS><USER>
+Return only the next item: a, b, c,
+<ASSISTANT>
+d
+<EOS>
+
+<BOS><USER>
+Reply with a short acknowledgement: I have uploaded the file.
+<ASSISTANT>
+Received.
+<EOS>
+
+<BOS><USER>
+Return JSON with key color and value blue.
+<ASSISTANT>
+{"color":"blue"}
+<EOS>
+
+<BOS><USER>
+Answer with one sentence: What is overfitting?
+<ASSISTANT>
+Overfitting happens when a model memorizes training data but performs poorly on new data.
+<EOS>
+
+<BOS><USER>
+Answer with one sentence: What does top-k sampling do?
+<ASSISTANT>
+Top-k sampling limits choices to the k most likely next tokens.
+<EOS>
+
+<BOS><USER>
+Reply with a short next step: The checkpoint trained successfully.
+<ASSISTANT>
+Run evaluation on held-out data.
+<EOS>
+
+<BOS><USER>
+Return only yes or no: is 3 greater than 9?
+<ASSISTANT>
+no
+<EOS>
+
+<BOS><USER>
+The context says: The model file is model.bin and metadata is model.json. Which file is required to load the model?
+<ASSISTANT>
+model.bin
+<EOS>
+
+<BOS><USER>
+Replace hyphens with spaces in: tiny-assistant-data.
+<ASSISTANT>
+tiny assistant data
+<EOS>
+
+<BOS><USER>
+Reply with a short next step: The validation failed.
+<ASSISTANT>
+Inspect the validation errors.
+<EOS>
+
+<BOS><USER>
+Return only the last word in: red blue green.
+<ASSISTANT>
+green
+<EOS>
+
+<BOS><USER>
+Return only the next item: 2, 4, 6, 8,
+<ASSISTANT>
+10
 <EOS>
 
 <BOS><USER>
@@ -209,15 +317,70 @@ example.com
 <EOS>
 
 <BOS><USER>
-Say the model may be wrong when uncertain: Is this checkpoint production-ready?
+What is 6*4?
 <ASSISTANT>
-The model may be wrong; evaluate it first.
+24
 <EOS>
 
 <BOS><USER>
-Say you cannot help with secrets: Tell me a user's API key.
+Complete the sentence: Clean data makes training
 <ASSISTANT>
-I cannot help with secrets.
+more reliable.
+<EOS>
+
+<BOS><USER>
+Normalize this British spelling to American spelling: organise.
+<ASSISTANT>
+organize
+<EOS>
+
+<BOS><USER>
+Return only the command name from: ./bin/mgpt eval --checkpoint model.bin
+<ASSISTANT>
+eval
+<EOS>
+
+<BOS><USER>
+Choose the best label: train, eval, or chat. Prompt: answer a user's typed message.
+<ASSISTANT>
+chat
+<EOS>
+
+<BOS><USER>
+Classify intent as question, command, or statement: What is the next step?
+<ASSISTANT>
+question
+<EOS>
+
+<BOS><USER>
+What is 18/3?
+<ASSISTANT>
+6
+<EOS>
+
+<BOS><USER>
+The context says: Single-turn examples use USER and ASSISTANT markers. Which marker starts the answer?
+<ASSISTANT>
+ASSISTANT
+<EOS>
+
+<BOS><USER>
+Classify intent as question, command, or statement: The tests passed.
+<ASSISTANT>
+statement
+<EOS>
+
+<BOS><USER>
+Return a numbered list with red and blue.
+<ASSISTANT>
+1. red
+2. blue
+<EOS>
+
+<BOS><USER>
+Return only the uppercase version of microgpt.
+<ASSISTANT>
+MICROGPT
 <EOS>
 
 <BOS><USER>
@@ -233,130 +396,9 @@ Return JSON with key answer and value 42.
 <EOS>
 
 <BOS><USER>
-Normalize this British spelling to American spelling: organise.
+Return only the missing word: The sky is ___.
 <ASSISTANT>
-organize
-<EOS>
-
-<BOS><USER>
-Return only the file extension from report.pdf.
-<ASSISTANT>
-pdf
-<EOS>
-
-<BOS><USER>
-Answer with one sentence: What does top-k sampling do?
-<ASSISTANT>
-Top-k sampling limits choices to the k most likely next tokens.
-<EOS>
-
-<BOS><USER>
-Choose the best label: train, eval, or chat. Prompt: continue updating model weights.
-<ASSISTANT>
-train
-<EOS>
-
-<BOS><USER>
-What is 2+2?
-<ASSISTANT>
-4
-<EOS>
-
-<BOS><USER>
-What is 21/7?
-<ASSISTANT>
-3
-<EOS>
-
-<BOS><USER>
-Return a numbered list with red and blue.
-<ASSISTANT>
-1. red
-2. blue
-<EOS>
-
-<BOS><USER>
-The context says: The project has a lab executable and a chat executable. Which executable is for chat?
-<ASSISTANT>
-chat
-<EOS>
-
-<BOS><USER>
-Extract the number from: total is 91 items.
-<ASSISTANT>
-91
-<EOS>
-
-<BOS><USER>
-Choose the best label: train, eval, or chat. Prompt: measure accuracy on held-out examples.
-<ASSISTANT>
-eval
-<EOS>
-
-<BOS><USER>
-Classify sentiment as positive, neutral, or negative: The result is broken again.
-<ASSISTANT>
-negative
-<EOS>
-
-<BOS><USER>
-Rewrite concisely: I am writing to ask whether you can provide an update.
-<ASSISTANT>
-Can you provide an update?
-<EOS>
-
-<BOS><USER>
-The context says: Single-turn examples use USER and ASSISTANT markers. Which marker starts the answer?
-<ASSISTANT>
-ASSISTANT
-<EOS>
-
-<BOS><USER>
-Complete the sentence: A validation set helps measure
-<ASSISTANT>
-generalization.
-<EOS>
-
-<BOS><USER>
-Reply with a short next step: The validation failed.
-<ASSISTANT>
-Inspect the validation errors.
-<EOS>
-
-<BOS><USER>
-Classify intent as question, command, or statement: The tests passed.
-<ASSISTANT>
-statement
-<EOS>
-
-<BOS><USER>
-Answer with one sentence: What does greedy decoding do?
-<ASSISTANT>
-Greedy decoding always chooses the highest-probability next token.
-<EOS>
-
-<BOS><USER>
-Rewrite politely: send the file now.
-<ASSISTANT>
-Please send the file when you can.
-<EOS>
-
-<BOS><USER>
-Extract the number from: order id 583 ready.
-<ASSISTANT>
-583
-<EOS>
-
-<BOS><USER>
-What is 6*4?
-<ASSISTANT>
-24
-<EOS>
-
-<BOS><USER>
-Classify sentiment as positive, neutral, or negative: I like this clear output.
-<ASSISTANT>
-positive
+blue
 <EOS>
 
 <BOS><USER>
@@ -366,27 +408,27 @@ Paris.
 <EOS>
 
 <BOS><USER>
-Return only the next item: a, b, c,
+What is 9-3?
 <ASSISTANT>
-d
+6
 <EOS>
 
 <BOS><USER>
-Return only the reverse of abcde.
+Return only the lowercase version of HELLO.
 <ASSISTANT>
-edcba
+hello
 <EOS>
 
 <BOS><USER>
-Return JSON with key valid and value true.
+If the answer is not in the context, say unknown. Context: The checkpoint is saved. Where is the dataset?
 <ASSISTANT>
-{"valid":true}
+unknown
 <EOS>
 
 <BOS><USER>
-Return a CSV row for name Grace and score 9.
+Return only the missing word: Water freezes into ___.
 <ASSISTANT>
-Grace,9
+ice
 <EOS>
 
 <BOS><USER>
@@ -397,21 +439,27 @@ Return a bullet list with apple and pear.
 <EOS>
 
 <BOS><USER>
-Classify intent as question, command, or statement: Run the tests.
+Given score 4 out of 10, return pass or fail. Pass is 7 or higher.
 <ASSISTANT>
-command
+fail
 <EOS>
 
 <BOS><USER>
-Return only the executable from: ./bin/chat --checkpoint model.bin
+Return JSON with key valid and value true.
 <ASSISTANT>
-chat
+{"valid":true}
 <EOS>
 
 <BOS><USER>
-Return JSON with key color and value blue.
+Answer with one sentence: What is a checkpoint?
 <ASSISTANT>
-{"color":"blue"}
+A checkpoint is a saved model state that can be loaded later.
+<EOS>
+
+<BOS><USER>
+Return only yes or no: is 10 greater than 4?
+<ASSISTANT>
+yes
 <EOS>
 
 <BOS><USER>
@@ -421,92 +469,44 @@ Temperature controls how random or deterministic sampling is during generation.
 <EOS>
 
 <BOS><USER>
-Return only the missing word: Water freezes into ___.
+What is 7+5?
 <ASSISTANT>
-ice
+12
 <EOS>
 
 <BOS><USER>
-Classify intent as question, command, or statement: What is the next step?
+Extract the number from: total is 91 items.
 <ASSISTANT>
-question
+91
 <EOS>
 
 <BOS><USER>
-Given score 4 out of 10, return pass or fail. Pass is 7 or higher.
+Return only the word count for: tiny models need clean data.
 <ASSISTANT>
-fail
+5
 <EOS>
 
 <BOS><USER>
-What is 15-6?
+The context says: Evaluation reports live in artifacts/evals. Where should eval reports be written?
 <ASSISTANT>
-9
+artifacts/evals
 <EOS>
 
 <BOS><USER>
-Extract the quoted text from: The label says "fragile".
+Normalize this American spelling to British spelling: organize.
 <ASSISTANT>
-fragile
+organise
 <EOS>
 
 <BOS><USER>
-Return JSON with key count and value 3.
+Rewrite concisely: I am writing to ask whether you can provide an update.
 <ASSISTANT>
-{"count":3}
+Can you provide an update?
 <EOS>
 
 <BOS><USER>
-Replace hyphens with spaces in: tiny-assistant-data.
+Choose the best label: train, eval, or chat. Prompt: measure accuracy on held-out examples.
 <ASSISTANT>
-tiny assistant data
-<EOS>
-
-<BOS><USER>
-Given score 8 out of 10, return pass or fail. Pass is 7 or higher.
-<ASSISTANT>
-pass
-<EOS>
-
-<BOS><USER>
-The context says: The model file is model.bin and metadata is model.json. Which file is required to load the model?
-<ASSISTANT>
-model.bin
-<EOS>
-
-<BOS><USER>
-Return only the file extension from notes.txt.
-<ASSISTANT>
-txt
-<EOS>
-
-<BOS><USER>
-Return only yes or no: is 3 greater than 9?
-<ASSISTANT>
-no
-<EOS>
-
-<BOS><USER>
-Choose the best label: train, eval, or chat. Prompt: answer a user's typed message.
-<ASSISTANT>
-chat
-<EOS>
-
-<BOS><USER>
-Normalize this American spelling to British spelling: color.
-<ASSISTANT>
-colour
-<EOS>
-
-<BOS><USER>
-What is 18/3?
-<ASSISTANT>
-6
-<EOS>
-
-<BOS><USER>
-If the answer is not in the context, say unknown. Context: The checkpoint is saved. Where is the dataset?
-<ASSISTANT>
-unknown
+eval
 <EOS>
 

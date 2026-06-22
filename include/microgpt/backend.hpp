@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -51,6 +52,51 @@ extern "C" bool microgpt_metal_command_batch_end();
 extern "C" size_t microgpt_metal_command_buffer_submissions();
 extern "C" void microgpt_metal_reset_command_buffer_submissions();
 
+extern "C" void* microgpt_cuda_buffer_create(size_t bytes);
+extern "C" void microgpt_cuda_buffer_destroy(void* buffer);
+extern "C" bool microgpt_cuda_buffer_write(void* buffer, const void* data, size_t bytes);
+extern "C" bool microgpt_cuda_buffer_read(void* buffer, void* data, size_t bytes);
+extern "C" void* microgpt_cuda_buffer_contents(void* buffer);
+extern "C" bool microgpt_cuda_runtime_available();
+extern "C" bool microgpt_cuda_runtime_compiled();
+extern "C" const char* microgpt_cuda_runtime_device_name();
+extern "C" bool microgpt_cuda_linear_forward(const float* x, const float* w, const float* bias, float* y, int rows,
+                                              int in_features, int out_features, bool has_bias);
+extern "C" bool microgpt_cuda_linear_backward(const float* x, const float* w, const float* dy, float* dx, float* dw,
+                                               float* db, int rows, int in_features, int out_features, bool has_bias);
+extern "C" bool microgpt_cuda_linear_forward_buffers(void* x, void* w, void* bias, void* y, int rows, int in_features,
+                                                      int out_features, bool has_bias);
+extern "C" bool microgpt_cuda_linear_backward_buffers(void* x, void* w, void* dy, void* dx, void* dw, void* db,
+                                                       int rows, int in_features, int out_features, bool has_bias);
+extern "C" bool microgpt_cuda_linear_forward_backward_buffers(void* x, void* w, void* bias, void* y, void* dy,
+                                                              void* dx, void* dw, void* db, int rows, int in_features,
+                                                              int out_features, bool has_bias);
+extern "C" bool microgpt_cuda_linear_forward_backward_repeat_buffers(void* x, void* w, void* bias, void* y, void* dy,
+                                                                     void* dx, void* dw, void* db, int rows,
+                                                                     int in_features, int out_features, bool has_bias,
+                                                                     int iterations);
+extern "C" bool microgpt_cuda_gelu_forward(const float* x, float* y, int n);
+extern "C" bool microgpt_cuda_gelu_backward(const float* x, const float* dy, float* dx, int n);
+extern "C" bool microgpt_cuda_layernorm_forward(const float* x, const float* gamma, const float* beta, float* y,
+                                                 float* mean, float* inv_std, float* xhat, int rows, int dim,
+                                                 float eps);
+extern "C" bool microgpt_cuda_layernorm_backward(const float* x, const float* gamma, const float* dy,
+                                                  const float* mean, const float* inv_std, const float* xhat,
+                                                  float* dx, float* dgamma, float* dbeta, int rows, int dim);
+extern "C" bool microgpt_cuda_feedforward_forward(const float* x, const float* w1, const float* b1, const float* w2,
+                                                   const float* b2, float* pre, float* hidden, float* y, int rows,
+                                                   int d_model, int d_ff, bool has_b1, bool has_b2);
+extern "C" bool microgpt_cuda_feedforward_backward(const float* x, const float* pre, const float* hidden,
+                                                    const float* w1, const float* w2, const float* dy, float* dx,
+                                                    float* dw1, float* db1, float* dw2, float* db2, int rows,
+                                                    int d_model, int d_ff, bool has_b1, bool has_b2);
+extern "C" bool microgpt_cuda_adamw_update(float* data, float* grad, float* m, float* v, int n, float lr, float beta1,
+                                            float beta2, float eps, float weight_decay, int step, bool decay);
+extern "C" void microgpt_cuda_command_batch_begin();
+extern "C" bool microgpt_cuda_command_batch_end();
+extern "C" size_t microgpt_cuda_command_buffer_submissions();
+extern "C" void microgpt_cuda_reset_command_buffer_submissions();
+
 namespace microgpt {
 
 enum class BackendKind {
@@ -58,6 +104,32 @@ enum class BackendKind {
   Metal,
   Cuda,
 };
+
+struct BackendDispatchStats {
+  size_t accelerated_ops = 0;
+  size_t cpu_fallback_ops = 0;
+};
+
+inline BackendDispatchStats& backend_dispatch_stats() {
+  static BackendDispatchStats stats;
+  return stats;
+}
+
+inline void reset_backend_dispatch_stats() {
+  backend_dispatch_stats() = BackendDispatchStats{};
+}
+
+inline void record_backend_accelerated_op(BackendKind backend) {
+  if (backend != BackendKind::Cpu) {
+    backend_dispatch_stats().accelerated_ops += 1;
+  }
+}
+
+inline void record_backend_cpu_fallback_op(BackendKind backend) {
+  if (backend != BackendKind::Cpu) {
+    backend_dispatch_stats().cpu_fallback_ops += 1;
+  }
+}
 
 inline std::string backend_name(BackendKind backend) {
   switch (backend) {
@@ -91,7 +163,7 @@ inline bool backend_available(BackendKind backend) {
     case BackendKind::Metal:
       return microgpt_metal_runtime_compiled();
     case BackendKind::Cuda:
-      return false;
+      return microgpt_cuda_runtime_compiled();
   }
   return false;
 }
@@ -113,7 +185,16 @@ inline std::string backend_detail(BackendKind backend) {
     return "portable scalar reference backend";
   }
   if (backend == BackendKind::Cuda) {
-    return "not compiled or unavailable";
+    if (microgpt_cuda_runtime_available()) {
+      const char* name = microgpt_cuda_runtime_device_name();
+      if (name && name[0] != '\0') {
+        return name;
+      }
+    }
+    if (microgpt_cuda_runtime_compiled()) {
+      return "compiled, no runtime device detected; CPU fallback only";
+    }
+    return "not compiled";
   }
   return "unavailable";
 }
@@ -126,7 +207,7 @@ inline void require_backend_available(BackendKind backend) {
     throw std::runtime_error("Metal backend requested but unavailable; run `make BACKEND=metal all` and `make deps`");
   }
   if (backend == BackendKind::Cuda) {
-    throw std::runtime_error("CUDA backend requested but unavailable on this build");
+    throw std::runtime_error("CUDA backend requested but unavailable; run `make BACKEND=cuda all` and `make deps`");
   }
   throw std::runtime_error("backend unavailable: " + backend_name(backend));
 }

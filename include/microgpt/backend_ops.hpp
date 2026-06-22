@@ -64,6 +64,8 @@ struct BackendBuffer {
   void release_device() {
     if (device != nullptr && backend == BackendKind::Metal) {
       microgpt_metal_buffer_destroy(device);
+    } else if (device != nullptr && backend == BackendKind::Cuda) {
+      microgpt_cuda_buffer_destroy(device);
     }
     device = nullptr;
   }
@@ -75,6 +77,11 @@ struct BackendBuffer {
       device = microgpt_metal_buffer_create(n * sizeof(float));
       if (device == nullptr) {
         throw std::runtime_error("failed to allocate Metal backend buffer");
+      }
+    } else if (backend == BackendKind::Cuda && n > 0 && microgpt_cuda_runtime_available()) {
+      device = microgpt_cuda_buffer_create(n * sizeof(float));
+      if (device == nullptr) {
+        throw std::runtime_error("failed to allocate CUDA backend buffer");
       }
     }
     host_dirty = true;
@@ -99,6 +106,13 @@ struct BackendBuffer {
       BackendTransferStats& stats = backend_transfer_stats();
       stats.uploads += 1;
       stats.upload_bytes += host.size() * sizeof(float);
+    } else if (backend == BackendKind::Cuda && device != nullptr && host_dirty) {
+      if (!microgpt_cuda_buffer_write(device, host.data(), host.size() * sizeof(float))) {
+        throw std::runtime_error("failed to upload CUDA backend buffer");
+      }
+      BackendTransferStats& stats = backend_transfer_stats();
+      stats.uploads += 1;
+      stats.upload_bytes += host.size() * sizeof(float);
     }
     host_dirty = false;
   }
@@ -108,6 +122,13 @@ struct BackendBuffer {
     if (backend == BackendKind::Metal && device != nullptr && device_dirty) {
       if (!microgpt_metal_buffer_read(device, host.data(), host.size() * sizeof(float))) {
         throw std::runtime_error("failed to download Metal backend buffer");
+      }
+      BackendTransferStats& stats = backend_transfer_stats();
+      stats.downloads += 1;
+      stats.download_bytes += host.size() * sizeof(float);
+    } else if (backend == BackendKind::Cuda && device != nullptr && device_dirty) {
+      if (!microgpt_cuda_buffer_read(device, host.data(), host.size() * sizeof(float))) {
+        throw std::runtime_error("failed to download CUDA backend buffer");
       }
       BackendTransferStats& stats = backend_transfer_stats();
       stats.downloads += 1;
@@ -122,12 +143,18 @@ struct BackendBuffer {
     if (backend == BackendKind::Metal && device != nullptr) {
       return static_cast<float*>(microgpt_metal_buffer_contents(device));
     }
+    if (backend == BackendKind::Cuda && device != nullptr) {
+      return static_cast<float*>(microgpt_cuda_buffer_contents(device));
+    }
     return host.data();
   }
 
   const float* device_contents() const {
     if (backend == BackendKind::Metal && device != nullptr) {
       return static_cast<const float*>(microgpt_metal_buffer_contents(device));
+    }
+    if (backend == BackendKind::Cuda && device != nullptr) {
+      return static_cast<const float*>(microgpt_cuda_buffer_contents(device));
     }
     return host.data();
   }
@@ -183,6 +210,10 @@ struct LinearBackendCache {
   bool usable_for_metal() const {
     return backend == BackendKind::Metal && x.has_device() && w.has_device() && y.has_device();
   }
+
+  bool usable_for_cuda() const {
+    return backend == BackendKind::Cuda && x.has_device() && w.has_device() && y.has_device();
+  }
 };
 
 inline void matmul_forward_cpu(const float* a, const float* b, float* c, int rows, int inner, int cols) {
@@ -208,6 +239,7 @@ inline std::vector<float> matmul_forward_op(BackendKind backend, const float* a,
     throw std::runtime_error("matmul forward: invalid input");
   }
   std::vector<float> out(static_cast<size_t>(rows) * static_cast<size_t>(cols), 0.0f);
+  record_backend_cpu_fallback_op(backend);
   matmul_forward_cpu(a, b, out.data(), rows, inner, cols);
   return out;
 }
@@ -252,8 +284,15 @@ inline std::vector<float> gelu_forward_op(BackendKind backend, const std::vector
   std::vector<float> y(x.size(), 0.0f);
   if (backend == BackendKind::Metal && !x.empty() &&
       microgpt_metal_gelu_forward(x.data(), y.data(), static_cast<int>(x.size()))) {
+    record_backend_accelerated_op(backend);
     return y;
   }
+  if (backend == BackendKind::Cuda && !x.empty() &&
+      microgpt_cuda_gelu_forward(x.data(), y.data(), static_cast<int>(x.size()))) {
+    record_backend_accelerated_op(backend);
+    return y;
+  }
+  record_backend_cpu_fallback_op(backend);
   gelu_forward_cpu(x, y);
   return y;
 }
@@ -267,8 +306,15 @@ inline std::vector<float> gelu_backward_op(BackendKind backend, const std::vecto
   std::vector<float> dx(x.size(), 0.0f);
   if (backend == BackendKind::Metal && !x.empty() &&
       microgpt_metal_gelu_backward(x.data(), dy.data(), dx.data(), static_cast<int>(x.size()))) {
+    record_backend_accelerated_op(backend);
     return dx;
   }
+  if (backend == BackendKind::Cuda && !x.empty() &&
+      microgpt_cuda_gelu_backward(x.data(), dy.data(), dx.data(), static_cast<int>(x.size()))) {
+    record_backend_accelerated_op(backend);
+    return dx;
+  }
+  record_backend_cpu_fallback_op(backend);
   gelu_backward_cpu(x, dy, dx);
   return dx;
 }
@@ -325,8 +371,16 @@ inline LayerNormForwardResult layernorm_forward_op(BackendKind backend, const Se
   if (backend == BackendKind::Metal && !x.data.empty() &&
       microgpt_metal_layernorm_forward(x.data.data(), gamma.data.data(), beta.data.data(), out.y.data.data(),
                                        out.mean.data(), out.inv_std.data(), out.xhat.data(), x.B * x.T, x.D, eps)) {
+    record_backend_accelerated_op(backend);
     return out;
   }
+  if (backend == BackendKind::Cuda && !x.data.empty() &&
+      microgpt_cuda_layernorm_forward(x.data.data(), gamma.data.data(), beta.data.data(), out.y.data.data(),
+                                      out.mean.data(), out.inv_std.data(), out.xhat.data(), x.B * x.T, x.D, eps)) {
+    record_backend_accelerated_op(backend);
+    return out;
+  }
+  record_backend_cpu_fallback_op(backend);
   layernorm_forward_cpu(x, gamma, beta, eps, out);
   return out;
 }
@@ -387,6 +441,7 @@ inline void layernorm_backward_op(BackendKind backend, SeqTensor& x, Parameter& 
     std::vector<float> dbeta(beta.data.size(), 0.0f);
     if (microgpt_metal_layernorm_backward(x.data.data(), gamma.data.data(), y.grad.data(), mean.data(), inv_std.data(),
                                           xhat.data(), dx.data(), dgamma.data(), dbeta.data(), x.B * x.T, x.D)) {
+      record_backend_accelerated_op(backend);
       for (size_t i = 0; i < x.grad.size(); ++i) {
         x.grad[i] += dx[i];
       }
@@ -399,6 +454,26 @@ inline void layernorm_backward_op(BackendKind backend, SeqTensor& x, Parameter& 
       return;
     }
   }
+  if (backend == BackendKind::Cuda && !x.data.empty()) {
+    std::vector<float> dx(x.data.size(), 0.0f);
+    std::vector<float> dgamma(gamma.data.size(), 0.0f);
+    std::vector<float> dbeta(beta.data.size(), 0.0f);
+    if (microgpt_cuda_layernorm_backward(x.data.data(), gamma.data.data(), y.grad.data(), mean.data(), inv_std.data(),
+                                         xhat.data(), dx.data(), dgamma.data(), dbeta.data(), x.B * x.T, x.D)) {
+      record_backend_accelerated_op(backend);
+      for (size_t i = 0; i < x.grad.size(); ++i) {
+        x.grad[i] += dx[i];
+      }
+      for (size_t i = 0; i < gamma.grad.size(); ++i) {
+        gamma.grad[i] += dgamma[i];
+      }
+      for (size_t i = 0; i < beta.grad.size(); ++i) {
+        beta.grad[i] += dbeta[i];
+      }
+      return;
+    }
+  }
+  record_backend_cpu_fallback_op(backend);
   layernorm_backward_cpu(x, gamma, beta, y, mean, inv_std, xhat);
 }
 
@@ -451,8 +526,16 @@ inline SeqTensor linear_forward_op(BackendKind backend, const SeqTensor& x, cons
   if (backend == BackendKind::Metal &&
       microgpt_metal_linear_forward(x.data.data(), w.data.data(), b.data.empty() ? nullptr : b.data.data(),
                                     y.data.data(), x.B * x.T, in_features, out_features, !b.data.empty())) {
+    record_backend_accelerated_op(backend);
     return y;
   }
+  if (backend == BackendKind::Cuda &&
+      microgpt_cuda_linear_forward(x.data.data(), w.data.data(), b.data.empty() ? nullptr : b.data.data(),
+                                   y.data.data(), x.B * x.T, in_features, out_features, !b.data.empty())) {
+    record_backend_accelerated_op(backend);
+    return y;
+  }
+  record_backend_cpu_fallback_op(backend);
   linear_forward_cpu(x, w, b, in_features, out_features, y);
   return y;
 }
@@ -505,12 +588,60 @@ inline SeqTensor linear_forward_op(BackendKind backend, LinearBackendCache* cach
         microgpt_metal_linear_forward_buffers(cache->x.device, cache->w.device,
                                               b.data.empty() ? nullptr : cache->b.device, cache->y.device, rows,
                                               in_features, out_features, !b.data.empty())) {
+      record_backend_accelerated_op(backend);
+      cache->y.device_dirty = true;
+      cache->y.download();
+      y.data = cache->y.host;
+      return y;
+    }
+  } else if (backend == BackendKind::Cuda && cache != nullptr && microgpt_cuda_runtime_available()) {
+    cache->set_backend(backend);
+    cache->rows = rows;
+    cache->in_features = in_features;
+    cache->out_features = out_features;
+    cache->has_bias = !b.data.empty();
+    cache->x.ensure_size(x.data.size());
+    cache->w.ensure_size(w.data.size());
+    cache->y.ensure_size(y.data.size());
+    if (!b.data.empty()) {
+      cache->b.ensure_size(b.data.size());
+    }
+    cache->x.host = x.data;
+    if (cache->w_version != w.version) {
+      cache->w_device_current = false;
+      cache->w_version = w.version;
+    }
+    cache->w.host = w.data;
+    if (!b.data.empty()) {
+      if (cache->b_version != b.version) {
+        cache->b_device_current = false;
+        cache->b_version = b.version;
+      }
+      cache->b.host = b.data;
+    }
+    cache->x.host_dirty = true;
+    cache->w.host_dirty = true;
+    cache->b.host_dirty = !b.data.empty();
+    cache->x.upload();
+    cache->w.upload();
+    if (!b.data.empty()) {
+      cache->b.upload();
+    }
+    cache->x_device_current = true;
+    cache->w_device_current = true;
+    cache->b_device_current = !b.data.empty();
+    if (cache->usable_for_cuda() &&
+        microgpt_cuda_linear_forward_buffers(cache->x.device, cache->w.device,
+                                             b.data.empty() ? nullptr : cache->b.device, cache->y.device, rows,
+                                             in_features, out_features, !b.data.empty())) {
+      record_backend_accelerated_op(backend);
       cache->y.device_dirty = true;
       cache->y.download();
       y.data = cache->y.host;
       return y;
     }
   }
+  record_backend_cpu_fallback_op(backend);
   linear_forward_cpu(x, w, b, in_features, out_features, y);
   return y;
 }
@@ -528,6 +659,7 @@ inline void linear_backward_op(BackendKind backend, SeqTensor& x, Parameter& w, 
     if (microgpt_metal_linear_backward(x.data.data(), w.data.data(), y.grad.data(), dx.data(), dw.data(),
                                        b.data.empty() ? nullptr : db.data(), x.B * x.T, in_features, out_features,
                                        !b.data.empty())) {
+      record_backend_accelerated_op(backend);
       for (size_t i = 0; i < x.grad.size(); ++i) {
         x.grad[i] += dx[i];
       }
@@ -540,6 +672,27 @@ inline void linear_backward_op(BackendKind backend, SeqTensor& x, Parameter& w, 
       return;
     }
   }
+  if (backend == BackendKind::Cuda) {
+    std::vector<float> dx(x.data.size(), 0.0f);
+    std::vector<float> dw(w.data.size(), 0.0f);
+    std::vector<float> db(b.data.size(), 0.0f);
+    if (microgpt_cuda_linear_backward(x.data.data(), w.data.data(), y.grad.data(), dx.data(), dw.data(),
+                                      b.data.empty() ? nullptr : db.data(), x.B * x.T, in_features, out_features,
+                                      !b.data.empty())) {
+      record_backend_accelerated_op(backend);
+      for (size_t i = 0; i < x.grad.size(); ++i) {
+        x.grad[i] += dx[i];
+      }
+      for (size_t i = 0; i < w.grad.size(); ++i) {
+        w.grad[i] += dw[i];
+      }
+      for (size_t i = 0; i < b.grad.size(); ++i) {
+        b.grad[i] += db[i];
+      }
+      return;
+    }
+  }
+  record_backend_cpu_fallback_op(backend);
   linear_backward_cpu(x, w, b, in_features, out_features, y);
 }
 
@@ -600,6 +753,77 @@ inline void linear_backward_op(BackendKind backend, LinearBackendCache* cache, S
                                                      b.data.empty() ? nullptr : cache->db.device, rows, in_features,
                                                      out_features, !b.data.empty());
     if (ok) {
+      record_backend_accelerated_op(backend);
+      cache->dx.device_dirty = true;
+      cache->dw.device_dirty = true;
+      cache->dx.download();
+      cache->dw.download();
+      for (size_t i = 0; i < x.grad.size(); ++i) {
+        x.grad[i] += cache->dx.host[i];
+      }
+      for (size_t i = 0; i < w.grad.size(); ++i) {
+        w.grad[i] += cache->dw.host[i];
+      }
+      if (!b.data.empty()) {
+        cache->db.device_dirty = true;
+        cache->db.download();
+        for (size_t i = 0; i < b.grad.size(); ++i) {
+          b.grad[i] += cache->db.host[i];
+        }
+      }
+      return;
+    }
+  } else if (backend == BackendKind::Cuda && cache != nullptr && microgpt_cuda_runtime_available()) {
+    cache->set_backend(backend);
+    size_t old_x_size = cache->x.size();
+    size_t old_w_size = cache->w.size();
+    cache->x.ensure_size(x.data.size());
+    cache->w.ensure_size(w.data.size());
+    cache->dy.ensure_size(y.grad.size());
+    cache->dx.ensure_size(x.data.size());
+    cache->dw.ensure_size(w.data.size());
+    if (cache->x.size() != old_x_size) {
+      cache->x_device_current = false;
+    }
+    if (cache->w.size() != old_w_size) {
+      cache->w_device_current = false;
+    }
+    if (cache->w_version != w.version) {
+      cache->w_device_current = false;
+      cache->w_version = w.version;
+    }
+    if (!b.data.empty()) {
+      cache->db.ensure_size(b.data.size());
+      if (cache->b_version != b.version) {
+        cache->b_device_current = false;
+        cache->b_version = b.version;
+      }
+    }
+    cache->dy.host = y.grad;
+    if (!cache->x_device_current) {
+      cache->x.host = x.data;
+      cache->x.host_dirty = true;
+    }
+    if (!cache->w_device_current) {
+      cache->w.host = w.data;
+      cache->w.host_dirty = true;
+    }
+    cache->dy.host_dirty = true;
+    if (!cache->x_device_current) {
+      cache->x.upload();
+      cache->x_device_current = true;
+    }
+    if (!cache->w_device_current) {
+      cache->w.upload();
+      cache->w_device_current = true;
+    }
+    cache->dy.upload();
+    bool ok = microgpt_cuda_linear_backward_buffers(cache->x.device, cache->w.device, cache->dy.device,
+                                                    cache->dx.device, cache->dw.device,
+                                                    b.data.empty() ? nullptr : cache->db.device, rows, in_features,
+                                                    out_features, !b.data.empty());
+    if (ok) {
+      record_backend_accelerated_op(backend);
       cache->dx.device_dirty = true;
       cache->dw.device_dirty = true;
       cache->dx.download();

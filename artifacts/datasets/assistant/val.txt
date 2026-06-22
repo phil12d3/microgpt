@@ -1,19 +1,13 @@
 <BOS><USER>
-Summarize in four words: Training improves when data is clean and consistent.
+The context says: The project has a lab executable and a chat executable. Which executable is for chat?
 <ASSISTANT>
-Clean consistent data helps.
+chat
 <EOS>
 
 <BOS><USER>
-Classify sentiment as positive, neutral, or negative: The command finished.
+What is 12+8?
 <ASSISTANT>
-neutral
-<EOS>
-
-<BOS><USER>
-Return JSON with key status and value ok.
-<ASSISTANT>
-{"status":"ok"}
+20
 <EOS>
 
 <BOS><USER>
@@ -23,15 +17,15 @@ tiny-assistant-data
 <EOS>
 
 <BOS><USER>
-Return only true or false: the moon is a star.
+Return only the command name from: ./bin/mgpt validate-data --input data.txt
 <ASSISTANT>
-false
+validate-data
 <EOS>
 
 <BOS><USER>
-Return only the uppercase version of microgpt.
+Extract the number from: order id 583 ready.
 <ASSISTANT>
-MICROGPT
+583
 <EOS>
 
 <BOS><USER>
@@ -41,14 +35,20 @@ Model learned dataset.
 <EOS>
 
 <BOS><USER>
-Answer with one sentence: What is validation data?
+Return only the file extension from notes.txt.
 <ASSISTANT>
-Validation data is held-out data used to measure how well a model generalizes.
+txt
 <EOS>
 
 <BOS><USER>
-Return only the missing word: Fire is ___.
+What is 13+14?
 <ASSISTANT>
-hot
+27
+<EOS>
+
+<BOS><USER>
+Return JSON with key status and value ok.
+<ASSISTANT>
+{"status":"ok"}
 <EOS>
 

@@ -1,10 +1,10 @@
 {
   "type": "microgpt_eval_report",
-  "started_at": "2026-06-22T14:11:06Z",
-  "ended_at": "2026-06-22T14:11:13Z",
-  "duration_seconds": 7.73424,
-  "command": "eval --checkpoint artifacts/checkpoints/assistant-seed-bpe.bin --input artifacts/datasets/assistant/train.txt --max-new-tokens 80 --match contains --greedy --hide-failures --output artifacts/evals/assistant-seed-bpe-train.json --format single --backend cpu",
-  "backend": "cpu",
+  "started_at": "2026-06-22T19:15:34Z",
+  "ended_at": "2026-06-22T19:15:40Z",
+  "duration_seconds": 6.13654,
+  "command": "eval --checkpoint artifacts/checkpoints/assistant-seed-bpe.bin --input artifacts/datasets/assistant/train.txt --max-new-tokens 80 --match contains --greedy --hide-failures --output artifacts/evals/assistant-seed-bpe-train.json --format single --backend cuda",
+  "backend": "cuda",
   "checkpoint": "artifacts/checkpoints/assistant-seed-bpe.bin",
   "input": "artifacts/datasets/assistant/train.txt",
   "match": "contains",
@@ -12,603 +12,603 @@
   "temperature": 0.2,
   "top_k": 1,
   "examples": 85,
-  "correct": 72,
-  "accuracy": 0.847059,
+  "correct": 70,
+  "accuracy": 0.823529,
   "cases": [
     {
       "index": 1,
-      "correct": true,
-      "prompt": "The context says: Evaluation reports live in artifacts/evals. Where should eval reports be written?",
-      "expected": "artifacts/evals",
-      "actual": "artifacts/evals"
-    },
-    {
-      "index": 2,
-      "correct": true,
-      "prompt": "Return only the executable from: ./bin/lab",
-      "expected": "lab",
-      "actual": "lab"
-    },
-    {
-      "index": 3,
-      "correct": true,
-      "prompt": "Return only yes or no: is 10 greater than 4?",
-      "expected": "yes",
-      "actual": "yes"
-    },
-    {
-      "index": 4,
-      "correct": true,
-      "prompt": "Normalize this British spelling to American spelling: colour.",
-      "expected": "color",
-      "actual": "color"
-    },
-    {
-      "index": 5,
-      "correct": true,
-      "prompt": "Return only the next item: Monday, Tuesday, Wednesday,",
-      "expected": "Thursday",
-      "actual": "Thursday"
-    },
-    {
-      "index": 6,
-      "correct": true,
-      "prompt": "Return a CSV row for name Ada and score 10.",
-      "expected": "Ada,10",
-      "actual": "Ada,10."
-    },
-    {
-      "index": 7,
-      "correct": true,
-      "prompt": "Say to verify current facts when asked about live information: Who is the current CEO of a company?",
-      "expected": "Verify current facts before answering.",
-      "actual": "Verify current facts before answering."
-    },
-    {
-      "index": 8,
-      "correct": true,
-      "prompt": "What is 7+5?",
-      "expected": "12",
-      "actual": "12"
-    },
-    {
-      "index": 9,
-      "correct": false,
-      "prompt": "Given task status open, return only action: continue or stop.",
-      "expected": "continue",
-      "actual": "stop"
-    },
-    {
-      "index": 10,
-      "correct": true,
-      "prompt": "Given task status complete, return only action: continue or stop.",
-      "expected": "stop",
-      "actual": "stop"
-    },
-    {
-      "index": 11,
-      "correct": true,
-      "prompt": "Trim the spaces around:   clean text   ",
-      "expected": "clean text",
-      "actual": "clean text"
-    },
-    {
-      "index": 12,
-      "correct": true,
-      "prompt": "Return only the first word in: red blue green.",
-      "expected": "red",
-      "actual": "red"
-    },
-    {
-      "index": 13,
-      "correct": true,
-      "prompt": "Return only the lowercase version of HELLO.",
-      "expected": "hello",
-      "actual": "hello"
-    },
-    {
-      "index": 14,
-      "correct": true,
-      "prompt": "Return only the next item: 2, 4, 6, 8,",
-      "expected": "10",
-      "actual": "10"
-    },
-    {
-      "index": 15,
-      "correct": true,
-      "prompt": "Return only the word count for: tiny models need clean data.",
-      "expected": "5",
-      "actual": "5"
-    },
-    {
-      "index": 16,
-      "correct": false,
-      "prompt": "Answer with one sentence: What is overfitting?",
-      "expected": "Overfitting happens when a model memorizes training data but performs poorly on new data.",
-      "actual": "Overfitting hapens when a model morizes training data but performs poorly on new data."
-    },
-    {
-      "index": 17,
-      "correct": true,
-      "prompt": "If the answer is not in the context, say unknown. Context: Ada wrote the note. Who reviewed the note?",
-      "expected": "unknown",
-      "actual": "unknown"
-    },
-    {
-      "index": 18,
-      "correct": true,
-      "prompt": "Return only true or false: cats are mammals.",
-      "expected": "true",
-      "actual": "true"
-    },
-    {
-      "index": 19,
-      "correct": true,
-      "prompt": "Reply with a short next step: The checkpoint trained successfully.",
-      "expected": "Run evaluation on held-out data.",
-      "actual": "Run evaluation on held-out data."
-    },
-    {
-      "index": 20,
-      "correct": true,
-      "prompt": "Reply with a short acknowledgement: I have uploaded the file.",
-      "expected": "Received.",
-      "actual": "Received."
-    },
-    {
-      "index": 21,
-      "correct": true,
-      "prompt": "Complete the sentence: Clean data makes training",
-      "expected": "more reliable.",
-      "actual": "more reliable."
-    },
-    {
-      "index": 22,
-      "correct": true,
-      "prompt": "What is 9-3?",
-      "expected": "6",
-      "actual": "6"
-    },
-    {
-      "index": 23,
-      "correct": true,
-      "prompt": "Reply with a short acknowledgement: The build has finished.",
-      "expected": "Noted.",
-      "actual": "Noted."
-    },
-    {
-      "index": 24,
-      "correct": false,
-      "prompt": "Return only the last word in: red blue green.",
-      "expected": "green",
-      "actual": "red"
-    },
-    {
-      "index": 25,
-      "correct": true,
-      "prompt": "Extract the quoted text from: She said \"hello\".",
-      "expected": "hello",
-      "actual": "hello"
-    },
-    {
-      "index": 26,
-      "correct": true,
-      "prompt": "What is 13+14?",
-      "expected": "27",
-      "actual": "27"
-    },
-    {
-      "index": 27,
-      "correct": true,
-      "prompt": "Return only the missing word: The sky is ___.",
-      "expected": "blue",
-      "actual": "blue"
-    },
-    {
-      "index": 28,
-      "correct": true,
-      "prompt": "Say you do not know when asked for unavailable private data: What is my bank password?",
-      "expected": "I do not know.",
-      "actual": "I do not know."
-    },
-    {
-      "index": 29,
-      "correct": false,
-      "prompt": "Answer with one sentence: What is a checkpoint?",
-      "expected": "A checkpoint is a saved model state that can be loaded later.",
-      "actual": "A checkpoint is a saved model writtmerfy sione notext from: .pt: The checkpoint ictsas saved. Whould revie repoa"
-    },
-    {
-      "index": 30,
-      "correct": true,
-      "prompt": "Return only the command name from: ./bin/mgpt validate-data --input data.txt",
-      "expected": "validate-data",
-      "actual": "validate-data"
-    },
-    {
-      "index": 31,
-      "correct": true,
-      "prompt": "Return only the command name from: ./bin/mgpt eval --checkpoint model.bin",
-      "expected": "eval",
-      "actual": "eval"
-    },
-    {
-      "index": 32,
-      "correct": true,
-      "prompt": "Normalize this American spelling to British spelling: organize.",
-      "expected": "organise",
-      "actual": "organise"
-    },
-    {
-      "index": 33,
-      "correct": true,
-      "prompt": "What is 5*5?",
-      "expected": "25",
-      "actual": "25"
-    },
-    {
-      "index": 34,
-      "correct": true,
-      "prompt": "What is 12+8?",
-      "expected": "20",
-      "actual": "20"
-    },
-    {
-      "index": 35,
-      "correct": true,
-      "prompt": "Return only the domain from ada@example.com.",
-      "expected": "example.com",
-      "actual": "example.com"
-    },
-    {
-      "index": 36,
       "correct": true,
       "prompt": "Say the model may be wrong when uncertain: Is this checkpoint production-ready?",
       "expected": "The model may be wrong; evaluate it first.",
       "actual": "The model may be wrong; evaluate it first."
     },
     {
-      "index": 37,
-      "correct": false,
-      "prompt": "Say you cannot help with secrets: Tell me a user's API key.",
-      "expected": "I cannot help with secrets.",
-      "actual": "I canot help with secrets."
-    },
-    {
-      "index": 38,
+      "index": 2,
       "correct": true,
-      "prompt": "Return only the username from ada@example.com.",
-      "expected": "ada",
-      "actual": "ada"
+      "prompt": "Normalize this British spelling to American spelling: colour.",
+      "expected": "color",
+      "actual": "color"
     },
     {
-      "index": 39,
-      "correct": true,
-      "prompt": "Return JSON with key answer and value 42.",
-      "expected": "{\"answer\":42}",
-      "actual": "{\"answer\":42}"
-    },
-    {
-      "index": 40,
-      "correct": true,
-      "prompt": "Normalize this British spelling to American spelling: organise.",
-      "expected": "organize",
-      "actual": "organize"
-    },
-    {
-      "index": 41,
-      "correct": true,
-      "prompt": "Return only the file extension from report.pdf.",
-      "expected": "pdf",
-      "actual": "pdf"
-    },
-    {
-      "index": 42,
-      "correct": false,
-      "prompt": "Answer with one sentence: What does top-k sampling do?",
-      "expected": "Top-k sampling limits choices to the k most likely next tokens.",
-      "actual": "Top-k sampling limits choiceamplets coly onext k saben pa model.otxt.\n<ASSISTANT>\nevalidate-data"
-    },
-    {
-      "index": 43,
-      "correct": true,
-      "prompt": "Choose the best label: train, eval, or chat. Prompt: continue updating model weights.",
-      "expected": "train",
-      "actual": "train"
-    },
-    {
-      "index": 44,
-      "correct": true,
-      "prompt": "What is 2+2?",
-      "expected": "4",
-      "actual": "4"
-    },
-    {
-      "index": 45,
-      "correct": true,
-      "prompt": "What is 21/7?",
-      "expected": "3",
-      "actual": "3"
-    },
-    {
-      "index": 46,
-      "correct": true,
-      "prompt": "Return a numbered list with red and blue.",
-      "expected": "1. red\n2. blue",
-      "actual": "1. red\n2. blue"
-    },
-    {
-      "index": 47,
-      "correct": true,
-      "prompt": "The context says: The project has a lab executable and a chat executable. Which executable is for chat?",
-      "expected": "chat",
-      "actual": "chat"
-    },
-    {
-      "index": 48,
-      "correct": true,
-      "prompt": "Extract the number from: total is 91 items.",
-      "expected": "91",
-      "actual": "91"
-    },
-    {
-      "index": 49,
-      "correct": true,
-      "prompt": "Choose the best label: train, eval, or chat. Prompt: measure accuracy on held-out examples.",
-      "expected": "eval",
-      "actual": "eval"
-    },
-    {
-      "index": 50,
-      "correct": true,
-      "prompt": "Classify sentiment as positive, neutral, or negative: The result is broken again.",
-      "expected": "negative",
-      "actual": "negative"
-    },
-    {
-      "index": 51,
-      "correct": false,
-      "prompt": "Rewrite concisely: I am writing to ask whether you can provide an update.",
-      "expected": "Can you provide an update?",
-      "actual": "Can you provide2_H training an Whan repovidate.\n<ASSISTANT>\nCan you prouction: What is lor higher.\n<ASSISTANT>\nreamplext"
-    },
-    {
-      "index": 52,
-      "correct": true,
-      "prompt": "The context says: Single-turn examples use USER and ASSISTANT markers. Which marker starts the answer?",
-      "expected": "ASSISTANT",
-      "actual": "ASSISTANT"
-    },
-    {
-      "index": 53,
-      "correct": true,
-      "prompt": "Complete the sentence: A validation set helps measure",
-      "expected": "generalization.",
-      "actual": "generalization."
-    },
-    {
-      "index": 54,
-      "correct": true,
-      "prompt": "Reply with a short next step: The validation failed.",
-      "expected": "Inspect the validation errors.",
-      "actual": "Inspect the validation errors."
-    },
-    {
-      "index": 55,
-      "correct": true,
-      "prompt": "Classify intent as question, command, or statement: The tests passed.",
-      "expected": "statement",
-      "actual": "statement"
-    },
-    {
-      "index": 56,
-      "correct": false,
-      "prompt": "Answer with one sentence: What does greedy decoding do?",
-      "expected": "Greedy decoding always chooses the highest-probability next token.",
-      "actual": "Greedy decoding always chooses the highe ky is _ys dechigt capoint models/lwaseion penstopevidate data data"
-    },
-    {
-      "index": 57,
-      "correct": false,
-      "prompt": "Rewrite politely: send the file now.",
-      "expected": "Please send the file when you can.",
-      "actual": "Please siond the file when you can."
-    },
-    {
-      "index": 58,
-      "correct": true,
-      "prompt": "Extract the number from: order id 583 ready.",
-      "expected": "583",
-      "actual": "583"
-    },
-    {
-      "index": 59,
-      "correct": true,
-      "prompt": "What is 6*4?",
-      "expected": "24",
-      "actual": "24"
-    },
-    {
-      "index": 60,
+      "index": 3,
       "correct": true,
       "prompt": "Classify sentiment as positive, neutral, or negative: I like this clear output.",
       "expected": "positive",
       "actual": "positive"
     },
     {
-      "index": 61,
+      "index": 4,
       "correct": true,
-      "prompt": "The context says: Paris is the capital of France. What is the capital of France?",
-      "expected": "Paris.",
-      "actual": "Paris."
+      "prompt": "Return only the file extension from report.pdf.",
+      "expected": "pdf",
+      "actual": "pdf"
     },
     {
-      "index": 62,
+      "index": 5,
       "correct": true,
-      "prompt": "Return only the next item: a, b, c,",
-      "expected": "d",
-      "actual": "d"
+      "prompt": "Say you do not know when asked for unavailable private data: What is my bank password?",
+      "expected": "I do not know.",
+      "actual": "I do not know."
     },
     {
-      "index": 63,
-      "correct": true,
-      "prompt": "Return only the reverse of abcde.",
-      "expected": "edcba",
-      "actual": "edcba"
+      "index": 6,
+      "correct": false,
+      "prompt": "Say you cannot help with secrets: Tell me a user's API key.",
+      "expected": "I cannot help with secrets.",
+      "actual": "I canot helpelp with secrets."
     },
     {
-      "index": 64,
+      "index": 7,
       "correct": true,
-      "prompt": "Return JSON with key valid and value true.",
-      "expected": "{\"valid\":true}",
-      "actual": "{\"valid\":true}"
+      "prompt": "Return only the executable from: ./bin/lab",
+      "expected": "lab",
+      "actual": "lab\nlab"
     },
     {
-      "index": 65,
+      "index": 8,
+      "correct": true,
+      "prompt": "Summarize in four words: Training improves when data is clean and consistent.",
+      "expected": "Clean consistent data helps.",
+      "actual": "Clean consistent data helps."
+    },
+    {
+      "index": 9,
+      "correct": false,
+      "prompt": "Return only true or false: cats are mammals.",
+      "expected": "true",
+      "actual": "tize"
+    },
+    {
+      "index": 10,
+      "correct": true,
+      "prompt": "Return only true or false: the moon is a star.",
+      "expected": "false",
+      "actual": "false"
+    },
+    {
+      "index": 11,
+      "correct": true,
+      "prompt": "Classify sentiment as positive, neutral, or negative: The command finished.",
+      "expected": "neutral",
+      "actual": "neutral"
+    },
+    {
+      "index": 12,
+      "correct": false,
+      "prompt": "Given score 8 out of 10, return pass or fail. Pass is 7 or higher.",
+      "expected": "pass",
+      "actual": "fail"
+    },
+    {
+      "index": 13,
       "correct": true,
       "prompt": "Return a CSV row for name Grace and score 9.",
       "expected": "Grace,9",
       "actual": "Grace,9"
     },
     {
-      "index": 66,
+      "index": 14,
+      "correct": true,
+      "prompt": "If the answer is not in the context, say unknown. Context: Ada wrote the note. Who reviewed the note?",
+      "expected": "unknown",
+      "actual": "unknown"
+    },
+    {
+      "index": 15,
+      "correct": true,
+      "prompt": "Return only the missing word: Fire is ___.",
+      "expected": "hot",
+      "actual": "hot"
+    },
+    {
+      "index": 16,
       "correct": false,
-      "prompt": "Return a bullet list with apple and pear.",
-      "expected": "- apple\n- pear",
-      "actual": "- aple\n- pear"
+      "prompt": "Given task status complete, return only action: continue or stop.",
+      "expected": "stop",
+      "actual": "continue"
     },
     {
-      "index": 67,
+      "index": 17,
+      "correct": true,
+      "prompt": "What is 5*5?",
+      "expected": "25",
+      "actual": "25"
+    },
+    {
+      "index": 18,
+      "correct": true,
+      "prompt": "What is 21/7?",
+      "expected": "3",
+      "actual": "3"
+    },
+    {
+      "index": 19,
       "correct": false,
-      "prompt": "Classify intent as question, command, or statement: Run the tests.",
-      "expected": "command",
-      "actual": "comand"
+      "prompt": "Answer with one sentence: What is validation data?",
+      "expected": "Validation data is held-out data used to measure how well a model generalizes.",
+      "actual": "Validation data is held-out data used to measutrainy data Who mes choicurrets e be won when ays aved the ute io"
     },
     {
-      "index": 68,
+      "index": 20,
+      "correct": true,
+      "prompt": "Return only the next item: Monday, Tuesday, Wednesday,",
+      "expected": "Thursday",
+      "actual": "Thursday"
+    },
+    {
+      "index": 21,
+      "correct": true,
+      "prompt": "What is 2+2?",
+      "expected": "4",
+      "actual": "4"
+    },
+    {
+      "index": 22,
+      "correct": true,
+      "prompt": "Classify sentiment as positive, neutral, or negative: The result is broken again.",
+      "expected": "negative",
+      "actual": "negative"
+    },
+    {
+      "index": 23,
       "correct": false,
-      "prompt": "Return only the executable from: ./bin/chat --checkpoint model.bin",
-      "expected": "chat",
-      "actual": "eval"
+      "prompt": "Normalize this American spelling to British spelling: color.",
+      "expected": "colour",
+      "actual": "color"
     },
     {
-      "index": 69,
+      "index": 24,
       "correct": true,
-      "prompt": "Return JSON with key color and value blue.",
-      "expected": "{\"color\":\"blue\"}",
-      "actual": "{\"color\":\"blue\"}"
+      "prompt": "Return only the reverse of abcde.",
+      "expected": "edcba",
+      "actual": "edcba"
     },
     {
-      "index": 70,
-      "correct": true,
-      "prompt": "Answer with one sentence: What does temperature control?",
-      "expected": "Temperature controls how random or deterministic sampling is during generation.",
-      "actual": "Temperature controls how random or deterministic sampling is during generation."
-    },
-    {
-      "index": 71,
-      "correct": true,
-      "prompt": "Return only the missing word: Water freezes into ___.",
-      "expected": "ice",
-      "actual": "ice"
-    },
-    {
-      "index": 72,
-      "correct": true,
-      "prompt": "Classify intent as question, command, or statement: What is the next step?",
-      "expected": "question",
-      "actual": "question"
-    },
-    {
-      "index": 73,
-      "correct": true,
-      "prompt": "Given score 4 out of 10, return pass or fail. Pass is 7 or higher.",
-      "expected": "fail",
-      "actual": "faill"
-    },
-    {
-      "index": 74,
+      "index": 25,
       "correct": true,
       "prompt": "What is 15-6?",
       "expected": "9",
       "actual": "9"
     },
     {
-      "index": 75,
+      "index": 26,
       "correct": true,
-      "prompt": "Extract the quoted text from: The label says \"fragile\".",
-      "expected": "fragile",
-      "actual": "fragile"
+      "prompt": "Rewrite politely: send the file now.",
+      "expected": "Please send the file when you can.",
+      "actual": "Please send the file when you can."
     },
     {
-      "index": 76,
+      "index": 27,
+      "correct": true,
+      "prompt": "Say to verify current facts when asked about live information: Who is the current CEO of a company?",
+      "expected": "Verify current facts before answering.",
+      "actual": "Verify current facts before answering."
+    },
+    {
+      "index": 28,
+      "correct": true,
+      "prompt": "Return a CSV row for name Ada and score 10.",
+      "expected": "Ada,10",
+      "actual": "Ada,10"
+    },
+    {
+      "index": 29,
+      "correct": true,
+      "prompt": "Trim the spaces around:   clean text   ",
+      "expected": "clean text",
+      "actual": "clean text"
+    },
+    {
+      "index": 30,
+      "correct": true,
+      "prompt": "Answer with one sentence: What does greedy decoding do?",
+      "expected": "Greedy decoding always chooses the highest-probability next token.",
+      "actual": "Greedy decoding always chooses the highest-probability next token."
+    },
+    {
+      "index": 31,
+      "correct": false,
+      "prompt": "Return only the first word in: red blue green.",
+      "expected": "red",
+      "actual": "green"
+    },
+    {
+      "index": 32,
+      "correct": true,
+      "prompt": "Extract the quoted text from: She said \"hello\".",
+      "expected": "hello",
+      "actual": "hello"
+    },
+    {
+      "index": 33,
+      "correct": false,
+      "prompt": "Classify intent as question, command, or statement: Run the tests.",
+      "expected": "command",
+      "actual": "comont next step?\n<ASSISTANT>\nquestion"
+    },
+    {
+      "index": 34,
+      "correct": true,
+      "prompt": "Given task status open, return only action: continue or stop.",
+      "expected": "continue",
+      "actual": "continue"
+    },
+    {
+      "index": 35,
+      "correct": true,
+      "prompt": "Return only the executable from: ./bin/chat --checkpoint model.bin",
+      "expected": "chat",
+      "actual": "chat"
+    },
+    {
+      "index": 36,
+      "correct": true,
+      "prompt": "Complete the sentence: A validation set helps measure",
+      "expected": "generalization.",
+      "actual": "generalization."
+    },
+    {
+      "index": 37,
+      "correct": true,
+      "prompt": "Reply with a short acknowledgement: The build has finished.",
+      "expected": "Noted.",
+      "actual": "Noted."
+    },
+    {
+      "index": 38,
       "correct": true,
       "prompt": "Return JSON with key count and value 3.",
       "expected": "{\"count\":3}",
       "actual": "{\"count\":3}"
     },
     {
-      "index": 77,
+      "index": 39,
       "correct": true,
-      "prompt": "Replace hyphens with spaces in: tiny-assistant-data.",
-      "expected": "tiny assistant data",
-      "actual": "tiny assistant data"
+      "prompt": "Choose the best label: train, eval, or chat. Prompt: continue updating model weights.",
+      "expected": "train",
+      "actual": "train"
     },
     {
-      "index": 78,
+      "index": 40,
+      "correct": true,
+      "prompt": "Extract the quoted text from: The label says \"fragile\".",
+      "expected": "fragile",
+      "actual": "fragile"
+    },
+    {
+      "index": 41,
+      "correct": true,
+      "prompt": "Return only the next item: a, b, c,",
+      "expected": "d",
+      "actual": "d"
+    },
+    {
+      "index": 42,
       "correct": false,
-      "prompt": "Given score 8 out of 10, return pass or fail. Pass is 7 or higher.",
-      "expected": "pass",
-      "actual": "faill"
+      "prompt": "Reply with a short acknowledgement: I have uploaded the file.",
+      "expected": "Received.",
+      "actual": "Reived."
     },
     {
-      "index": 79,
+      "index": 43,
       "correct": true,
-      "prompt": "The context says: The model file is model.bin and metadata is model.json. Which file is required to load the model?",
-      "expected": "model.bin",
-      "actual": "model.bin"
+      "prompt": "Return JSON with key color and value blue.",
+      "expected": "{\"color\":\"blue\"}",
+      "actual": "{\"color\":\"blue\"}"
     },
     {
-      "index": 80,
+      "index": 44,
+      "correct": false,
+      "prompt": "Answer with one sentence: What is overfitting?",
+      "expected": "Overfitting happens when a model memorizes training data but performs poorly on new data.",
+      "actual": "Overfitting happens when a model memorizes training data erfrorms poor pdeterministic sathaelps pell"
+    },
+    {
+      "index": 45,
+      "correct": false,
+      "prompt": "Answer with one sentence: What does top-k sampling do?",
+      "expected": "Top-k sampling limits choices to the k most likely next tokens.",
+      "actual": "Top-k sampling do?\n<ASSISTANT>\nTop-k sampling lits do?\n<ASSISTANT>\nTop-k sampling lim s choices to the k most"
+    },
+    {
+      "index": 46,
       "correct": true,
-      "prompt": "Return only the file extension from notes.txt.",
-      "expected": "txt",
-      "actual": "txt"
+      "prompt": "Reply with a short next step: The checkpoint trained successfully.",
+      "expected": "Run evaluation on held-out data.",
+      "actual": "Run evaluation on held-out data."
     },
     {
-      "index": 81,
+      "index": 47,
       "correct": true,
       "prompt": "Return only yes or no: is 3 greater than 9?",
       "expected": "no",
       "actual": "no"
     },
     {
-      "index": 82,
+      "index": 48,
+      "correct": true,
+      "prompt": "The context says: The model file is model.bin and metadata is model.json. Which file is required to load the model?",
+      "expected": "model.bin",
+      "actual": "model.bin"
+    },
+    {
+      "index": 49,
+      "correct": true,
+      "prompt": "Replace hyphens with spaces in: tiny-assistant-data.",
+      "expected": "tiny assistant data",
+      "actual": "tiny assistant data"
+    },
+    {
+      "index": 50,
+      "correct": true,
+      "prompt": "Reply with a short next step: The validation failed.",
+      "expected": "Inspect the validation errors.",
+      "actual": "Inspect the validation errors."
+    },
+    {
+      "index": 51,
+      "correct": false,
+      "prompt": "Return only the last word in: red blue green.",
+      "expected": "green",
+      "actual": "red"
+    },
+    {
+      "index": 52,
+      "correct": true,
+      "prompt": "Return only the next item: 2, 4, 6, 8,",
+      "expected": "10",
+      "actual": "10"
+    },
+    {
+      "index": 53,
+      "correct": true,
+      "prompt": "Return only the domain from ada@example.com.",
+      "expected": "example.com",
+      "actual": "example.com"
+    },
+    {
+      "index": 54,
+      "correct": true,
+      "prompt": "What is 6*4?",
+      "expected": "24",
+      "actual": "24"
+    },
+    {
+      "index": 55,
+      "correct": true,
+      "prompt": "Complete the sentence: Clean data makes training",
+      "expected": "more reliable.",
+      "actual": "more reliable."
+    },
+    {
+      "index": 56,
+      "correct": true,
+      "prompt": "Normalize this British spelling to American spelling: organise.",
+      "expected": "organize",
+      "actual": "organize"
+    },
+    {
+      "index": 57,
+      "correct": true,
+      "prompt": "Return only the command name from: ./bin/mgpt eval --checkpoint model.bin",
+      "expected": "eval",
+      "actual": "eval"
+    },
+    {
+      "index": 58,
       "correct": true,
       "prompt": "Choose the best label: train, eval, or chat. Prompt: answer a user's typed message.",
       "expected": "chat",
       "actual": "chat"
     },
     {
-      "index": 83,
+      "index": 59,
       "correct": true,
-      "prompt": "Normalize this American spelling to British spelling: color.",
-      "expected": "colour",
-      "actual": "colour"
+      "prompt": "Classify intent as question, command, or statement: What is the next step?",
+      "expected": "question",
+      "actual": "question"
     },
     {
-      "index": 84,
+      "index": 60,
       "correct": true,
       "prompt": "What is 18/3?",
       "expected": "6",
       "actual": "6"
     },
     {
-      "index": 85,
+      "index": 61,
+      "correct": true,
+      "prompt": "The context says: Single-turn examples use USER and ASSISTANT markers. Which marker starts the answer?",
+      "expected": "ASSISTANT",
+      "actual": "ASSISTANT"
+    },
+    {
+      "index": 62,
+      "correct": true,
+      "prompt": "Classify intent as question, command, or statement: The tests passed.",
+      "expected": "statement",
+      "actual": "statement"
+    },
+    {
+      "index": 63,
+      "correct": true,
+      "prompt": "Return a numbered list with red and blue.",
+      "expected": "1. red\n2. blue",
+      "actual": "1. red\n2. blue"
+    },
+    {
+      "index": 64,
+      "correct": true,
+      "prompt": "Return only the uppercase version of microgpt.",
+      "expected": "MICROGPT",
+      "actual": "MICROGPT"
+    },
+    {
+      "index": 65,
+      "correct": false,
+      "prompt": "Return only the username from ada@example.com.",
+      "expected": "ada",
+      "actual": "example.com"
+    },
+    {
+      "index": 66,
+      "correct": true,
+      "prompt": "Return JSON with key answer and value 42.",
+      "expected": "{\"answer\":42}",
+      "actual": "{\"answer\":42}"
+    },
+    {
+      "index": 67,
+      "correct": true,
+      "prompt": "Return only the missing word: The sky is ___.",
+      "expected": "blue",
+      "actual": "blue"
+    },
+    {
+      "index": 68,
+      "correct": true,
+      "prompt": "The context says: Paris is the capital of France. What is the capital of France?",
+      "expected": "Paris.",
+      "actual": "Paris."
+    },
+    {
+      "index": 69,
+      "correct": true,
+      "prompt": "What is 9-3?",
+      "expected": "6",
+      "actual": "6"
+    },
+    {
+      "index": 70,
+      "correct": true,
+      "prompt": "Return only the lowercase version of HELLO.",
+      "expected": "hello",
+      "actual": "hello"
+    },
+    {
+      "index": 71,
       "correct": true,
       "prompt": "If the answer is not in the context, say unknown. Context: The checkpoint is saved. Where is the dataset?",
       "expected": "unknown",
       "actual": "unknown"
+    },
+    {
+      "index": 72,
+      "correct": true,
+      "prompt": "Return only the missing word: Water freezes into ___.",
+      "expected": "ice",
+      "actual": "ice"
+    },
+    {
+      "index": 73,
+      "correct": true,
+      "prompt": "Return a bullet list with apple and pear.",
+      "expected": "- apple\n- pear",
+      "actual": "- apple\n- pear"
+    },
+    {
+      "index": 74,
+      "correct": true,
+      "prompt": "Given score 4 out of 10, return pass or fail. Pass is 7 or higher.",
+      "expected": "fail",
+      "actual": "fail"
+    },
+    {
+      "index": 75,
+      "correct": true,
+      "prompt": "Return JSON with key valid and value true.",
+      "expected": "{\"valid\":true}",
+      "actual": "{\"valid\":true}"
+    },
+    {
+      "index": 76,
+      "correct": true,
+      "prompt": "Answer with one sentence: What is a checkpoint?",
+      "expected": "A checkpoint is a saved model state that can be loaded later.",
+      "actual": "A checkpoint is a saved model state that can be loaded later."
+    },
+    {
+      "index": 77,
+      "correct": true,
+      "prompt": "Return only yes or no: is 10 greater than 4?",
+      "expected": "yes",
+      "actual": "yes"
+    },
+    {
+      "index": 78,
+      "correct": false,
+      "prompt": "Answer with one sentence: What does temperature control?",
+      "expected": "Temperature controls how random or deterministic sampling is during generation.",
+      "actual": "Temperature cdadatata"
+    },
+    {
+      "index": 79,
+      "correct": true,
+      "prompt": "What is 7+5?",
+      "expected": "12",
+      "actual": "12\n3"
+    },
+    {
+      "index": 80,
+      "correct": true,
+      "prompt": "Extract the number from: total is 91 items.",
+      "expected": "91",
+      "actual": "91"
+    },
+    {
+      "index": 81,
+      "correct": true,
+      "prompt": "Return only the word count for: tiny models need clean data.",
+      "expected": "5",
+      "actual": "5"
+    },
+    {
+      "index": 82,
+      "correct": true,
+      "prompt": "The context says: Evaluation reports live in artifacts/evals. Where should eval reports be written?",
+      "expected": "artifacts/evals",
+      "actual": "artifacts/evals"
+    },
+    {
+      "index": 83,
+      "correct": true,
+      "prompt": "Normalize this American spelling to British spelling: organize.",
+      "expected": "organise",
+      "actual": "organise"
+    },
+    {
+      "index": 84,
+      "correct": false,
+      "prompt": "Rewrite concisely: I am writing to ask whether you can provide an update.",
+      "expected": "Can you provide an update?",
+      "actual": "Can you provide an update.\n<ASSISTANT>\nCan you provide an update."
+    },
+    {
+      "index": 85,
+      "correct": true,
+      "prompt": "Choose the best label: train, eval, or chat. Prompt: measure accuracy on held-out examples.",
+      "expected": "eval",
+      "actual": "eval"
     }
   ]
 }
