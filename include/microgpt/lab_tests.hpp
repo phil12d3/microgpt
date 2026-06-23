@@ -874,6 +874,43 @@ inline bool chat_history_trimming_test() {
          prompt.find("three") == std::string::npos && prompt.find("four") == std::string::npos;
 }
 
+inline bool chat_history_compression_test() {
+  Tokenizer tok(TokenizerKind::Byte);
+  std::vector<ChatMessage> history;
+  for (int i = 0; i < 8; ++i) {
+    std::string repeated = "This is a long message about compressing context. ";
+    repeated += "It keeps enough signal for the summary to be shorter than the original. ";
+    repeated += "Turn " + std::to_string(i) + ". ";
+    repeated += repeated;
+    history.push_back({ChatRole::User, repeated});
+    history.push_back({ChatRole::Assistant, repeated});
+  }
+
+  std::string original_prompt = format_multi_turn_chat_prompt(history, "");
+  size_t original_tokens = tok.encode_text(original_prompt).size();
+  std::vector<ChatMessage> compressed = compress_chat_history(history, tok, static_cast<int>(original_tokens));
+  if (compressed.size() >= history.size()) {
+    return false;
+  }
+  std::string compressed_prompt = format_multi_turn_chat_prompt(compressed, "");
+  size_t compressed_tokens = tok.encode_text(compressed_prompt).size();
+  if (compressed_tokens >= original_tokens) {
+    return false;
+  }
+  if (compressed.size() < 4) {
+    return false;
+  }
+  const size_t tail_start = history.size() - 4;
+  for (size_t i = 0; i < 4; ++i) {
+    const ChatMessage& expected = history[tail_start + i];
+    const ChatMessage& actual = compressed[compressed.size() - 4 + i];
+    if (expected.role != actual.role || expected.content != actual.content) {
+      return false;
+    }
+  }
+  return true;
+}
+
 inline bool io_contract_test() {
   std::vector<uint8_t> bytes = {0, 127, 255};
   std::vector<int> tokens = bytes_to_tokens(bytes);
@@ -1412,15 +1449,16 @@ inline bool run_tests() {
   bool ok26 = session_split_contract_test();
   bool ok27 = chat_history_prompt_test();
   bool ok28 = chat_history_trimming_test();
-  bool ok29 = cpu_metal_training_parity_test();
-  bool ok30 = backend_adamw_update_test();
-  bool ok31 = backend_adamw_multi_param_parity_test();
-  bool ok32 = cpu_metal_staged_parity_trace_test();
-  bool ok33 = metal_checkpoint_cpu_generation_interop_test();
-  bool ok34 = cuda_checkpoint_cpu_generation_interop_test();
-  bool ok35 = cuda_feedforward_forward_test();
-  bool ok36 = cuda_feedforward_backward_test();
-  bool ok37 = cuda_cached_linear_backend_test();
+  bool ok29 = chat_history_compression_test();
+  bool ok30 = cpu_metal_training_parity_test();
+  bool ok31 = backend_adamw_update_test();
+  bool ok32 = backend_adamw_multi_param_parity_test();
+  bool ok33 = cpu_metal_staged_parity_trace_test();
+  bool ok34 = metal_checkpoint_cpu_generation_interop_test();
+  bool ok35 = cuda_checkpoint_cpu_generation_interop_test();
+  bool ok36 = cuda_feedforward_forward_test();
+  bool ok37 = cuda_feedforward_backward_test();
+  bool ok38 = cuda_cached_linear_backend_test();
   std::cout << "gradient_check_linear: " << (ok1 ? "PASS" : "FAIL") << '\n';
   std::cout << "backend_linear_op_test: " << (ok2 ? "PASS" : "FAIL") << '\n';
   std::cout << "backend_matmul_op_test: " << (ok3 ? "PASS" : "FAIL") << '\n';
@@ -1449,18 +1487,19 @@ inline bool run_tests() {
   std::cout << "session_split_contract_test: " << (ok26 ? "PASS" : "FAIL") << '\n';
   std::cout << "chat_history_prompt_test: " << (ok27 ? "PASS" : "FAIL") << '\n';
   std::cout << "chat_history_trimming_test: " << (ok28 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cpu_metal_training_parity_test: " << (ok29 ? "PASS" : "FAIL") << '\n';
-  std::cout << "backend_adamw_update_test: " << (ok30 ? "PASS" : "FAIL") << '\n';
-  std::cout << "backend_adamw_multi_param_parity_test: " << (ok31 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cpu_metal_staged_parity_trace_test: " << (ok32 ? "PASS" : "FAIL") << '\n';
-  std::cout << "metal_checkpoint_cpu_generation_interop_test: " << (ok33 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cuda_checkpoint_cpu_generation_interop_test: " << (ok34 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cuda_feedforward_forward_test: " << (ok35 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cuda_feedforward_backward_test: " << (ok36 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cuda_cached_linear_backend_test: " << (ok37 ? "PASS" : "FAIL") << '\n';
+  std::cout << "chat_history_compression_test: " << (ok29 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cpu_metal_training_parity_test: " << (ok30 ? "PASS" : "FAIL") << '\n';
+  std::cout << "backend_adamw_update_test: " << (ok31 ? "PASS" : "FAIL") << '\n';
+  std::cout << "backend_adamw_multi_param_parity_test: " << (ok32 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cpu_metal_staged_parity_trace_test: " << (ok33 ? "PASS" : "FAIL") << '\n';
+  std::cout << "metal_checkpoint_cpu_generation_interop_test: " << (ok34 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_checkpoint_cpu_generation_interop_test: " << (ok35 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_feedforward_forward_test: " << (ok36 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_feedforward_backward_test: " << (ok37 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_cached_linear_backend_test: " << (ok38 ? "PASS" : "FAIL") << '\n';
   return ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 &&
          ok15 && ok16 && ok17 && ok18 && ok19 && ok20 && ok21 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 &&
-         ok28 && ok29 && ok30 && ok31 && ok32 && ok33 && ok34 && ok35 && ok36 && ok37;
+         ok28 && ok29 && ok30 && ok31 && ok32 && ok33 && ok34 && ok35 && ok36 && ok37 && ok38;
 }
 
 

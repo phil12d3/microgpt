@@ -256,6 +256,7 @@
         </p>
         <nav aria-label="Page sections">
           <a href="#commands">Commands</a>
+          <a href="#gpt">GPT Settings</a>
           <a href="#training">Training Options</a>
           <a href="#generation">Generation Options</a>
           <a href="#evaluation">Evaluation</a>
@@ -417,6 +418,22 @@
         </div>
       </section>
 
+      <section id="gpt">
+        <h2>GPT Settings</h2>
+        <p>
+          These settings control the shape of the transformer checkpoint and the
+          way the model samples output. The deeper explanation of context,
+          tokenizers, and capacity tradeoffs lives on the
+          <a href="gpt-theory.html">GPT theory page</a>.
+        </p>
+        <ul>
+          <li><code>--context</code> sets the token window the model can process at once.</li>
+          <li><code>--d-model</code>, <code>--layers</code>, <code>--heads</code>, and <code>--ff</code> control model capacity and training cost.</li>
+          <li><code>--batch-size</code> and <code>--lr</code> change how training updates behave, but not decoding rules.</li>
+          <li><code>--temperature</code> and <code>--top-k</code> change how generation samples from the learned distribution.</li>
+        </ul>
+      </section>
+
       <section id="training">
         <h2>Training Options</h2>
         <table>
@@ -469,16 +486,16 @@
               <td><code>--context N</code></td>
               <td><code>train</code></td>
               <td><code>64</code></td>
-              <td>Sequence length in tokens. Smaller corpora need smaller context sizes.</td>
+              <td>Sequence length in tokens. Too small and the model cannot see enough history; too large and training gets slower and needs more data.</td>
             </tr>
             <tr>
               <td><code>--tokenizer byte|bpe</code></td>
               <td><code>train</code></td>
               <td><code>byte</code></td>
               <td>
-                Tokenizer used to create a new checkpoint. <code>byte</code> is the legacy byte-level mode.
-                <code>bpe</code> uses the built-in deterministic multi-character vocabulary. Resume and generation
-                read the tokenizer from the checkpoint.
+                Tokenizer used to create a new checkpoint. <code>byte</code> is the simplest and most robust choice for debugging or arbitrary text.
+                <code>bpe</code> shortens common phrases into fewer tokens, which usually uses the context window more efficiently and works better for assistant-style text.
+                Resume and generation read the tokenizer from the checkpoint.
               </td>
             </tr>
             <tr>

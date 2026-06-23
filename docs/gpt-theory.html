@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>microgpt GPT Theory</title>
+    <style>
+      :root {
+        --bg: #f7f8fa;
+        --panel: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6b7a;
+        --border: #d9dee7;
+        --accent: #0f766e;
+        --accent-soft: #e6fffb;
+        --code-bg: #111827;
+        --code-text: #e5e7eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #fbfcfd 0%, var(--bg) 100%);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.6;
+      }
+
+      header,
+      main {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      .hero {
+        padding-top: 18px;
+        padding-bottom: 8px;
+      }
+
+      .tag {
+        display: inline-block;
+        margin-bottom: 12px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 4px 10px;
+        background: var(--panel);
+        color: var(--accent);
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.15;
+      }
+
+      h1 {
+        font-size: clamp(2.2rem, 4vw, 3.7rem);
+        margin-bottom: 12px;
+      }
+
+      h2 {
+        margin-top: 44px;
+        margin-bottom: 12px;
+        font-size: 1.45rem;
+      }
+
+      h3 {
+        font-size: 1.02rem;
+        margin-bottom: 8px;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+      }
+
+      .lede {
+        max-width: 72ch;
+        font-size: 1.05rem;
+      }
+
+      .panel {
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--panel);
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+        padding: 18px 20px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--panel);
+        padding: 16px 18px;
+      }
+
+      .callout {
+        border-left: 4px solid var(--accent);
+        background: var(--accent-soft);
+        padding: 14px 16px;
+        border-radius: 0 12px 12px 0;
+      }
+
+      code {
+        border-radius: 5px;
+        background: #eef1f5;
+        padding: 0.12rem 0.32rem;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 12px 0 0;
+        border-radius: 12px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 16px;
+      }
+
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+
+      ul {
+        padding-left: 1.2rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--panel);
+      }
+
+      th,
+      td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f1f5f9;
+        color: var(--text);
+        font-size: 0.92rem;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .toc {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+        margin-top: 18px;
+      }
+
+      .toc a {
+        font-weight: 600;
+      }
+
+      .footer {
+        padding-bottom: 44px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <p><a href="index.html">Back to docs index</a></p>
+      <span class="tag">Guide</span>
+      <h1>GPT Theory for microgpt</h1>
+      <p class="lede">
+        This page explains the model settings in terms of behavior, not just
+        flags. The goal is to answer the practical questions: what gets better
+        when you increase a setting, what breaks when you shrink it too far, and
+        which choices make sense for a tiny assistant versus a lab benchmark.
+      </p>
+      <nav class="toc" aria-label="Page sections">
+        <a href="#basics">How GPT Uses Tokens</a>
+        <a href="#context">Context Window</a>
+        <a href="#tokenizers">Tokenizers</a>
+        <a href="#capacity">Model Capacity</a>
+        <a href="#training">Training Knobs</a>
+        <a href="#generation">Generation Knobs</a>
+        <a href="#recipes">Practical Recipes</a>
+      </nav>
+    </header>
+
+    <main class="footer">
+      <section id="basics">
+        <h2>How GPT Uses Tokens</h2>
+        <div class="panel">
+          <p>
+            A GPT-style model does not read text as words or characters directly.
+            It reads a stream of tokens, turns them into vectors, processes those
+            vectors through transformer blocks, and predicts the next token at
+            each step.
+          </p>
+          <p>
+            That matters because every setting changes the token stream or the
+            model's ability to use it. If the tokenizer splits text into many
+            small pieces, the model sees longer sequences. If the context window
+            is too short, the model cannot use older text even if it is present
+            in the chat history. If the model is too small, it can fail to learn
+            the patterns in the tokens it does see.
+          </p>
+        </div>
+      </section>
+
+      <section id="context">
+        <h2>Context Window</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>What it is</h3>
+            <p>
+              <code>--context</code> sets the number of tokens the model can
+              process in one forward pass. It is the size of the working memory
+              the checkpoint is built around.
+            </p>
+          </article>
+          <article class="card">
+            <h3>If it is too small</h3>
+            <p>
+              The model cannot see enough of the prompt, prior turns, or training
+              example. In chat, older turns get trimmed earlier. In training, the
+              model only learns short-range dependencies, so it may fail on tasks
+              that need the full instruction, a format marker, or a longer answer.
+            </p>
+          </article>
+          <article class="card">
+            <h3>If it is too large</h3>
+            <p>
+              Memory use rises because attention scales with sequence length. The
+              model also needs more data to make good use of the extra window. On
+              tiny datasets, a huge context can waste capacity on positions that
+              are rarely meaningful.
+            </p>
+          </article>
+        </div>
+        <div class="callout" style="margin-top: 14px;">
+          <strong>Rule of thumb:</strong> choose the smallest context that still
+          fits the real task. For arithmetic or short instruction tasks, a small
+          window can be enough. For chat or session memory, use a larger window,
+          but only if you have enough training data to fill it.
+        </div>
+      </section>
+
+      <section id="tokenizers">
+        <h2>Tokenizers</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Byte tokenizer</h3>
+            <p>
+              Byte mode maps each byte directly into the token stream. It is
+              simple, robust, and easy to debug. Every input can be represented
+              exactly, including unusual punctuation or malformed text.
+            </p>
+            <p class="muted">
+              Tradeoff: common words take more tokens, so sequences are longer and
+              the context window fills up faster.
+            </p>
+          </article>
+          <article class="card">
+            <h3>BPE tokenizer</h3>
+            <p>
+              BPE merges frequent character sequences into single tokens. That
+              usually shortens text, which means the same context window can hold
+              more semantic content. It often learns natural language and
+              assistant-style instruction data more efficiently.
+            </p>
+            <p class="muted">
+              Tradeoff: the token boundaries are less obvious when debugging, and
+              you need the checkpoint to carry the tokenizer choice with it.
+            </p>
+          </article>
+          <article class="card">
+            <h3>When to choose which</h3>
+            <p>
+              Use <code>byte</code> when you want the simplest pipeline, when you
+              are validating a new feature, or when the text may be arbitrary.
+              Use <code>bpe</code> when you want better efficiency on natural
+              language, more useful context usage, and a better fit for assistant
+              prompts.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="capacity">
+        <h2>Model Capacity</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Setting</th>
+              <th>Behavior</th>
+              <th>What changes when you increase it</th>
+              <th>What can go wrong if it is too large</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--d-model</code></td>
+              <td>Hidden width of the transformer.</td>
+              <td>More representational space for token and position features.</td>
+              <td>Higher compute cost and more chance of overfitting on small data.</td>
+            </tr>
+            <tr>
+              <td><code>--layers</code></td>
+              <td>Number of stacked transformer blocks.</td>
+              <td>More rounds of transformation and abstraction.</td>
+              <td>Slower training, more parameters, and more sensitivity to data quality.</td>
+            </tr>
+            <tr>
+              <td><code>--heads</code></td>
+              <td>Attention heads per block.</td>
+              <td>More subspaces for the model to track different relationships in parallel.</td>
+              <td>Must divide <code>d-model</code>; too many heads with too little width can make each head weak.</td>
+            </tr>
+            <tr>
+              <td><code>--ff</code></td>
+              <td>Feed-forward expansion width.</td>
+              <td>More non-linear capacity inside each block.</td>
+              <td>Extra compute for gains that may not help if the dataset is tiny.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Width and depth are the main capacity knobs. Width gives the model more
+          room to represent features. Depth gives it more steps to combine those
+          features into useful behavior. On small datasets, the wrong answer is
+          not always "make it bigger"; often the better move is to keep the model
+          modest and make the data cleaner and the prompts more consistent.
+        </p>
+      </section>
+
+      <section id="training">
+        <h2>Training Knobs</h2>
+        <div class="grid">
+          <article class="card">
+            <h3><code>--batch-size</code></h3>
+            <p>
+              Batch size controls how many context windows are sampled per update.
+              Bigger batches usually make gradients less noisy, but they need more
+              memory. For a tiny model, very large batches can make training less
+              responsive to new information.
+            </p>
+          </article>
+          <article class="card">
+            <h3><code>--lr</code></h3>
+            <p>
+              Learning rate controls how aggressively the optimizer updates the
+              weights. If it is too high, training can become unstable or bounce
+              around. If it is too low, the model may appear to do nothing.
+            </p>
+          </article>
+          <article class="card">
+            <h3><code>--tokenizer</code></h3>
+            <p>
+              Tokenization affects the training sequence length, how often the
+              model sees repeated fragments, and how much of the context window is
+              spent on separators versus content.
+            </p>
+          </article>
+        </div>
+        <p>
+          Training settings do not directly change generation randomness, but
+          they strongly shape the checkpoint you end up with. A good training
+          run on a bad configuration still produces a poor checkpoint. A modest
+          model trained on the right shape of data often beats a larger model
+          trained with mismatched settings.
+        </p>
+      </section>
+
+      <section id="generation">
+        <h2>Generation Knobs</h2>
+        <div class="grid">
+          <article class="card">
+            <h3><code>--temperature</code></h3>
+            <p>
+              Lower temperature concentrates probability mass on the most likely
+              tokens. That makes output more repeatable and often more accurate for
+              exact-answer tasks. Higher temperature increases variety, which can
+              be useful for brainstorming but also introduces more mistakes.
+            </p>
+          </article>
+          <article class="card">
+            <h3><code>--top-k</code></h3>
+            <p>
+              Top-k limits sampling to the k most likely next tokens. Smaller
+              values make output more conservative. <code>1</code> is greedy
+              decoding, which is usually best for exact-match evaluations and
+              controlled assistant baselines.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Prompt length</h3>
+            <p>
+              Generation uses the checkpoint context window. If the prompt or
+              conversation is longer than that window, the oldest part is trimmed.
+              That means the model only conditions on the most recent tokens it can
+              fit.
+            </p>
+          </article>
+        </div>
+        <div class="callout" style="margin-top: 14px;">
+          For evaluation, keep sampling conservative. If you are trying to see
+          whether the model actually learned a dataset, greedy or near-greedy
+          decoding gives the cleanest signal.
+        </div>
+      </section>
+
+      <section id="recipes">
+        <h2>Practical Recipes</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Debugging the pipeline</h3>
+            <ul>
+              <li>Use <code>byte</code> tokenizer.</li>
+              <li>Keep context modest.</li>
+              <li>Keep the model small.</li>
+              <li>Use greedy generation.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Tiny assistant data</h3>
+            <ul>
+              <li>Prefer <code>bpe</code> if the data is natural-language heavy.</li>
+              <li>Keep context large enough to hold the full prompt plus recent history.</li>
+              <li>Do not inflate width or depth before the model can memorize the dataset shape.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Broadening later</h3>
+            <ul>
+              <li>Increase context only when the task actually needs longer memory.</li>
+              <li>Increase model width or depth only when the current model is clearly underfitting.</li>
+              <li>Relax sampling only after the model is already producing correct answers.</li>
+            </ul>
+          </article>
+        </div>
+        <pre><code># Good baseline mental model
+# 1. pick a tokenizer
+# 2. pick the shortest context that still fits the task
+# 3. size the model to the dataset
+# 4. train with conservative sampling for eval
+# 5. only relax generation once the checkpoint is already competent</code></pre>
+      </section>
+    </main>
+  </body>
+</html>

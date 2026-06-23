@@ -84,9 +84,24 @@ inline void run_chat_tui_loop(Model& model, ChatConfig config, std::ostream& err
           append_scrollback(ui, "system", "context cleared", static_cast<size_t>(terminal_size().first));
           continue;
         }
+        if (ui.input == "/compress") {
+          history = compress_chat_history(history, tok, model.cfg.context_length);
+          std::string compressed_prompt = format_multi_turn_chat_prompt(history, "");
+          ui.last_prompt_tokens = tok.encode_text(compressed_prompt).size();
+          ui.stats = summarize_chat_session(history, tok);
+          append_scrollback(ui, "system", "context compressed", static_cast<size_t>(terminal_size().first));
+          ui.input.clear();
+          ui.input_cursor = 0;
+          ui.command_history.clear();
+          ui.history_index = -1;
+          ui.command_suggestions.clear();
+          ui.command_suggestion_index = -1;
+          continue;
+        }
+        std::string raw_prompt = format_multi_turn_chat_prompt(history, ui.input);
+        ui.last_prompt_tokens = tok.encode_text(raw_prompt).size();
         std::vector<ChatMessage> trimmed_history = trim_chat_history_to_context(history, ui.input, model.cfg.context_length, tok);
         std::string model_prompt = format_multi_turn_chat_prompt(trimmed_history, ui.input);
-        ui.last_prompt_tokens = tok.encode_text(model_prompt).size();
         ui.generating = true;
         generation_done = false;
         generated_reply.clear();

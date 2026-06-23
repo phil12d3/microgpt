@@ -11,6 +11,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #if !defined(_WIN32)
@@ -63,7 +64,7 @@ inline int run_chat_line_mode(Model& model, ChatConfig config, std::istream& in,
   std::vector<ChatMessage> history;
   Tokenizer tok(tokenizer_kind_from_int(model.cfg.tokenizer_kind));
   out << "microgpt chat. type /exit to quit.\n";
-  out << "type /reset to reset the session, or /clear to clear the conversation context.\n";
+  out << "type /reset to reset the session, /clear to clear the conversation context, or /compress to compact context.\n";
   while (true) {
     out << "> ";
     if (!std::getline(in, prompt)) {
@@ -82,12 +83,30 @@ inline int run_chat_line_mode(Model& model, ChatConfig config, std::istream& in,
       out << "context cleared\n";
       continue;
     }
+    if (prompt == "/compress") {
+      std::vector<ChatMessage> compressed = compress_chat_history(history, tok, model.cfg.context_length);
+      bool changed = compressed.size() != history.size();
+      history = std::move(compressed);
+      std::string compressed_prompt = format_multi_turn_chat_prompt(history, "");
+      size_t compressed_tokens = tok.encode_text(compressed_prompt).size();
+      size_t effective_tokens = model.cfg.context_length > 0
+                                    ? std::min(compressed_tokens, static_cast<size_t>(model.cfg.context_length))
+                                    : compressed_tokens;
+      int context_percent = model.cfg.context_length > 0
+                                ? static_cast<int>((100.0 * static_cast<double>(effective_tokens)) /
+                                                   static_cast<double>(model.cfg.context_length))
+                                : 0;
+      out << (changed ? "context compressed\n" : "context already compact\n");
+      out << "[ctx " << effective_tokens << '/' << model.cfg.context_length << ' ' << context_percent << "%]\n";
+      continue;
+    }
     if (prompt.empty()) {
       continue;
     }
+    std::string raw_prompt = format_multi_turn_chat_prompt(history, prompt);
+    size_t prompt_tokens = tok.encode_text(raw_prompt).size();
     std::vector<ChatMessage> trimmed_history = trim_chat_history_to_context(history, prompt, model.cfg.context_length, tok);
     std::string model_prompt = format_multi_turn_chat_prompt(trimmed_history, prompt);
-    size_t prompt_tokens = tok.encode_text(model_prompt).size();
     std::string reply = generate_text(model, model_prompt, config.max_new_tokens, config.temperature, config.top_k,
                                       Tokenizer::kEos);
     out << reply << "\n";

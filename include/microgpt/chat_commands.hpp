@@ -7,7 +7,7 @@
 namespace microgpt {
 
 inline const std::vector<std::string>& chat_commands() {
-  static const std::vector<std::string> commands = {"/exit", "/quit", "/reset", "/clear"};
+  static const std::vector<std::string> commands = {"/exit", "/quit", "/reset", "/clear", "/compress"};
   return commands;
 }
 

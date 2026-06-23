@@ -3,69 +3,268 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>microgpt Public API</title>
+    <title>microgpt Framework Guide</title>
     <style>
+      :root {
+        --bg: #f7f8fa;
+        --panel: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6b7a;
+        --border: #d9dee7;
+        --accent: #0f766e;
+        --accent-soft: #e5f4f2;
+        --code-bg: #111827;
+        --code-text: #e5e7eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         margin: 0;
-        background: #f7f8fa;
-        color: #1f2933;
+        background: var(--bg);
+        color: var(--text);
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         line-height: 1.55;
       }
+
+      header,
       main {
-        max-width: 960px;
+        max-width: 1120px;
         margin: 0 auto;
-        padding: 32px 20px;
+        padding: 28px 20px;
       }
-      h1, h2 {
+
+      header {
+        padding-bottom: 18px;
+      }
+
+      h1,
+      h2,
+      h3 {
         margin: 0;
         line-height: 1.18;
       }
+
+      h1 {
+        font-size: 2rem;
+      }
+
       h2 {
-        margin-top: 32px;
+        margin-top: 34px;
+        font-size: 1.35rem;
       }
-      p, li {
-        color: #5f6b7a;
+
+      h3 {
+        font-size: 1.05rem;
       }
+
+      p {
+        margin: 10px 0 0;
+        color: var(--muted);
+      }
+
       code {
         border-radius: 5px;
         background: #eef1f5;
         padding: 0.12rem 0.32rem;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
       }
+
       pre {
         overflow-x: auto;
+        margin: 12px 0 0;
         border-radius: 8px;
-        background: #111827;
-        color: #e5e7eb;
+        background: var(--code-bg);
+        color: var(--code-text);
         padding: 16px;
       }
+
       pre code {
         background: transparent;
         color: inherit;
         padding: 0;
       }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 5px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        padding: 2px 7px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 18px;
+      }
+
+      .card p,
+      .card li {
+        color: var(--muted);
+      }
+
+      .note {
+        border-left: 4px solid var(--accent);
+        background: var(--panel);
+        padding: 14px 16px;
+        margin-top: 16px;
+      }
+
+      ul {
+        margin: 10px 0 0;
+        padding-left: 20px;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      a {
+        color: var(--accent);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .steps {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .step {
+        border-left: 4px solid var(--accent);
+        background: var(--panel);
+        padding: 14px 16px;
+      }
+
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
-    <main>
-      <h1>Public API</h1>
+    <header>
+      <span class="tag">Code Guide</span>
+      <h1>Framework Guide</h1>
       <p>
-        The supported embedding boundaries are <code>include/microgpt/api.hpp</code>
-        for C++ and <code>include/microgpt/api_c.h</code> for C. Application
-        code should prefer these facades over CLI-specific headers.
+        This page is the code-side guide for the framework. It covers the
+        supported entry points, the lower-level helpers, and the chat controls
+        you can call from application code.
       </p>
+    </header>
 
-      <h2>Current Surface</h2>
+    <main>
+      <section>
+        <h2>What To Use</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>C++ facade</h3>
+            <ul>
+              <li><code>microgpt::api::load_model</code> to open a checkpoint.</li>
+              <li><code>microgpt::api::generate</code> to run inference.</li>
+              <li><code>microgpt::api::train_text_file</code> to train from raw text.</li>
+              <li><code>microgpt::api::ModelHandle</code> to keep model state together.</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>C facade</h3>
+            <ul>
+              <li><code>microgpt_load_model</code> to load a checkpoint.</li>
+              <li><code>microgpt_generate_text</code> to generate text.</li>
+              <li><code>microgpt_free_model</code> and <code>microgpt_free_string</code> for cleanup.</li>
+              <li><code>microgpt_last_error</code> for exception-free error reporting.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>C++ API Details</h2>
+        <div class="steps">
+          <div class="step">
+            <h3>Load a model</h3>
+            <p>
+              Use <code>microgpt::api::load_model(checkpoint_path, backend)</code>
+              when you already have a checkpoint. It returns a
+              <code>ModelHandle</code> that owns the model, optimizer state, and
+              step number.
+            </p>
+          </div>
+
+          <div class="step">
+            <h3>Generate text</h3>
+            <p>
+              Call <code>microgpt::api::generate(handle, prompt, options)</code>.
+              The options are:
+              <code>max_new_tokens</code>, <code>temperature</code>,
+              <code>top_k</code>, and <code>stop_token_id</code>.
+              Generation uses the model's tokenizer and backend already stored in
+              the handle.
+            </p>
+          </div>
+
+          <div class="step">
+            <h3>Train from text</h3>
+            <p>
+              Call <code>microgpt::api::train_text_file(input_path, checkpoint_path, options)</code>
+              to build a checkpoint from a plain text corpus. The train options
+              let you control model size, context length, batch size, learning
+              rate, backend, and whether the validation split is enabled.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <h2>Training Options</h2>
       <ul>
-        <li><code>microgpt::api::TrainingOptions</code> configures a small training run and can disable the validation split.</li>
-        <li><code>microgpt::api::GenerationOptions</code> configures generation.</li>
-        <li><code>microgpt::api::ModelHandle</code> owns a loaded model, optimizer state, and checkpoint step.</li>
-        <li><code>microgpt::api::load_model</code> loads a checkpoint with a selected backend.</li>
-        <li><code>microgpt::api::generate</code> runs text generation from a loaded handle.</li>
-        <li><code>microgpt::api::train_text_file</code> trains from a byte/text file and writes a checkpoint.</li>
+        <li><code>steps</code>: number of optimization steps.</li>
+        <li><code>context_length</code>: model context window used for training.</li>
+        <li><code>d_model</code>, <code>num_layers</code>, <code>num_heads</code>, <code>d_ff</code>: model size controls.</li>
+        <li><code>batch_size</code>: training batch size.</li>
+        <li><code>learning_rate</code>: optimizer learning rate.</li>
+        <li><code>seed</code>: random seed for reproducibility.</li>
+        <li><code>backend</code>: CPU, Metal, or CUDA backend selection.</li>
+        <li><code>use_validation_split</code>: turn the held-out split on or off.</li>
+        <li><code>validation_split_ratio</code>: fraction used for the training side when splitting is enabled.</li>
+      </ul>
+      <div class="note">
+        If you want to train and evaluate on all of the available data, set
+        <code>use_validation_split = false</code>. That keeps the full token set
+        in play instead of partitioning it into train and held-out slices.
+      </div>
+
+      <h2>Generation Options</h2>
+      <ul>
+        <li><code>max_new_tokens</code>: number of tokens to generate.</li>
+        <li><code>temperature</code>: sampling temperature.</li>
+        <li><code>top_k</code>: top-k sampling cutoff.</li>
+        <li><code>stop_token_id</code>: token ID that ends generation, usually <code>Tokenizer::kEos</code>.</li>
       </ul>
 
-      <h2>Example</h2>
+      <h2>Direct Use Example</h2>
       <pre><code>#include "microgpt/api.hpp"
 
 int main() {
@@ -76,11 +275,55 @@ int main() {
   std::string text = microgpt::api::generate(model, "Hello", options);
 }</code></pre>
 
-      <p>
-        The build includes <code>examples/embed_api.cpp</code> as
-        <code>bin/embed_api_example</code> so this public header is compiled by
-        the normal build.
-      </p>
+      <h2>Training Example</h2>
+      <pre><code>#include "microgpt/api.hpp"
+
+int main() {
+  microgpt::api::TrainingOptions options;
+  options.steps = 200;
+  options.context_length = 64;
+  options.use_validation_split = false;
+  auto model = microgpt::api::train_text_file("train.txt", "model.bin", options);
+}</code></pre>
+
+      <section>
+        <h2>Lower-Level Framework Calls</h2>
+        <p>
+          If you want direct access to the framework internals, these are the
+          main helpers.
+        </p>
+        <ul>
+          <li><code>generate_text(Model&, prompt, max_new_tokens, temperature, top_k, stop_token_id, on_progress)</code> for raw generation.</li>
+          <li><code>train_model(Model&, train_tokens, val_tokens, AdamW&, steps, checkpoint_path, resume_step, on_progress)</code> for optimization loops.</li>
+          <li><code>save_checkpoint(path, model, opt, step)</code> and <code>load_checkpoint(path, opt, step)</code> for persistence.</li>
+          <li><code>split_train_val(tokens, train, ratio)</code> if you want manual train/validation slicing.</li>
+          <li><code>write_instruction_examples</code>, <code>parse_instruction_examples</code>, <code>write_session_examples</code>, and <code>parse_session_examples</code> for dataset work.</li>
+          <li><code>validate_instruction_text</code> and <code>validate_session_text</code> for contract checks.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Chat Helpers</h2>
+        <p>
+          The chat layer is a set of reusable helpers, not just a UI. These are
+          the functions used by the CLI and TUI to manage context.
+        </p>
+        <ul>
+          <li><code>format_multi_turn_chat_prompt(history, user_prompt)</code> builds the model prompt from prior turns.</li>
+          <li><code>trim_chat_history_to_context(history, user_prompt, context_length, tok)</code> removes old turns until the prompt fits.</li>
+          <li><code>compress_chat_history(history, tok, context_length)</code> explicitly compresses long histories.</li>
+          <li><code>summarize_chat_session(history, tok)</code> reports message and token counts.</li>
+          <li><code>chat_commands()</code> exposes the supported slash commands.</li>
+        </ul>
+        <div class="note">
+          Chat command behavior:
+          <ul>
+            <li><code>/reset</code> resets the whole conversation state.</li>
+            <li><code>/clear</code> clears the active context but keeps the transcript on screen.</li>
+            <li><code>/compress</code> compresses the current context on user request.</li>
+          </ul>
+        </div>
+      </section>
 
       <h2>C API</h2>
       <p>
@@ -100,12 +343,73 @@ microgpt_free_model(model);</code></pre>
         <code>examples/embed_c.c</code> as <code>bin/embed_c_example</code>.
       </p>
 
-      <h2>Not Stable Yet</h2>
-      <p>
-        This is the first public API boundary, not a long-term ABI promise.
-        The C API is the preferred direction for future stable embedding, while
-        the C++ API remains the preferred source-level integration point.
-      </p>
+      <section>
+        <h2>Entry Points By Task</h2>
+        <div class="steps">
+          <div class="step">
+            <h3>Load and run inference</h3>
+            <p>
+              Use <code>api::load_model</code> or <code>microgpt_load_model</code>
+              first, then call <code>api::generate</code> or
+              <code>microgpt_generate_text</code>.
+            </p>
+          </div>
+          <div class="step">
+            <h3>Train on a text file</h3>
+            <p>
+              Use <code>api::train_text_file</code> when you want the framework
+              to handle tokenization, optional split control, training, and
+              checkpoint saving in one call.
+            </p>
+          </div>
+          <div class="step">
+            <h3>Build a custom training loop</h3>
+            <p>
+              Use <code>train_model</code>, <code>split_train_val</code>,
+              <code>save_checkpoint</code>, and the tokenizer helpers directly
+              if you need to plug the framework into another pipeline.
+            </p>
+          </div>
+          <div class="step">
+            <h3>Add chat UX</h3>
+            <p>
+              Use the chat helpers to build a prompt, manage trimming, and
+              trigger compression when the user explicitly requests it.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Related Files</h2>
+        <ul>
+          <li><code>include/microgpt/api.hpp</code> for the C++ facade.</li>
+          <li><code>include/microgpt/api_c.h</code> for the C facade.</li>
+          <li><code>include/microgpt/generation.hpp</code> for the raw generation primitive.</li>
+          <li><code>include/microgpt/training.hpp</code> for training and splitting.</li>
+          <li><code>include/microgpt/chat_session.hpp</code> for prompt and context helpers.</li>
+          <li><code>include/microgpt/data_format.hpp</code> for dataset parsing and validation.</li>
+          <li><code>examples/embed_api.cpp</code> and <code>examples/embed_c.c</code> for concrete integration examples.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Build Notes</h2>
+        <p>
+          The build already compiles the embedding examples, so the public API
+          and C API are part of the normal build path. The internal helpers are
+          header-only and can be reused directly from source-level integrations.
+        </p>
+      </section>
+
+      <section>
+        <h2>Stability</h2>
+        <p>
+          This is a code guide, not an ABI guarantee. The C API is the safer
+          boundary for external consumers, while the C++ facade is the easiest
+          source-level integration point.
+        </p>
+      </section>
     </main>
   </body>
 </html>
