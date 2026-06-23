@@ -2,6 +2,7 @@
 
 #include "microgpt/batch.hpp"
 #include "microgpt/layers.hpp"
+#include "microgpt/tokenizer.hpp"
 
 #include <stdexcept>
 #include <string>
@@ -11,6 +12,7 @@ namespace microgpt {
 struct Model {
   Config cfg;
   RNG rng;
+  Tokenizer tokenizer;
   Parameter token_embedding;
   Parameter position_embedding;
   std::vector<Block> blocks;
@@ -27,6 +29,7 @@ struct Model {
   explicit Model(const Config& c)
       : cfg(c),
         rng(c.seed),
+        tokenizer(tokenizer_kind_from_int(c.tokenizer_kind)),
         token_embedding("tok_emb", {c.vocab_size, c.d_model}, true),
         position_embedding("pos_emb", {c.context_length, c.d_model}, true),
         final_norm("final_norm", c.d_model),

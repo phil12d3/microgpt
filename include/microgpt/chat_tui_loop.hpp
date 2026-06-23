@@ -26,7 +26,7 @@ inline void run_chat_tui_loop(Model& model, ChatConfig config, std::ostream& err
   if (!guard.active()) {
     throw std::runtime_error("failed to enable terminal raw mode");
   }
-  Tokenizer tok(tokenizer_kind_from_int(model.cfg.tokenizer_kind));
+  const Tokenizer& tok = model.tokenizer;
   ChatUiState ui;
   ui.checkpoint = config.checkpoint;
   ui.backend_name = backend_name(config.backend);

@@ -106,8 +106,8 @@
       <p>
         microgpt currently uses a compact single-turn instruction format. The
         tokenizer treats the control markers as special tokens. New checkpoints
-        can use either the default byte tokenizer or the built-in deterministic
-        BPE-style tokenizer.
+        can use the default byte tokenizer or a learned tokenizer such as
+        <code>bpe</code> or <code>pairs</code>.
       </p>
     </header>
 
@@ -136,14 +136,19 @@ What is 2+2?
           <ul>
             <li><code>byte</code>: the compatibility mode. Every non-marker byte is one token.</li>
             <li>
-              <code>bpe</code>: a built-in greedy multi-character tokenizer for common assistant and instruction
-              substrings. It reduces token counts for matching text and stores the tokenizer choice in the checkpoint.
+              <code>bpe</code>: a learned byte-pair tokenizer trained from the corpus. It reduces token counts for
+              matching text, works across languages, and stores the tokenizer state in the checkpoint.
+            </li>
+            <li>
+              <code>pairs</code>: a simpler learned bigram tokenizer that picks the most common byte pairs from the
+              corpus. It is easier to reason about than BPE, but usually compresses less.
             </li>
           </ul>
           <p>
-            Choose the tokenizer at training time with <code>--tokenizer byte</code> or
-            <code>--tokenizer bpe</code>. Resume, generation, chat, and eval load the tokenizer from the checkpoint,
-            so CPU and Metal use the same token IDs for the same model.
+            Choose the tokenizer at training time with <code>--tokenizer byte</code>,
+            <code>--tokenizer bpe</code>, or <code>--tokenizer pairs</code>. Use <code>--tokenizer-vocab</code> to
+            change the learned vocabulary size. Resume, generation, chat, and eval load the tokenizer from the
+            checkpoint, so CPU and Metal use the same token IDs for the same model.
           </p>
         </div>
       </section>

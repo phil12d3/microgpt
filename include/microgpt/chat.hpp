@@ -62,7 +62,7 @@ inline ChatConfig parse_chat_config(const std::vector<std::string>& args) {
 inline int run_chat_line_mode(Model& model, ChatConfig config, std::istream& in, std::ostream& out, std::ostream& err) {
   std::string prompt;
   std::vector<ChatMessage> history;
-  Tokenizer tok(tokenizer_kind_from_int(model.cfg.tokenizer_kind));
+  const Tokenizer& tok = model.tokenizer;
   out << "microgpt chat. type /exit to quit.\n";
   out << "type /reset to reset the session, /clear to clear the conversation context, or /compress to compact context.\n";
   while (true) {

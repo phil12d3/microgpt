@@ -14,7 +14,7 @@ namespace microgpt {
 inline std::string generate_text(Model& model, const std::string& prompt, int max_new_tokens, float temperature, int top_k,
                                  int stop_token_id = Tokenizer::kEos,
                                  const std::function<void(const GenerationProgress&)>& on_progress = {}) {
-  Tokenizer tok(tokenizer_kind_from_int(model.cfg.tokenizer_kind));
+  const Tokenizer& tok = model.tokenizer;
   std::vector<int> ids = tok.encode_text(prompt);
   std::vector<int> generated_ids;
   using clock = std::chrono::steady_clock;

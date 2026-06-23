@@ -489,13 +489,22 @@
               <td>Sequence length in tokens. Too small and the model cannot see enough history; too large and training gets slower and needs more data.</td>
             </tr>
             <tr>
-              <td><code>--tokenizer byte|bpe</code></td>
+              <td><code>--tokenizer byte|bpe|pairs</code></td>
               <td><code>train</code></td>
               <td><code>byte</code></td>
               <td>
                 Tokenizer used to create a new checkpoint. <code>byte</code> is the simplest and most robust choice for debugging or arbitrary text.
-                <code>bpe</code> shortens common phrases into fewer tokens, which usually uses the context window more efficiently and works better for assistant-style text.
+                <code>bpe</code> learns byte-pair merges from the training corpus, which usually shortens text and works better for assistant-style or multilingual data.
+                <code>pairs</code> learns a fixed bigram vocabulary from the training corpus and is a simpler alternative to full BPE.
                 Resume and generation read the tokenizer from the checkpoint.
+              </td>
+            </tr>
+            <tr>
+              <td><code>--tokenizer-vocab N</code></td>
+              <td><code>train</code></td>
+              <td><code>512</code></td>
+              <td>
+                Target vocabulary size for <code>--tokenizer bpe</code> or <code>pairs</code>. Larger values can compress text more, but only if the training corpus is large and repetitive enough to support extra pieces.
               </td>
             </tr>
             <tr>

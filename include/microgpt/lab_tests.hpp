@@ -935,23 +935,44 @@ inline bool tokenizer_byte_roundtrip_test() {
 
 inline bool tokenizer_bpe_roundtrip_test() {
   Tokenizer byte_tok(TokenizerKind::Byte);
-  Tokenizer bpe_tok(TokenizerKind::Bpe);
-  std::string text = "<BOS><USER>\nSummarize the training data and validation data for microgpt.\n<ASSISTANT>\nClean data helps.<EOS>";
+  std::string corpus =
+      "<BOS><USER>\nSummarize the training data and validation data for microgpt.\n<ASSISTANT>\nClean data helps.<EOS>";
+  Tokenizer bpe_tok = Tokenizer::learn_bpe_from_text(corpus, 384);
+  std::string text = "<BOS><USER>\nこんにちは microgpt\n<ASSISTANT>\nClean data helps.<EOS>";
   std::vector<int> byte_ids = byte_tok.encode_text(text);
   std::vector<int> bpe_ids = bpe_tok.encode_text(text);
   if (bpe_tok.vocab_size() <= byte_tok.vocab_size()) {
     return false;
   }
-  if (bpe_ids.size() >= byte_ids.size()) {
+  if (bpe_tok.encode_text(corpus).size() >= byte_tok.encode_text(corpus).size()) {
     return false;
   }
   return bpe_tok.decode_text(bpe_ids) == text;
 }
 
+inline bool tokenizer_pairs_roundtrip_test() {
+  Tokenizer byte_tok(TokenizerKind::Byte);
+  std::string corpus = "<BOS><USER>\nSummarize the training data and validation data for microgpt.\n<ASSISTANT>\nClean data helps.<EOS>";
+  Tokenizer pair_tok = Tokenizer::learn_pairs_from_text(corpus, 384);
+  std::string text = "<BOS><USER>\nこんにちは microgpt\n<ASSISTANT>\nClean data helps.<EOS>";
+  std::vector<int> byte_ids = byte_tok.encode_text(text);
+  std::vector<int> pair_ids = pair_tok.encode_text(text);
+  if (pair_tok.vocab_size() <= byte_tok.vocab_size()) {
+    return false;
+  }
+  if (pair_tok.encode_text(corpus).size() >= byte_tok.encode_text(corpus).size()) {
+    return false;
+  }
+  return pair_tok.decode_text(pair_ids) == text;
+}
+
 inline bool tokenizer_checkpoint_roundtrip_test() {
+  Tokenizer tok = Tokenizer::learn_bpe_from_text(
+      "<BOS><USER>\nSummarize the training data and validation data for microgpt.\n<ASSISTANT>\nClean data helps.<EOS>",
+      384);
   Config cfg;
   cfg.tokenizer_kind = static_cast<int>(TokenizerKind::Bpe);
-  cfg.vocab_size = Tokenizer(TokenizerKind::Bpe).vocab_size();
+  cfg.vocab_size = tok.vocab_size();
   cfg.context_length = 8;
   cfg.d_model = 8;
   cfg.num_layers = 1;
@@ -959,6 +980,7 @@ inline bool tokenizer_checkpoint_roundtrip_test() {
   cfg.d_ff = 16;
   cfg.batch_size = 2;
   Model model(cfg);
+  model.tokenizer = tok;
   AdamW opt;
   opt.step = 3;
   std::string checkpoint = test_temp_path("microgpt-tokenizer", ".bin");
@@ -968,8 +990,38 @@ inline bool tokenizer_checkpoint_roundtrip_test() {
   Model loaded = load_checkpoint(checkpoint, loaded_opt, loaded_step);
   std::remove(checkpoint.c_str());
   std::remove(checkpoint_json_path(checkpoint).c_str());
+  std::string sample = "<BOS><USER>\nこんにちは microgpt\n<ASSISTANT>\nClean data helps.<EOS>";
   return loaded_step == 7 && loaded_opt.step == 3 && loaded.cfg.tokenizer_kind == cfg.tokenizer_kind &&
-         loaded.cfg.vocab_size == cfg.vocab_size;
+         loaded.cfg.vocab_size == cfg.vocab_size && loaded.tokenizer.decode_text(loaded.tokenizer.encode_text(sample)) == sample;
+}
+
+inline bool tokenizer_pairs_checkpoint_roundtrip_test() {
+  Tokenizer tok = Tokenizer::learn_pairs_from_text(
+      "<BOS><USER>\nSummarize the training data and validation data for microgpt.\n<ASSISTANT>\nClean data helps.<EOS>",
+      384);
+  Config cfg;
+  cfg.tokenizer_kind = static_cast<int>(TokenizerKind::Pairs);
+  cfg.vocab_size = tok.vocab_size();
+  cfg.context_length = 8;
+  cfg.d_model = 8;
+  cfg.num_layers = 1;
+  cfg.num_heads = 2;
+  cfg.d_ff = 16;
+  cfg.batch_size = 2;
+  Model model(cfg);
+  model.tokenizer = tok;
+  AdamW opt;
+  opt.step = 3;
+  std::string checkpoint = test_temp_path("microgpt-tokenizer-pairs", ".bin");
+  save_checkpoint(checkpoint, model, opt, 7);
+  AdamW loaded_opt;
+  int loaded_step = 0;
+  Model loaded = load_checkpoint(checkpoint, loaded_opt, loaded_step);
+  std::remove(checkpoint.c_str());
+  std::remove(checkpoint_json_path(checkpoint).c_str());
+  std::string sample = "<BOS><USER>\nこんにちは microgpt\n<ASSISTANT>\nClean data helps.<EOS>";
+  return loaded_step == 7 && loaded_opt.step == 3 && loaded.cfg.tokenizer_kind == cfg.tokenizer_kind &&
+         loaded.cfg.vocab_size == cfg.vocab_size && loaded.tokenizer.decode_text(loaded.tokenizer.encode_text(sample)) == sample;
 }
 
 inline Config backend_parity_test_config() {
@@ -1443,22 +1495,24 @@ inline bool run_tests() {
   bool ok20 = io_contract_test();
   bool ok21 = tokenizer_byte_roundtrip_test();
   bool ok22 = tokenizer_bpe_roundtrip_test();
-  bool ok23 = tokenizer_checkpoint_roundtrip_test();
-  bool ok24 = session_roundtrip_test();
-  bool ok25 = session_jsonl_import_roundtrip_test();
-  bool ok26 = session_split_contract_test();
-  bool ok27 = chat_history_prompt_test();
-  bool ok28 = chat_history_trimming_test();
-  bool ok29 = chat_history_compression_test();
-  bool ok30 = cpu_metal_training_parity_test();
-  bool ok31 = backend_adamw_update_test();
-  bool ok32 = backend_adamw_multi_param_parity_test();
-  bool ok33 = cpu_metal_staged_parity_trace_test();
-  bool ok34 = metal_checkpoint_cpu_generation_interop_test();
-  bool ok35 = cuda_checkpoint_cpu_generation_interop_test();
-  bool ok36 = cuda_feedforward_forward_test();
-  bool ok37 = cuda_feedforward_backward_test();
-  bool ok38 = cuda_cached_linear_backend_test();
+  bool ok23 = tokenizer_pairs_roundtrip_test();
+  bool ok24 = tokenizer_checkpoint_roundtrip_test();
+  bool ok25 = tokenizer_pairs_checkpoint_roundtrip_test();
+  bool ok26 = session_roundtrip_test();
+  bool ok27 = session_jsonl_import_roundtrip_test();
+  bool ok28 = session_split_contract_test();
+  bool ok29 = chat_history_prompt_test();
+  bool ok30 = chat_history_trimming_test();
+  bool ok31 = chat_history_compression_test();
+  bool ok32 = cpu_metal_training_parity_test();
+  bool ok33 = backend_adamw_update_test();
+  bool ok34 = backend_adamw_multi_param_parity_test();
+  bool ok35 = cpu_metal_staged_parity_trace_test();
+  bool ok36 = metal_checkpoint_cpu_generation_interop_test();
+  bool ok37 = cuda_checkpoint_cpu_generation_interop_test();
+  bool ok38 = cuda_feedforward_forward_test();
+  bool ok39 = cuda_feedforward_backward_test();
+  bool ok40 = cuda_cached_linear_backend_test();
   std::cout << "gradient_check_linear: " << (ok1 ? "PASS" : "FAIL") << '\n';
   std::cout << "backend_linear_op_test: " << (ok2 ? "PASS" : "FAIL") << '\n';
   std::cout << "backend_matmul_op_test: " << (ok3 ? "PASS" : "FAIL") << '\n';
@@ -1481,22 +1535,24 @@ inline bool run_tests() {
   std::cout << "io_contract_test: " << (ok20 ? "PASS" : "FAIL") << '\n';
   std::cout << "tokenizer_byte_roundtrip_test: " << (ok21 ? "PASS" : "FAIL") << '\n';
   std::cout << "tokenizer_bpe_roundtrip_test: " << (ok22 ? "PASS" : "FAIL") << '\n';
-  std::cout << "tokenizer_checkpoint_roundtrip_test: " << (ok23 ? "PASS" : "FAIL") << '\n';
-  std::cout << "session_roundtrip_test: " << (ok24 ? "PASS" : "FAIL") << '\n';
-  std::cout << "session_jsonl_import_roundtrip_test: " << (ok25 ? "PASS" : "FAIL") << '\n';
-  std::cout << "session_split_contract_test: " << (ok26 ? "PASS" : "FAIL") << '\n';
-  std::cout << "chat_history_prompt_test: " << (ok27 ? "PASS" : "FAIL") << '\n';
-  std::cout << "chat_history_trimming_test: " << (ok28 ? "PASS" : "FAIL") << '\n';
-  std::cout << "chat_history_compression_test: " << (ok29 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cpu_metal_training_parity_test: " << (ok30 ? "PASS" : "FAIL") << '\n';
-  std::cout << "backend_adamw_update_test: " << (ok31 ? "PASS" : "FAIL") << '\n';
-  std::cout << "backend_adamw_multi_param_parity_test: " << (ok32 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cpu_metal_staged_parity_trace_test: " << (ok33 ? "PASS" : "FAIL") << '\n';
-  std::cout << "metal_checkpoint_cpu_generation_interop_test: " << (ok34 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cuda_checkpoint_cpu_generation_interop_test: " << (ok35 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cuda_feedforward_forward_test: " << (ok36 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cuda_feedforward_backward_test: " << (ok37 ? "PASS" : "FAIL") << '\n';
-  std::cout << "cuda_cached_linear_backend_test: " << (ok38 ? "PASS" : "FAIL") << '\n';
+  std::cout << "tokenizer_pairs_roundtrip_test: " << (ok23 ? "PASS" : "FAIL") << '\n';
+  std::cout << "tokenizer_checkpoint_roundtrip_test: " << (ok24 ? "PASS" : "FAIL") << '\n';
+  std::cout << "tokenizer_pairs_checkpoint_roundtrip_test: " << (ok25 ? "PASS" : "FAIL") << '\n';
+  std::cout << "session_roundtrip_test: " << (ok26 ? "PASS" : "FAIL") << '\n';
+  std::cout << "session_jsonl_import_roundtrip_test: " << (ok27 ? "PASS" : "FAIL") << '\n';
+  std::cout << "session_split_contract_test: " << (ok28 ? "PASS" : "FAIL") << '\n';
+  std::cout << "chat_history_prompt_test: " << (ok29 ? "PASS" : "FAIL") << '\n';
+  std::cout << "chat_history_trimming_test: " << (ok30 ? "PASS" : "FAIL") << '\n';
+  std::cout << "chat_history_compression_test: " << (ok31 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cpu_metal_training_parity_test: " << (ok32 ? "PASS" : "FAIL") << '\n';
+  std::cout << "backend_adamw_update_test: " << (ok33 ? "PASS" : "FAIL") << '\n';
+  std::cout << "backend_adamw_multi_param_parity_test: " << (ok34 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cpu_metal_staged_parity_trace_test: " << (ok35 ? "PASS" : "FAIL") << '\n';
+  std::cout << "metal_checkpoint_cpu_generation_interop_test: " << (ok36 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_checkpoint_cpu_generation_interop_test: " << (ok37 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_feedforward_forward_test: " << (ok38 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_feedforward_backward_test: " << (ok39 ? "PASS" : "FAIL") << '\n';
+  std::cout << "cuda_cached_linear_backend_test: " << (ok40 ? "PASS" : "FAIL") << '\n';
   return ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 &&
          ok15 && ok16 && ok17 && ok18 && ok19 && ok20 && ok21 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 &&
          ok28 && ok29 && ok30 && ok31 && ok32 && ok33 && ok34 && ok35 && ok36 && ok37 && ok38;

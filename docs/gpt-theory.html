@@ -296,14 +296,24 @@
           <article class="card">
             <h3>BPE tokenizer</h3>
             <p>
-              BPE merges frequent character sequences into single tokens. That
-              usually shortens text, which means the same context window can hold
-              more semantic content. It often learns natural language and
-              assistant-style instruction data more efficiently.
+              BPE learns frequent byte-pair sequences from your data and turns
+              them into single tokens. That usually shortens text, which means
+              the same context window can hold more semantic content. Because it
+              is learned from the corpus, it can adapt to English, Japanese, or
+              mixed-language data.
             </p>
             <p class="muted">
               Tradeoff: the token boundaries are less obvious when debugging, and
-              you need the checkpoint to carry the tokenizer choice with it.
+              you need the checkpoint to carry the tokenizer state with it.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Pairs tokenizer</h3>
+            <p>
+              The pairs tokenizer is a simpler learned mode that keeps only the
+              most frequent byte pairs from the corpus. It is easier to reason
+              about than full BPE, while still compressing repeated text better
+              than raw bytes.
             </p>
           </article>
           <article class="card">
@@ -313,7 +323,8 @@
               are validating a new feature, or when the text may be arbitrary.
               Use <code>bpe</code> when you want better efficiency on natural
               language, more useful context usage, and a better fit for assistant
-              prompts.
+              prompts. Use <code>pairs</code> when you want a simpler learned
+              tokenizer with predictable two-byte pieces.
             </p>
           </article>
         </div>
