@@ -77,6 +77,13 @@ inline void run_chat_tui_loop(Model& model, ChatConfig config, std::ostream& err
           ui.command_suggestion_index = -1;
           continue;
         }
+        if (ui.input == "/clear") {
+          history.clear();
+          ui.input.clear();
+          ui.input_cursor = 0;
+          append_scrollback(ui, "system", "context cleared", static_cast<size_t>(terminal_size().first));
+          continue;
+        }
         std::vector<ChatMessage> trimmed_history = trim_chat_history_to_context(history, ui.input, model.cfg.context_length, tok);
         std::string model_prompt = format_multi_turn_chat_prompt(trimmed_history, ui.input);
         ui.last_prompt_tokens = tok.encode_text(model_prompt).size();

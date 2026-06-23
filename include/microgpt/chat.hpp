@@ -7,6 +7,7 @@
 #include "microgpt/generation.hpp"
 #include "microgpt/chat_tui.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -62,7 +63,7 @@ inline int run_chat_line_mode(Model& model, ChatConfig config, std::istream& in,
   std::vector<ChatMessage> history;
   Tokenizer tok(tokenizer_kind_from_int(model.cfg.tokenizer_kind));
   out << "microgpt chat. type /exit to quit.\n";
-  out << "type /reset to clear the current session history.\n";
+  out << "type /reset to reset the session, or /clear to clear the conversation context.\n";
   while (true) {
     out << "> ";
     if (!std::getline(in, prompt)) {
@@ -76,14 +77,28 @@ inline int run_chat_line_mode(Model& model, ChatConfig config, std::istream& in,
       out << "session reset\n";
       continue;
     }
+    if (prompt == "/clear") {
+      history.clear();
+      out << "context cleared\n";
+      continue;
+    }
     if (prompt.empty()) {
       continue;
     }
     std::vector<ChatMessage> trimmed_history = trim_chat_history_to_context(history, prompt, model.cfg.context_length, tok);
     std::string model_prompt = format_multi_turn_chat_prompt(trimmed_history, prompt);
+    size_t prompt_tokens = tok.encode_text(model_prompt).size();
     std::string reply = generate_text(model, model_prompt, config.max_new_tokens, config.temperature, config.top_k,
                                       Tokenizer::kEos);
     out << reply << "\n";
+    size_t effective_prompt_tokens = model.cfg.context_length > 0
+                                         ? std::min(prompt_tokens, static_cast<size_t>(model.cfg.context_length))
+                                         : prompt_tokens;
+    int context_percent = model.cfg.context_length > 0
+                              ? static_cast<int>((100.0 * static_cast<double>(effective_prompt_tokens)) /
+                                                 static_cast<double>(model.cfg.context_length))
+                              : 0;
+    out << "[ctx " << effective_prompt_tokens << '/' << model.cfg.context_length << ' ' << context_percent << "%]\n";
     history.push_back({ChatRole::User, prompt});
     history.push_back({ChatRole::Assistant, reply});
     if (config.backend != BackendKind::Cpu) {
@@ -125,9 +140,9 @@ inline int run_chat_cli(int argc, char** argv, std::ostream& out = std::cout, st
     return run_chat_line_mode(model, config, std::cin, out, err);
   } catch (const std::exception& e) {
     err << "error: " << e.what() << '\n';
-    err << "usage: chat --checkpoint model.bin [--max-new-tokens N] [--temperature T] [--top-k K] [--greedy] [--backend cpu|metal|cuda]\n";
-    return 1;
-  }
+        err << "usage: chat --checkpoint model.bin [--max-new-tokens N] [--temperature T] [--top-k K] [--greedy] [--backend cpu|metal|cuda]\n";
+        return 1;
+      }
 }
 
 }  // namespace microgpt

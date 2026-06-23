@@ -186,7 +186,14 @@ inline void render_chat_ui(const ChatUiState& ui) {
   if (!ui.backend_detail.empty()) {
     status << ' ' << ui.backend_detail;
   }
-  status << " | ctx " << ui.context_length;
+  size_t effective_prompt_tokens = ui.context_length > 0
+                                       ? std::min(ui.last_prompt_tokens, static_cast<size_t>(ui.context_length))
+                                       : ui.last_prompt_tokens;
+  int context_percent = ui.context_length > 0
+                            ? static_cast<int>((100.0 * static_cast<double>(effective_prompt_tokens)) /
+                                               static_cast<double>(ui.context_length))
+                            : 0;
+  status << " | ctx " << effective_prompt_tokens << '/' << ui.context_length << ' ' << context_percent << '%';
   status << " | max " << ui.max_new_tokens;
   status << " | t " << ui.temperature;
   status << " | k " << ui.top_k;
