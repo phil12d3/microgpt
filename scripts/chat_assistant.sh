@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 : "${TEMPERATURE:=0.2}"
 : "${TOP_K:=1}"
 : "${GREEDY:=1}"
-: "${ASSISTANT_BACKEND:=cuda}"
+: "${ASSISTANT_BACKEND:=cpu}"
 
 if [ ! -f "$ASSISTANT_CHECKPOINT" ]; then
   echo "missing checkpoint: $ASSISTANT_CHECKPOINT" >&2

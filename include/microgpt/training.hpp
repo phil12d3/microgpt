@@ -112,8 +112,15 @@ inline void train_model(Model& model, const std::vector<int>& train_tokens, cons
   }
 }
 
-inline std::vector<int> split_train_val(const std::vector<int>& tokens, bool train) {
-  size_t split = static_cast<size_t>(tokens.size() * 9 / 10);
+inline std::vector<int> split_train_val(const std::vector<int>& tokens, bool train, float ratio = 0.9f) {
+  if (ratio <= 0.0f || ratio >= 1.0f) {
+    throw std::runtime_error("--split-ratio must be greater than 0 and less than 1");
+  }
+  if (tokens.size() < 2) {
+    throw std::runtime_error("need at least two tokens to split data");
+  }
+  size_t split = static_cast<size_t>(std::round(static_cast<float>(tokens.size()) * ratio));
+  split = std::max<size_t>(1, std::min(split, tokens.size() - 1));
   if (train) {
     return std::vector<int>(tokens.begin(), tokens.begin() + static_cast<std::ptrdiff_t>(split));
   }

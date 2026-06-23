@@ -156,7 +156,11 @@
           <code>ASSISTANT_TOKENIZER=byte</code> only when creating a legacy
           byte-tokenized checkpoint.
           Use <code>ASSISTANT_BACKEND=metal</code> to build and select the
-          Metal backend.
+          Metal backend. The scripts default to
+          <code>ASSISTANT_SPLIT_RATIO=0</code>, which means they train and
+          evaluate on the full imported dataset instead of splitting out a
+          validation file. Set it to something like <code>0.9</code> when you
+          want a held-out validation split.
         </p>
         <p>
           To continue training an existing checkpoint, use
@@ -220,7 +224,9 @@ TOP_K=1 \
           <code>layers=2</code>. It reached 12.94% train contains accuracy and
           0.00% validation contains accuracy, so it is not ready for session
           context. The next experiments should improve single-turn memorization
-          before broadening the assistant behavior.
+          before broadening the assistant behavior. For tiny-data debugging,
+          keep <code>ASSISTANT_SPLIT_RATIO=0</code> to measure exact-match
+          accuracy on the full imported dataset instead of a held-out split.
         </p>
       </section>
 

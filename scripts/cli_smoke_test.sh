@@ -21,7 +21,9 @@ VAL="$TMP_DIR/val.txt"
 JSONL="$TMP_DIR/pairs.jsonl"
 IMPORTED="$TMP_DIR/imported.txt"
 MODEL="$TMP_DIR/model.bin"
+FULL_MODEL="$TMP_DIR/model-full.bin"
 REPORT="$TMP_DIR/eval.json"
+FULL_REPORT="$TMP_DIR/eval-full.json"
 OUT="$TMP_DIR/out.txt"
 ERR="$TMP_DIR/err.txt"
 
@@ -54,6 +56,25 @@ printf '%s\n' \
 test -s "$MODEL"
 test -s "${MODEL%.bin}.json"
 
+"$BIN" train \
+  --input "$DATA" \
+  --no-val-split \
+  --checkpoint "$FULL_MODEL" \
+  --steps 1 \
+  --context 8 \
+  --d-model 8 \
+  --layers 0 \
+  --heads 1 \
+  --ff 16 \
+  --batch-size 2 \
+  --lr 0.001 \
+  --eval-interval 100 \
+  --save-interval 100 \
+  --progress-interval 1 >"$OUT"
+
+test -s "$FULL_MODEL"
+grep -q '"validation_source": "full_data"' "${FULL_MODEL%.bin}.json"
+
 "$BIN" generate --checkpoint "$MODEL" --prompt "What is 1+1?" --max-new-tokens 2 --greedy --quiet >"$OUT"
 "$BIN" bench --train-steps 1 --gen-tokens 1 >"$OUT"
 "$BIN" list-artifacts --root "$TMP_DIR" >"$OUT"
@@ -67,6 +88,16 @@ if [ "$eval_status" -ne 0 ] && [ "$eval_status" -ne 2 ]; then
   exit 1
 fi
 test -s "$REPORT"
+
+set +e
+"$BIN" eval --checkpoint "$FULL_MODEL" --input "$DATA" --max-examples 1 --max-new-tokens 1 --greedy --hide-failures --output "$FULL_REPORT" >"$OUT"
+full_eval_status=$?
+set -e
+if [ "$full_eval_status" -ne 0 ] && [ "$full_eval_status" -ne 2 ]; then
+  echo "full-data eval smoke command failed with unexpected status $full_eval_status" >&2
+  exit 1
+fi
+test -s "$FULL_REPORT"
 
 printf 'not a valid instruction dataset\n' >"$TMP_DIR/bad.txt"
 set +e

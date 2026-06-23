@@ -196,8 +196,11 @@
         </p>
         <pre><code>./scripts/train_assistant.sh</code></pre>
         <p>
-          The script runs the full import, validation, split, train, and eval
-          pipeline. Use environment variables to override defaults, for example
+          The script runs the full import, validation, train, and eval pipeline
+          with <code>ASSISTANT_SPLIT_RATIO=0</code> by default, which disables
+          the held-out split. Set it to a value like <code>0.9</code> when you
+          want a validation split. Use environment variables to override
+          defaults, for example
           <code>STEPS=500 ./scripts/train_assistant.sh</code> or
           <code>ASSISTANT_BACKEND=metal ./scripts/train_assistant.sh</code>.
           The assistant scripts default to <code>ASSISTANT_TOKENIZER=bpe</code>.

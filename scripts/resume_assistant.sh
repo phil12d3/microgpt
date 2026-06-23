@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 : "${ASSISTANT_BACKEND:=cpu}"
 : "${ASSISTANT_FORMAT:=single}"
 : "${ASSISTANT_TOKENIZER:=bpe}"
-: "${ASSISTANT_SPLIT_RATIO:=0.9}"
+: "${ASSISTANT_SPLIT_RATIO:=0}"
 : "${ASSISTANT_SPLIT_SEED:=42}"
 : "${STEPS:=10000}"
 : "${CONTEXT:=128}"
@@ -31,8 +31,14 @@ TRAIN_DATA="$ASSISTANT_DATA_DIR/train.txt"
 VAL_DATA="$ASSISTANT_DATA_DIR/val.txt"
 CHECKPOINT_NAME="$(basename "$ASSISTANT_CHECKPOINT")"
 CHECKPOINT_NAME="${CHECKPOINT_NAME%.*}"
-TRAIN_REPORT="$ASSISTANT_EVAL_DIR/$CHECKPOINT_NAME-resume-train.json"
-VAL_REPORT="$ASSISTANT_EVAL_DIR/$CHECKPOINT_NAME-resume-val.json"
+if [ "$ASSISTANT_SPLIT_RATIO" = "0" ] || [ "$ASSISTANT_SPLIT_RATIO" = "0.0" ]; then
+  TRAIN_DATA="$ALL_DATA"
+  TRAIN_REPORT="$ASSISTANT_EVAL_DIR/$CHECKPOINT_NAME-resume-all.json"
+  VAL_REPORT="$TRAIN_REPORT"
+else
+  TRAIN_REPORT="$ASSISTANT_EVAL_DIR/$CHECKPOINT_NAME-resume-train.json"
+  VAL_REPORT="$ASSISTANT_EVAL_DIR/$CHECKPOINT_NAME-resume-val.json"
+fi
 
 run_eval() {
   set +e
@@ -66,56 +72,94 @@ echo "validating assistant dataset"
   --input "$ALL_DATA" \
   --format "$ASSISTANT_FORMAT"
 
-echo "splitting assistant dataset"
-./bin/mgpt split-data \
-  --input "$ALL_DATA" \
-  --train "$TRAIN_DATA" \
-  --val "$VAL_DATA" \
-  --ratio "$ASSISTANT_SPLIT_RATIO" \
-  --seed "$ASSISTANT_SPLIT_SEED" \
-  --format "$ASSISTANT_FORMAT"
+if [ "$ASSISTANT_SPLIT_RATIO" = "0" ] || [ "$ASSISTANT_SPLIT_RATIO" = "0.0" ]; then
+  echo "using full assistant dataset for train and eval"
+else
+  echo "splitting assistant dataset"
+  ./bin/mgpt split-data \
+    --input "$ALL_DATA" \
+    --train "$TRAIN_DATA" \
+    --val "$VAL_DATA" \
+    --ratio "$ASSISTANT_SPLIT_RATIO" \
+    --seed "$ASSISTANT_SPLIT_SEED" \
+    --format "$ASSISTANT_FORMAT"
+fi
 
 echo "resuming assistant checkpoint"
-./bin/mgpt resume \
-  --input "$TRAIN_DATA" \
-  --val-input "$VAL_DATA" \
-  --checkpoint "$ASSISTANT_CHECKPOINT" \
-  --steps "$STEPS" \
-  --context "$CONTEXT" \
-  --d-model "$D_MODEL" \
-  --layers "$LAYERS" \
-  --heads "$HEADS" \
-  --ff "$FF" \
-  --batch-size "$BATCH_SIZE" \
-  --lr "$LR" \
-  --tokenizer "$ASSISTANT_TOKENIZER" \
-  --eval-interval "$EVAL_INTERVAL" \
-  --save-interval "$SAVE_INTERVAL" \
-  --progress-interval "$PROGRESS_INTERVAL" \
-  --backend "$ASSISTANT_BACKEND"
+if [ "$ASSISTANT_SPLIT_RATIO" = "0" ] || [ "$ASSISTANT_SPLIT_RATIO" = "0.0" ]; then
+  ./bin/mgpt resume \
+    --input "$ALL_DATA" \
+    --no-val-split \
+    --checkpoint "$ASSISTANT_CHECKPOINT" \
+    --steps "$STEPS" \
+    --context "$CONTEXT" \
+    --d-model "$D_MODEL" \
+    --layers "$LAYERS" \
+    --heads "$HEADS" \
+    --ff "$FF" \
+    --batch-size "$BATCH_SIZE" \
+    --lr "$LR" \
+    --tokenizer "$ASSISTANT_TOKENIZER" \
+    --eval-interval "$EVAL_INTERVAL" \
+    --save-interval "$SAVE_INTERVAL" \
+    --progress-interval "$PROGRESS_INTERVAL" \
+    --backend "$ASSISTANT_BACKEND"
+else
+  ./bin/mgpt resume \
+    --input "$TRAIN_DATA" \
+    --val-input "$VAL_DATA" \
+    --checkpoint "$ASSISTANT_CHECKPOINT" \
+    --steps "$STEPS" \
+    --context "$CONTEXT" \
+    --d-model "$D_MODEL" \
+    --layers "$LAYERS" \
+    --heads "$HEADS" \
+    --ff "$FF" \
+    --batch-size "$BATCH_SIZE" \
+    --lr "$LR" \
+    --tokenizer "$ASSISTANT_TOKENIZER" \
+    --eval-interval "$EVAL_INTERVAL" \
+    --save-interval "$SAVE_INTERVAL" \
+    --progress-interval "$PROGRESS_INTERVAL" \
+    --backend "$ASSISTANT_BACKEND"
+fi
 
-echo "evaluating train split"
-run_eval ./bin/mgpt eval \
-  --checkpoint "$ASSISTANT_CHECKPOINT" \
-  --input "$TRAIN_DATA" \
-  --max-new-tokens "$MAX_NEW_TOKENS" \
-  --match "$MATCH" \
-  --greedy \
-  --hide-failures \
-  --output "$TRAIN_REPORT" \
-  --format "$ASSISTANT_FORMAT" \
-  --backend "$ASSISTANT_BACKEND"
+if [ "$ASSISTANT_SPLIT_RATIO" = "0" ] || [ "$ASSISTANT_SPLIT_RATIO" = "0.0" ]; then
+  echo "evaluating full dataset"
+  run_eval ./bin/mgpt eval \
+    --checkpoint "$ASSISTANT_CHECKPOINT" \
+    --input "$ALL_DATA" \
+    --max-new-tokens "$MAX_NEW_TOKENS" \
+    --match "$MATCH" \
+    --greedy \
+    --hide-failures \
+    --output "$TRAIN_REPORT" \
+    --format "$ASSISTANT_FORMAT" \
+    --backend "$ASSISTANT_BACKEND"
+else
+  echo "evaluating train split"
+  run_eval ./bin/mgpt eval \
+    --checkpoint "$ASSISTANT_CHECKPOINT" \
+    --input "$TRAIN_DATA" \
+    --max-new-tokens "$MAX_NEW_TOKENS" \
+    --match "$MATCH" \
+    --greedy \
+    --hide-failures \
+    --output "$TRAIN_REPORT" \
+    --format "$ASSISTANT_FORMAT" \
+    --backend "$ASSISTANT_BACKEND"
 
-echo "evaluating validation split"
-run_eval ./bin/mgpt eval \
-  --checkpoint "$ASSISTANT_CHECKPOINT" \
-  --input "$VAL_DATA" \
-  --max-new-tokens "$MAX_NEW_TOKENS" \
-  --match "$MATCH" \
-  --greedy \
-  --output "$VAL_REPORT" \
-  --format "$ASSISTANT_FORMAT" \
-  --backend "$ASSISTANT_BACKEND"
+  echo "evaluating validation split"
+  run_eval ./bin/mgpt eval \
+    --checkpoint "$ASSISTANT_CHECKPOINT" \
+    --input "$VAL_DATA" \
+    --max-new-tokens "$MAX_NEW_TOKENS" \
+    --match "$MATCH" \
+    --greedy \
+    --output "$VAL_REPORT" \
+    --format "$ASSISTANT_FORMAT" \
+    --backend "$ASSISTANT_BACKEND"
+fi
 
 echo "assistant resume pipeline complete"
 echo "checkpoint: $ASSISTANT_CHECKPOINT"

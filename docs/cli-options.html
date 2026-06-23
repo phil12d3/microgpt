@@ -438,8 +438,20 @@
             <tr>
               <td><code>--val-input PATH</code></td>
               <td><code>train</code>, <code>resume</code></td>
-              <td>Automatic 90/10 split</td>
+              <td>Automatic split</td>
               <td>Explicit validation file. When provided, all of <code>--input</code> is used for training.</td>
+            </tr>
+            <tr>
+              <td><code>--split-ratio VALUE</code></td>
+              <td><code>train</code>, <code>resume</code></td>
+              <td><code>0.9</code></td>
+              <td>Controls the automatic validation split when <code>--val-input</code> is not provided.</td>
+            </tr>
+            <tr>
+              <td><code>--no-val-split</code></td>
+              <td><code>train</code>, <code>resume</code></td>
+              <td>Off</td>
+              <td>Trains and validates on the full input file instead of creating a split.</td>
             </tr>
             <tr>
               <td><code>--checkpoint PATH</code></td>
@@ -883,7 +895,7 @@ make BACKEND=metal all
             </tr>
             <tr>
               <td><code>validation_source</code></td>
-              <td><code>explicit</code> when <code>--val-input</code> was used, otherwise <code>auto_split</code>.</td>
+              <td><code>explicit</code> when <code>--val-input</code> was used, otherwise <code>auto_split</code> or <code>full_data</code> when <code>--no-val-split</code> was used.</td>
             </tr>
             <tr>
               <td><code>config</code></td>

@@ -90,8 +90,9 @@ inline std::string previous_training_history_entries(const std::string& metadata
 
 inline void write_checkpoint_metadata_json(const std::string& checkpoint, const Model& model, const AdamW& opt, int final_step,
                                            const std::string& command, const std::string& input,
-                                           const std::string& val_input, bool explicit_validation, int requested_steps,
-                                           int start_step, BackendKind backend, const TrainingRunSummary& run) {
+                                           const std::string& val_input, const std::string& validation_source,
+                                           int requested_steps, int start_step, BackendKind backend,
+                                           const TrainingRunSummary& run) {
   std::string metadata_path = checkpoint_json_path(checkpoint);
   std::string previous_history = previous_training_history_entries(metadata_path);
   std::ofstream json(metadata_path, std::ios::binary);
@@ -113,7 +114,7 @@ inline void write_checkpoint_metadata_json(const std::string& checkpoint, const 
   json << "  \"backend\": \"" << json_escape(backend_name(backend)) << "\",\n";
   json << "  \"train_input\": \"" << json_escape(input) << "\",\n";
   json << "  \"val_input\": \"" << json_escape(val_input) << "\",\n";
-  json << "  \"validation_source\": \"" << (explicit_validation ? "explicit" : "auto_split") << "\",\n";
+  json << "  \"validation_source\": \"" << json_escape(validation_source) << "\",\n";
   json << "  \"config\": {\n";
   json << "    \"vocab_size\": " << model.cfg.vocab_size << ",\n";
   json << "    \"tokenizer\": \"" << json_escape(tok.name()) << "\",\n";
@@ -151,7 +152,7 @@ inline void write_checkpoint_metadata_json(const std::string& checkpoint, const 
   json << "      \"tokenizer_kind\": " << model.cfg.tokenizer_kind << ",\n";
   json << "      \"train_input\": \"" << json_escape(input) << "\",\n";
   json << "      \"val_input\": \"" << json_escape(val_input) << "\",\n";
-  json << "      \"validation_source\": \"" << (explicit_validation ? "explicit" : "auto_split") << "\",\n";
+  json << "      \"validation_source\": \"" << json_escape(validation_source) << "\",\n";
   json << "      \"parameter_count\": " << params << ",\n";
   json << "      \"parameter_bytes_f32\": " << (params * sizeof(float)) << ",\n";
   json << "      \"last_train_loss\": " << run.last_train_loss << ",\n";
@@ -188,6 +189,14 @@ inline int run_train_command(const std::vector<std::string>& args, bool resume, 
   cfg.temperature = get_arg_float(args, "--temperature", cfg.temperature);
   cfg.top_k = get_arg_int(args, "--top-k", cfg.top_k);
   cfg.seed = static_cast<uint32_t>(get_arg_int(args, "--seed", static_cast<int>(cfg.seed)));
+  float split_ratio = get_arg_float(args, "--split-ratio", 0.9f);
+  bool no_val_split = has_arg(args, "--no-val-split");
+  if (split_ratio <= 0.0f || split_ratio >= 1.0f) {
+    throw std::runtime_error("--split-ratio must be greater than 0 and less than 1");
+  }
+  if (no_val_split && !val_input.empty()) {
+    throw std::runtime_error("--no-val-split cannot be used with --val-input");
+  }
 
   std::string tokenizer_arg = get_arg(args, "--tokenizer", "byte");
   cfg.tokenizer_kind = static_cast<int>(parse_tokenizer_kind(tokenizer_arg));
@@ -216,8 +225,13 @@ inline int run_train_command(const std::vector<std::string>& args, bool resume, 
   std::vector<int> train_tokens;
   std::vector<int> val_tokens;
   if (val_input.empty()) {
-    train_tokens = split_train_val(tokens, true);
-    val_tokens = split_train_val(tokens, false);
+    if (no_val_split) {
+      train_tokens = tokens;
+      val_tokens = tokens;
+    } else {
+      train_tokens = split_train_val(tokens, true, split_ratio);
+      val_tokens = split_train_val(tokens, false, split_ratio);
+    }
   } else {
     train_tokens = tokens;
     val_tokens = tok.encode_text(read_file_text(val_input));
@@ -228,6 +242,7 @@ inline int run_train_command(const std::vector<std::string>& args, bool resume, 
   model.set_backend(backend);
   opt.set_backend(backend);
   reset_backend_dispatch_stats();
+  std::string validation_source = val_input.empty() ? (no_val_split ? "full_data" : "auto_split") : "explicit";
   TrainingRunSummary run;
   run.started_at = timestamp_utc_now();
   auto started = std::chrono::steady_clock::now();
@@ -250,7 +265,7 @@ inline int run_train_command(const std::vector<std::string>& args, bool resume, 
   run.ended_at = timestamp_utc_now();
   run.duration_seconds = std::chrono::duration<double>(ended - started).count();
   write_checkpoint_metadata_json(checkpoint, model, opt, resume_step + requested_steps, command, input, val_input,
-                                 !val_input.empty(), requested_steps, resume_step, backend, run);
+                                 validation_source, requested_steps, resume_step, backend, run);
   if (backend != BackendKind::Cpu) {
     const BackendDispatchStats& stats = backend_dispatch_stats();
     out << "backend_accelerated_ops " << stats.accelerated_ops << '\n';

@@ -29,6 +29,8 @@ struct TrainingOptions {
   float learning_rate = 0.0003f;
   uint32_t seed = 42;
   BackendKind backend = BackendKind::Cpu;
+  bool use_validation_split = true;
+  float validation_split_ratio = 0.9f;
 };
 
 class ModelHandle {
@@ -87,8 +89,18 @@ inline ModelHandle train_text_file(const std::string& input_path, const std::str
   opt.eps = cfg.adam_eps;
   opt.weight_decay = cfg.weight_decay;
   std::vector<int> tokens = bytes_to_tokens(read_file_bytes(input_path), cfg.vocab_size);
-  std::vector<int> train_tokens = split_train_val(tokens, true);
-  std::vector<int> val_tokens = split_train_val(tokens, false);
+  if (tokens.size() < 2) {
+    throw std::runtime_error("training input is too small");
+  }
+  std::vector<int> train_tokens;
+  std::vector<int> val_tokens;
+  if (options.use_validation_split) {
+    train_tokens = split_train_val(tokens, true, options.validation_split_ratio);
+    val_tokens = split_train_val(tokens, false, options.validation_split_ratio);
+  } else {
+    train_tokens = tokens;
+    val_tokens = tokens;
+  }
   train_model(model, train_tokens, val_tokens, opt, options.steps, checkpoint_path);
   return load_model(checkpoint_path, options.backend);
 }
